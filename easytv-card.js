@@ -1,7 +1,7 @@
-// EasyTV Card v0.1.6
+// EasyTV Card v0.1.7
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.1.6';
+const CARD_VERSION = '0.1.7';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power' },
@@ -18,23 +18,22 @@ const CARD_STYLES = `
   .compact {
     display: flex; align-items: center; justify-content: space-between;
     padding: 10px 14px; border-radius: 16px;
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 100, 0, 0.6); border: 2px solid #ff6400;
+    box-shadow: 0 4px 16px rgba(255,100,0,0.5);
   }
   .compact-left { display: flex; align-items: center; gap: 10px; }
-  .tv-icon { --mdc-icon-size: 26px; color: var(--primary-text-color); }
-  .tv-name { font-weight: 600; font-size: 15px; color: var(--primary-text-color); }
+  .tv-icon { --mdc-icon-size: 26px; color: #fff; }
+  .tv-name { font-weight: 700; font-size: 15px; color: #fff; }
   .compact-actions { display: flex; align-items: center; gap: 4px; }
   .icon-btn {
-    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
-    cursor: pointer; color: var(--primary-text-color);
+    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+    cursor: pointer; color: #fff;
     width: 44px; height: 44px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent;
   }
-  .icon-btn:hover { background: rgba(255,255,255,0.15); }
-  .icon-btn:active { background: rgba(255,255,255,0.25); transform: scale(0.92); }
+  .icon-btn:hover { background: rgba(255,255,255,0.3); }
+  .icon-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.92); }
   .icon-btn ha-icon { --mdc-icon-size: 22px; }
   .icon-btn.compact-action { width: 40px; height: 40px; }
   .icon-btn.compact-action ha-icon { --mdc-icon-size: 20px; }
@@ -58,7 +57,7 @@ const OVERLAY_STYLES = `
     padding: 20px 20px 14px;
     border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
   }
-  #easytv-overlay .overlay-header ha-icon { --mdc-icon-size: 28px; color: #90caf9; }
+  #easytv-overlay .overlay-header ha-icon { --mdc-icon-size: 28px; color: #ff6400; }
   #easytv-overlay .overlay-title { flex: 1; font-size: 20px; font-weight: 700; color: #fff; }
   #easytv-overlay .close-btn {
     background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
@@ -87,7 +86,7 @@ const OVERLAY_STYLES = `
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ffffff' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 16px center; cursor: pointer;
   }
-  #easytv-overlay .app-select-native:focus { outline: none; border-color: #90caf9; }
+  #easytv-overlay .app-select-native:focus { outline: none; border-color: #ff6400; }
   #easytv-overlay .icon-btn {
     background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
     cursor: pointer; color: #fff; width: 62px; height: 62px;
@@ -99,7 +98,7 @@ const OVERLAY_STYLES = `
   #easytv-overlay .icon-btn ha-icon { --mdc-icon-size: 28px; }
   #easytv-overlay .icon-btn.select-btn {
     width: 74px; height: 74px;
-    background: rgba(255,255,255,0.14); border: 2px solid rgba(255,255,255,0.3);
+    background: rgba(255,100,0,0.3); border: 2px solid #ff6400;
   }
   #easytv-overlay .icon-btn.select-btn ha-icon { --mdc-icon-size: 34px; }
   #easytv-overlay .dpad-wrap { display: flex; flex-direction: column; align-items: center; }
@@ -390,4 +389,4 @@ window.customCards.push({
   preview: true,
 });
 
-console.info(`%c EasyTV Card %c v${CARD_VERSION} `, 'background:#1976d2;color:#fff;font-weight:700;border-radius:4px 0 0 4px;padding:2px 6px', 'background:#333;color:#fff;border-radius:0 4px 4px 0;padding:2px 6px');
+console.info(`%c EasyTV Card %c v${CARD_VERSION} `, 'background:#ff6400;color:#fff;font-weight:700;border-radius:4px 0 0 4px;padding:2px 6px', 'background:#333;color:#fff;border-radius:0 4px 4px 0;padding:2px 6px');
