@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.17
+// EasyTV Card v0.5.0
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.17';
+const CARD_VERSION = '0.5.0';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -132,21 +132,17 @@ const OVERLAY_THEMES = {
 const CARD_STYLES = `
   :host {
     display: block;
-    /* ── Compact card tokens ── */
     --easytv-card-background:      var(--ha-card-background, var(--card-background-color, #1c1c1c));
     --easytv-card-border-radius:   var(--ha-card-border-radius, 16px);
     --easytv-card-border:          1px solid var(--divider-color, rgba(255,255,255,0.12));
     --easytv-card-box-shadow:      var(--ha-card-box-shadow, none);
     --easytv-card-backdrop-filter: none;
-    /* ── Text & accent tokens ── */
     --easytv-text-color:           var(--primary-text-color, #fff);
     --easytv-muted-color:          var(--secondary-text-color, rgba(255,255,255,0.6));
     --easytv-accent-color:         var(--primary-color, #1976d2);
-    /* ── Button tokens ── */
     --easytv-button-background:    var(--secondary-background-color, var(--card-background-color, #2a2a2a));
     --easytv-button-border-radius: 50%;
     --easytv-button-border:        1px solid var(--divider-color, rgba(255,255,255,0.12));
-    /* ── Internal derived tokens (not user-facing) ── */
     --easytv-button-background-hover:  color-mix(in srgb, var(--easytv-button-background) 82%, white);
     --easytv-button-background-active: color-mix(in srgb, var(--easytv-button-background) 72%, white);
   }
@@ -224,7 +220,6 @@ const OVERLAY_STYLES = `
     animation: etvFadeIn 0.2s ease;
     transform: translateZ(0); -webkit-transform: translateZ(0);
     will-change: backdrop-filter;
-    /* overlay tokens with sensible built-in fallbacks */
     --easytv-overlay-section-radius: 16px;
     --easytv-overlay-btn-radius:     14px;
   }
@@ -242,7 +237,6 @@ const OVERLAY_STYLES = `
   }
   #easytv-overlay .close-btn ha-icon { --mdc-icon-size: 20px; }
 
-  /* ── 4-column grid body ── */
   #easytv-overlay .overlay-body {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -268,19 +262,17 @@ const OVERLAY_STYLES = `
   }
   #easytv-overlay .section-label.hidden { display: none; }
 
-  /* ── Generic btn-row ── */
   #easytv-overlay .btn-row { display: flex; align-items: center; gap: 6px; width: 100%; }
   #easytv-overlay .btn-row .icon-btn { flex: 1; border-radius: var(--easytv-overlay-btn-radius); height: 52px; width: auto; }
   #easytv-overlay .btn-row .icon-btn ha-icon { --mdc-icon-size: 24px; }
 
-  /* Power fills quarter-section height */
   #easytv-overlay .power-only-row { flex: 1; }
   #easytv-overlay .power-only-row .icon-btn {
     flex: 1 !important; height: 100% !important; min-height: 52px;
     border-radius: var(--easytv-overlay-btn-radius) !important; width: auto !important;
   }
 
-  /* ── D-pad 3×3 grid ── */
+  /* ── Legacy dpad-grid (kept for fallback safety, hidden when svg-dpad present) ── */
   #easytv-overlay .dpad-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -299,7 +291,62 @@ const OVERLAY_STYLES = `
   }
   #easytv-overlay .dpad-grid .dpad-empty { background: transparent; border: none; pointer-events: none; }
 
-  /* Base overlay icon-btn */
+  /* ── SVG D-Pad ── */
+  #easytv-overlay .svg-dpad-wrap {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%;
+    /* square aspect ratio via padding trick — no JS sizing needed, Pi safe */
+  }
+  #easytv-overlay .svg-dpad {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    overflow: visible;
+  }
+  /* Petal hit areas — transparent by default, fill on hover/active */
+  #easytv-overlay .dpad-petal {
+    cursor: pointer;
+    fill: var(--easytv-overlay-btn-background, rgba(255,255,255,0.10));
+    stroke: var(--easytv-overlay-border-color, rgba(255,255,255,0.13));
+    stroke-width: 1.5;
+    transition: fill 0.13s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #easytv-overlay .dpad-petal:hover { fill: rgba(255,255,255,0.20); }
+  #easytv-overlay .dpad-petal:active { fill: rgba(255,255,255,0.32); }
+  /* Select circle in centre */
+  #easytv-overlay .dpad-select-circle {
+    cursor: pointer;
+    fill: color-mix(in srgb, var(--primary-color, #1976d2) 22%, rgba(255,255,255,0.10));
+    stroke: var(--primary-color, #1976d2);
+    stroke-width: 2;
+    transition: fill 0.13s, transform 0.1s;
+    transform-origin: 50% 50%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #easytv-overlay .dpad-select-circle:active { fill: color-mix(in srgb, var(--primary-color, #1976d2) 45%, rgba(255,255,255,0.10)); transform: scale(0.91); }
+  /* Directional icons rendered as foreignObject ha-icon inside SVG */
+  #easytv-overlay .dpad-icon-fo {
+    pointer-events: none;
+    overflow: visible;
+  }
+  #easytv-overlay .dpad-icon-fo ha-icon {
+    --mdc-icon-size: 22px;
+    color: var(--easytv-overlay-text-color, #fff);
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+  }
+  /* Back / Home row below d-pad */
+  #easytv-overlay .dpad-aux-row {
+    display: flex; gap: 8px; margin-top: 8px;
+  }
+  #easytv-overlay .dpad-aux-row .icon-btn {
+    flex: 1; height: 44px;
+    border-radius: var(--easytv-overlay-btn-radius) !important;
+    width: auto !important;
+  }
+  #easytv-overlay .dpad-aux-row .icon-btn ha-icon { --mdc-icon-size: 22px; }
+
   #easytv-overlay .icon-btn {
     cursor:pointer; border-radius: var(--easytv-overlay-btn-radius); width:52px; height:52px;
     display:flex; align-items:center; justify-content:center;
@@ -560,7 +607,6 @@ class EasyTVCard extends HTMLElement {
     overlay.style.webkitBackdropFilter = t.backdropFilter;
     overlay.style.color = t.textColor;
     overlay.style.setProperty('--etv-gap', `${parseInt(gap, 10) || 0}px`);
-    /* Expose overlay tokens so card_mod / global CSS can override them */
     overlay.style.setProperty('--easytv-overlay-background',      t.background);
     overlay.style.setProperty('--easytv-overlay-backdrop',         t.backdropFilter);
     overlay.style.setProperty('--easytv-overlay-section-bg',       showSectionBg ? t.sectionBackground : 'transparent');
@@ -601,6 +647,20 @@ class EasyTVCard extends HTMLElement {
       #easytv-overlay .app-btn span { color: var(--easytv-overlay-muted-color, ${t.mutedColor}); }
       #easytv-overlay .app-select-native { background-color: var(--easytv-overlay-btn-background, ${t.buttonBackground}); border: 1px solid ${t.borderColor}; color: var(--easytv-overlay-text-color, ${t.textColor}); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23${t.dropdownArrow}' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); }
       #easytv-overlay .app-select-native:focus { border-color: var(--primary-color, #1976d2); }
+      #easytv-overlay .dpad-petal {
+        fill: ${t.buttonBackground};
+        stroke: ${t.borderColor};
+      }
+      #easytv-overlay .dpad-petal:hover { fill: ${t.buttonHover}; }
+      #easytv-overlay .dpad-petal:active { fill: ${t.buttonActive}; }
+      #easytv-overlay .dpad-select-circle {
+        fill: color-mix(in srgb, var(--primary-color, #1976d2) 22%, ${t.buttonBackground});
+        stroke: var(--primary-color, #1976d2);
+      }
+      #easytv-overlay .dpad-select-circle:active {
+        fill: color-mix(in srgb, var(--primary-color, #1976d2) 45%, ${t.buttonBackground});
+      }
+      #easytv-overlay .dpad-icon-fo ha-icon { color: ${t.textColor}; }
     `;
   }
 
@@ -723,25 +783,128 @@ class EasyTVCard extends HTMLElement {
     wrap.appendChild(sel); return wrap;
   }
 
+  /**
+   * _buildDpad — v0.5.0
+   * Renders a pure SVG arc d-pad (four petal shapes + centre select circle).
+   * No canvas, no JS sizing loops. Just static SVG paths + CSS transitions.
+   * Pi-safe: zero runtime cost after first paint.
+   *
+   * SVG coordinate space: 100×100 viewBox.
+   * Centre: (50,50). Outer radius: 50. Inner radius (hole): 18. Select circle radius: 15.
+   *
+   * Each petal is an SVG <path> drawn as an annular sector:
+   *   - Outer arc from angleStart to angleEnd at r=48 (slight inset for gap)
+   *   - Inner arc from angleEnd to angleStart at r=20
+   *   - Two straight lines connecting them
+   * Gap between petals: 4° on each side of the 90° boundary.
+   */
   _buildDpad() {
     const c = this._commands;
     const wrap = sectionWrap('Navigation', this._showLabels);
-    const grid = document.createElement('div'); grid.className = 'dpad-grid';
-    const empty1 = document.createElement('div'); empty1.className = 'dpad-empty';
-    const empty2 = document.createElement('div'); empty2.className = 'dpad-empty';
-    const backBtn = iconBtn('mdi:arrow-left',       () => this._send(c.back),   'Back');
-    const homeBtn = iconBtn('mdi:home-outline',     () => this._send(c.home),   'Home');
-    [empty1,
-     iconBtn('mdi:arrow-up-bold',    () => this._send(c.up),     'Up'),
-     empty2,
-     iconBtn('mdi:arrow-left-bold',  () => this._send(c.left),   'Left'),
-     iconBtn('mdi:keyboard-return',  () => this._send(c.select), 'Select', 'select-btn'),
-     iconBtn('mdi:arrow-right-bold', () => this._send(c.right),  'Right'),
-     backBtn,
-     iconBtn('mdi:arrow-down-bold',  () => this._send(c.down),   'Down'),
-     homeBtn,
-    ].forEach(el => grid.appendChild(el));
-    wrap.appendChild(grid); return wrap;
+
+    // ── Square aspect-ratio wrapper ──
+    const outerWrap = document.createElement('div');
+    outerWrap.className = 'svg-dpad-wrap';
+
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 100 100');
+    svg.setAttribute('xmlns', NS);
+    svg.classList.add('svg-dpad');
+
+    // Helper: polar to cartesian (cx=50, cy=50)
+    function pt(angleDeg, r) {
+      const rad = (angleDeg - 90) * Math.PI / 180;
+      return [50 + r * Math.cos(rad), 50 + r * Math.sin(rad)];
+    }
+
+    // Build annular sector path: outer arc a1→a2, inner arc a2→a1
+    function petalPath(a1, a2, rOuter, rInner) {
+      const [ox1, oy1] = pt(a1, rOuter);
+      const [ox2, oy2] = pt(a2, rOuter);
+      const [ix2, iy2] = pt(a2, rInner);
+      const [ix1, iy1] = pt(a1, rInner);
+      return [
+        `M ${ox1} ${oy1}`,
+        `A ${rOuter} ${rOuter} 0 0 1 ${ox2} ${oy2}`,
+        `L ${ix2} ${iy2}`,
+        `A ${rInner} ${rInner} 0 0 0 ${ix1} ${iy1}`,
+        'Z'
+      ].join(' ');
+    }
+
+    // 4 petals: Up, Right, Down, Left
+    // Each covers 82° centred on its cardinal direction (4° gap each side)
+    const petals = [
+      { label: 'Up',    cmd: c.up,    icon: 'mdi:arrow-up-bold',    a1: -41+360, a2:  41,      iconAng: 0   },
+      { label: 'Right', cmd: c.right, icon: 'mdi:arrow-right-bold', a1:  49,     a2: 131,      iconAng: 90  },
+      { label: 'Down',  cmd: c.down,  icon: 'mdi:arrow-down-bold',  a1: 139,     a2: 221,      iconAng: 180 },
+      { label: 'Left',  cmd: c.left,  icon: 'mdi:arrow-left-bold',  a1: 229,     a2: 311,      iconAng: 270 },
+    ];
+
+    const OUTER_R = 48;
+    const INNER_R = 20;
+    const ICON_R  = 35; // radius at which icon centres sit
+
+    petals.forEach(({ label, cmd, icon, a1, a2, iconAng }) => {
+      // Petal shape
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', petalPath(a1, a2, OUTER_R, INNER_R));
+      path.classList.add('dpad-petal');
+      path.setAttribute('role', 'button');
+      path.setAttribute('aria-label', label);
+      path.addEventListener('click', (e) => { e.stopPropagation(); this._send(cmd); });
+      svg.appendChild(path);
+
+      // Icon via foreignObject — renders ha-icon at the petal centre
+      const [iconX, iconY] = pt(iconAng, ICON_R);
+      const SIZE = 16; // foreignObject box size (px in viewBox units)
+      const fo = document.createElementNS(NS, 'foreignObject');
+      fo.setAttribute('x', iconX - SIZE / 2);
+      fo.setAttribute('y', iconY - SIZE / 2);
+      fo.setAttribute('width', SIZE);
+      fo.setAttribute('height', SIZE);
+      fo.classList.add('dpad-icon-fo');
+      const iconEl = document.createElement('ha-icon');
+      iconEl.setAttribute('icon', icon);
+      fo.appendChild(iconEl);
+      svg.appendChild(fo);
+    });
+
+    // Centre select circle
+    const selectCircle = document.createElementNS(NS, 'circle');
+    selectCircle.setAttribute('cx', '50');
+    selectCircle.setAttribute('cy', '50');
+    selectCircle.setAttribute('r', '16');
+    selectCircle.classList.add('dpad-select-circle');
+    selectCircle.setAttribute('role', 'button');
+    selectCircle.setAttribute('aria-label', 'Select');
+    selectCircle.addEventListener('click', (e) => { e.stopPropagation(); this._send(c.select); });
+    svg.appendChild(selectCircle);
+
+    // Select icon (OK / enter) — centred
+    const selectFO = document.createElementNS(NS, 'foreignObject');
+    selectFO.setAttribute('x', '38');
+    selectFO.setAttribute('y', '38');
+    selectFO.setAttribute('width', '24');
+    selectFO.setAttribute('height', '24');
+    selectFO.classList.add('dpad-icon-fo');
+    const selectIcon = document.createElement('ha-icon');
+    selectIcon.setAttribute('icon', 'mdi:keyboard-return');
+    selectFO.appendChild(selectIcon);
+    svg.appendChild(selectFO);
+
+    outerWrap.appendChild(svg);
+    wrap.appendChild(outerWrap);
+
+    // Back + Home auxiliary row below the d-pad
+    const auxRow = document.createElement('div');
+    auxRow.className = 'dpad-aux-row';
+    auxRow.appendChild(iconBtn('mdi:arrow-left', () => this._send(c.back), 'Back'));
+    auxRow.appendChild(iconBtn('mdi:home-outline', () => this._send(c.home), 'Home'));
+    wrap.appendChild(auxRow);
+
+    return wrap;
   }
 
   _buildUtility() {
