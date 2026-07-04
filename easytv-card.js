@@ -1,7 +1,7 @@
-// EasyTV Card v0.3.6
+// EasyTV Card v0.3.7
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.3.6';
+const CARD_VERSION = '0.3.7';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -29,7 +29,6 @@ const APP_SHORTCUTS = [
 
 const OVERLAY_THEMES = {
   dark: {
-    // Lower alpha so dashboard bleeds through — backdrop-filter blurs what's behind
     background: 'rgba(10, 10, 18, 0.55)',
     backdropFilter: 'blur(32px) saturate(1.4)',
     sectionBackground: 'rgba(255, 255, 255, 0.07)',
@@ -108,9 +107,12 @@ const OVERLAY_STYLES = `
     display: flex; flex-direction: column; overflow-y: auto;
     font-family: var(--paper-font-body1_-_font-family, sans-serif);
     animation: etvFadeIn 0.2s ease;
-    /* backdrop-filter applied inline per theme */
+    /* GPU compositing layer — required for backdrop-filter to work */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: backdrop-filter;
   }
-  @keyframes etvFadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes etvFadeIn { from { opacity:0; transform:translateY(20px) translateZ(0); } to { opacity:1; transform:translateY(0) translateZ(0); } }
   #easytv-overlay .overlay-header {
     display: flex; align-items: center; gap: 12px;
     padding: 18px 20px 12px; flex-shrink: 0;
@@ -228,23 +230,6 @@ function sectionWrap(labelText) {
   return wrap;
 }
 
-// Find the best mount point inside HA's shadow DOM so backdrop-filter
-// has real painted content behind it rather than an empty body.
-function _getOverlayTarget() {
-  try {
-    const ha = document.querySelector('home-assistant');
-    if (!ha || !ha.shadowRoot) return document.body;
-    const haMain = ha.shadowRoot.querySelector('home-assistant-main');
-    if (!haMain || !haMain.shadowRoot) return document.body;
-    // partial-panel-resolver or ha-panel-lovelace sit above the cards
-    const panel = haMain.shadowRoot.querySelector('ha-panel-lovelace') ||
-                  haMain.shadowRoot.querySelector('partial-panel-resolver') ||
-                  haMain.shadowRoot.querySelector('ha-panel-iframe') ||
-                  haMain.shadowRoot.firstElementChild;
-    return panel || document.body;
-  } catch (_) { return document.body; }
-}
-
 class EasyTVCard extends HTMLElement {
   constructor() {
     super();
@@ -307,8 +292,9 @@ class EasyTVCard extends HTMLElement {
   setConfig(config) {
     if (!config.remote_entity) throw new Error('EasyTV: remote_entity is required');
     this._config = {
-      tv_preset:'roku', expand_mode:'inline', show_name:true, overlay_theme:'dark',
-      sections:{ ...DEFAULT_SECTIONS }, ...config,
+      tv_preset:'roku', show_name:true, overlay_theme:'dark',
+      sections:{ ...DEFAULT_SECTIONS },
+      ...config,
       sections:{ ...DEFAULT_SECTIONS, ...(config.sections||{}) },
     };
     this._render();
@@ -316,7 +302,7 @@ class EasyTVCard extends HTMLElement {
 
   static getConfigElement() { return document.createElement('easytv-card-editor'); }
   static getStubConfig() {
-    return { name:'My TV', remote_entity:'remote.my_tv', tv_preset:'roku', expand_mode:'inline', overlay_theme:'dark', sections:{ ...DEFAULT_SECTIONS } };
+    return { name:'My TV', remote_entity:'remote.my_tv', tv_preset:'roku', overlay_theme:'dark', sections:{ ...DEFAULT_SECTIONS } };
   }
 
   get _commands() {
@@ -330,14 +316,8 @@ class EasyTVCard extends HTMLElement {
   }
 
   _toggleExpanded() {
-    const { expand_mode, popup_hash } = this._config;
-    if (expand_mode === 'popup' && popup_hash && popup_hash.trim()) {
-      history.pushState(null, '', popup_hash);
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-    } else {
-      this._expanded = !this._expanded;
-      if (this._expanded) this._mountOverlay(); else this._removeOverlay();
-    }
+    this._expanded = !this._expanded;
+    if (this._expanded) this._mountOverlay(); else this._removeOverlay();
   }
 
   _buildAppSelector() {
@@ -480,9 +460,7 @@ class EasyTVCard extends HTMLElement {
       document.body.appendChild(styleEl); this._overlayStyleEl = styleEl;
     }
 
-    // Mount inside HA's shadow DOM tree so backdrop-filter has painted content behind it
-    const target = _getOverlayTarget();
-    target.appendChild(overlay);
+    document.body.appendChild(overlay);
     this._overlayEl = overlay;
   }
 
@@ -585,6 +563,7 @@ class EasyTVCardEditor extends HTMLElement {
     const style = document.createElement('style'); style.textContent = EDITOR_STYLES; root.appendChild(style);
     const editor = document.createElement('div'); editor.className = 'editor';
 
+    // General
     editor.appendChild(editorH3('General'));
     const nameEl = editorInput(c.name, 'e.g. My TV');
     nameEl.addEventListener('change', e => this._set('name', e.target.value));
@@ -594,6 +573,7 @@ class EasyTVCardEditor extends HTMLElement {
     iconEl.addEventListener('change', e => this._set('icon', e.target.value));
     editor.appendChild(editorField('Icon', iconEl));
 
+    // Entities
     editor.appendChild(editorH3('Entities'));
     const remotePicker = document.createElement('ha-entity-picker');
     remotePicker.id = 'etv-remote';
@@ -611,20 +591,13 @@ class EasyTVCardEditor extends HTMLElement {
     appPicker.addEventListener('value-changed', e => this._set('app_select_entity', e.detail.value));
     editor.appendChild(editorField('App Select Entity (Roku)', appPicker));
 
+    // TV Preset
     editor.appendChild(editorH3('TV Preset'));
     const presetEl = editorSelect([['roku','Roku'],['google_tv','Google TV'],['samsung','Samsung'],['generic','Generic']], c.tv_preset || 'roku');
     presetEl.addEventListener('change', e => this._set('tv_preset', e.target.value));
     editor.appendChild(editorField('TV Preset', presetEl));
 
-    editor.appendChild(editorH3('Behaviour'));
-    const expandEl = editorSelect([['inline','Inline Expand'],['popup','Popup (Bubble Card)']], c.expand_mode || 'inline');
-    expandEl.addEventListener('change', e => this._set('expand_mode', e.target.value));
-    editor.appendChild(editorField('Expand Mode', expandEl));
-
-    const hashEl = editorInput(c.popup_hash, 'e.g. #MyTV-PopUp');
-    hashEl.addEventListener('change', e => this._set('popup_hash', e.target.value));
-    editor.appendChild(editorField('Popup Hash', hashEl));
-
+    // Sections
     editor.appendChild(editorH3('Sections'));
     [
       ['Controls (Power/Source/Menu)', 'utility', s.utility !== false],
@@ -640,6 +613,7 @@ class EasyTVCardEditor extends HTMLElement {
       editor.appendChild(editorRow(label, sw));
     });
 
+    // Appearance
     editor.appendChild(editorH3('Appearance'));
     const showNameSw = editorSwitch(c.show_name !== false);
     showNameSw.addEventListener('change', e => this._set('show_name', e.target.checked));
@@ -660,7 +634,7 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: 'easytv-card',
   name: 'EasyTV Card',
-  description: `TV remote card v${CARD_VERSION} — theme-driven with dark/light blur overlay`,
+  description: `TV remote card v${CARD_VERSION} — fullscreen blur overlay`,
   preview: true,
 });
 
