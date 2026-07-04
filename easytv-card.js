@@ -1,7 +1,7 @@
-// EasyTV Card v0.3.5
+// EasyTV Card v0.3.6
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.3.5';
+const CARD_VERSION = '0.3.6';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -29,21 +29,22 @@ const APP_SHORTCUTS = [
 
 const OVERLAY_THEMES = {
   dark: {
-    background: 'rgba(10, 10, 18, 0.88)',
-    backdropFilter: 'blur(28px)',
-    sectionBackground: 'rgba(255, 255, 255, 0.06)',
-    buttonBackground: 'rgba(255, 255, 255, 0.09)',
-    buttonHover: 'rgba(255, 255, 255, 0.16)',
-    buttonActive: 'rgba(255, 255, 255, 0.24)',
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    // Lower alpha so dashboard bleeds through — backdrop-filter blurs what's behind
+    background: 'rgba(10, 10, 18, 0.55)',
+    backdropFilter: 'blur(32px) saturate(1.4)',
+    sectionBackground: 'rgba(255, 255, 255, 0.07)',
+    buttonBackground: 'rgba(255, 255, 255, 0.10)',
+    buttonHover: 'rgba(255, 255, 255, 0.18)',
+    buttonActive: 'rgba(255, 255, 255, 0.26)',
+    borderColor: 'rgba(255, 255, 255, 0.13)',
     textColor: '#ffffff',
     mutedColor: 'rgba(255, 255, 255, 0.55)',
     headerBorder: 'rgba(255, 255, 255, 0.10)',
     dropdownArrow: 'ffffff',
   },
   light: {
-    background: 'rgba(240, 240, 245, 0.88)',
-    backdropFilter: 'blur(28px)',
+    background: 'rgba(240, 240, 248, 0.60)',
+    backdropFilter: 'blur(32px) saturate(1.8)',
     sectionBackground: 'rgba(0, 0, 0, 0.05)',
     buttonBackground: 'rgba(0, 0, 0, 0.07)',
     buttonHover: 'rgba(0, 0, 0, 0.13)',
@@ -107,6 +108,7 @@ const OVERLAY_STYLES = `
     display: flex; flex-direction: column; overflow-y: auto;
     font-family: var(--paper-font-body1_-_font-family, sans-serif);
     animation: etvFadeIn 0.2s ease;
+    /* backdrop-filter applied inline per theme */
   }
   @keyframes etvFadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
   #easytv-overlay .overlay-header {
@@ -224,6 +226,23 @@ function sectionWrap(labelText) {
     wrap.appendChild(lbl);
   }
   return wrap;
+}
+
+// Find the best mount point inside HA's shadow DOM so backdrop-filter
+// has real painted content behind it rather than an empty body.
+function _getOverlayTarget() {
+  try {
+    const ha = document.querySelector('home-assistant');
+    if (!ha || !ha.shadowRoot) return document.body;
+    const haMain = ha.shadowRoot.querySelector('home-assistant-main');
+    if (!haMain || !haMain.shadowRoot) return document.body;
+    // partial-panel-resolver or ha-panel-lovelace sit above the cards
+    const panel = haMain.shadowRoot.querySelector('ha-panel-lovelace') ||
+                  haMain.shadowRoot.querySelector('partial-panel-resolver') ||
+                  haMain.shadowRoot.querySelector('ha-panel-iframe') ||
+                  haMain.shadowRoot.firstElementChild;
+    return panel || document.body;
+  } catch (_) { return document.body; }
 }
 
 class EasyTVCard extends HTMLElement {
@@ -431,8 +450,10 @@ class EasyTVCard extends HTMLElement {
     this._removeOverlay();
     this._injectGlobalStyle();
     const { name, icon: ico, sections } = this._config;
+
     const overlay = document.createElement('div'); overlay.id = 'easytv-overlay';
     this._applyOverlayTheme(overlay);
+
     const header = document.createElement('div'); header.className = 'overlay-header';
     header.appendChild(mkIcon(ico || 'mdi:television'));
     const title = document.createElement('span'); title.className = 'overlay-title'; title.textContent = name || 'My TV';
@@ -442,6 +463,7 @@ class EasyTVCard extends HTMLElement {
     closeBtn.addEventListener('click', (e) => { e.stopPropagation(); this._expanded = false; this._removeOverlay(); });
     header.appendChild(closeBtn);
     overlay.appendChild(header);
+
     const body = document.createElement('div'); body.className = 'overlay-body';
     if (sections.app_selector) { const a = this._buildAppSelector(); if (a) body.appendChild(a); }
     if (sections.utility !== false) body.appendChild(this._buildUtility());
@@ -451,12 +473,17 @@ class EasyTVCard extends HTMLElement {
     if (sections.app_shortcuts) body.appendChild(this._buildAppShortcuts());
     if (sections.numpad) body.appendChild(this._buildNumpad());
     overlay.appendChild(body);
+
     if (this._config.card_mod?.style) {
       const styleEl = document.createElement('style'); styleEl.id = 'easytv-overlay-card-mod';
       styleEl.textContent = this._config.card_mod.style;
       document.body.appendChild(styleEl); this._overlayStyleEl = styleEl;
     }
-    document.body.appendChild(overlay); this._overlayEl = overlay;
+
+    // Mount inside HA's shadow DOM tree so backdrop-filter has painted content behind it
+    const target = _getOverlayTarget();
+    target.appendChild(overlay);
+    this._overlayEl = overlay;
   }
 
   _compactView() {
@@ -492,7 +519,6 @@ class EasyTVCard extends HTMLElement {
   getCardSize() { return this._config?.compact_rows || 2; }
 }
 
-// Helper to build a labelled native input field
 function editorField(labelText, inputEl) {
   const wrap = document.createElement('div'); wrap.className = 'field-wrap';
   const lbl = document.createElement('label'); lbl.textContent = labelText;
@@ -559,7 +585,6 @@ class EasyTVCardEditor extends HTMLElement {
     const style = document.createElement('style'); style.textContent = EDITOR_STYLES; root.appendChild(style);
     const editor = document.createElement('div'); editor.className = 'editor';
 
-    // --- General ---
     editor.appendChild(editorH3('General'));
     const nameEl = editorInput(c.name, 'e.g. My TV');
     nameEl.addEventListener('change', e => this._set('name', e.target.value));
@@ -569,7 +594,6 @@ class EasyTVCardEditor extends HTMLElement {
     iconEl.addEventListener('change', e => this._set('icon', e.target.value));
     editor.appendChild(editorField('Icon', iconEl));
 
-    // --- Entities ---
     editor.appendChild(editorH3('Entities'));
     const remotePicker = document.createElement('ha-entity-picker');
     remotePicker.id = 'etv-remote';
@@ -587,13 +611,11 @@ class EasyTVCardEditor extends HTMLElement {
     appPicker.addEventListener('value-changed', e => this._set('app_select_entity', e.detail.value));
     editor.appendChild(editorField('App Select Entity (Roku)', appPicker));
 
-    // --- TV Preset ---
     editor.appendChild(editorH3('TV Preset'));
     const presetEl = editorSelect([['roku','Roku'],['google_tv','Google TV'],['samsung','Samsung'],['generic','Generic']], c.tv_preset || 'roku');
     presetEl.addEventListener('change', e => this._set('tv_preset', e.target.value));
     editor.appendChild(editorField('TV Preset', presetEl));
 
-    // --- Behaviour ---
     editor.appendChild(editorH3('Behaviour'));
     const expandEl = editorSelect([['inline','Inline Expand'],['popup','Popup (Bubble Card)']], c.expand_mode || 'inline');
     expandEl.addEventListener('change', e => this._set('expand_mode', e.target.value));
@@ -603,7 +625,6 @@ class EasyTVCardEditor extends HTMLElement {
     hashEl.addEventListener('change', e => this._set('popup_hash', e.target.value));
     editor.appendChild(editorField('Popup Hash', hashEl));
 
-    // --- Sections ---
     editor.appendChild(editorH3('Sections'));
     [
       ['Controls (Power/Source/Menu)', 'utility', s.utility !== false],
@@ -619,7 +640,6 @@ class EasyTVCardEditor extends HTMLElement {
       editor.appendChild(editorRow(label, sw));
     });
 
-    // --- Appearance ---
     editor.appendChild(editorH3('Appearance'));
     const showNameSw = editorSwitch(c.show_name !== false);
     showNameSw.addEventListener('change', e => this._set('show_name', e.target.checked));
