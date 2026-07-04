@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.15
+// EasyTV Card v0.4.16
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.15';
+const CARD_VERSION = '0.4.16';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -210,7 +210,13 @@ const OVERLAY_STYLES = `
     display: flex; flex-direction: column; gap: 6px;
     border-radius: 16px; padding: 8px; width: 100%; box-sizing: border-box;
   }
-  #easytv-overlay .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; padding: 0 2px 4px; }
+  #easytv-overlay .section-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; padding: 0 2px 4px;
+  }
+  /* Fully collapse the label element — no leftover height or padding */
+  #easytv-overlay .section-label.hidden {
+    display: none;
+  }
 
   /* \u2500\u2500 Generic btn-row \u2500\u2500 */
   #easytv-overlay .btn-row { display: flex; align-items: center; gap: 6px; width: 100%; }
@@ -417,12 +423,12 @@ function numBtn(label, onClick) {
   return btn;
 }
 
-function sectionWrap(labelText) {
+function sectionWrap(labelText, showLabel) {
   const wrap = document.createElement('div');
   wrap.className = 'etv-section';
   if (labelText) {
     const lbl = document.createElement('div');
-    lbl.className = 'section-label';
+    lbl.className = 'section-label' + (showLabel ? '' : ' hidden');
     lbl.textContent = labelText;
     wrap.appendChild(lbl);
   }
@@ -448,14 +454,10 @@ function buildDefaultSectionLayout() {
 
 /**
  * Normalize sections from config.
- * When the config already contains an array, we PRESERVE the order from the
- * array (user may have reordered sections) and only fill in any missing ids.
- * Re-sorting by SECTION_ORDER is intentionally avoided here so that
- * _moveSection changes survive the setConfig round-trip.
+ * Preserves the array order so _moveSection changes survive the setConfig round-trip.
  */
 function normalizeSections(sections) {
   if (Array.isArray(sections)) {
-    // Build a set of ids that are already present in the array
     const seen = new Set();
     const result = sections
       .filter(s => s && s.id && SECTION_ORDER.includes(s.id))
@@ -463,7 +465,6 @@ function normalizeSections(sections) {
         seen.add(s.id);
         return { id: s.id, enabled: s.enabled !== false, width: normalizeWidth(s.width) };
       });
-    // Append any ids missing from the saved array (new sections added in future versions)
     SECTION_ORDER.forEach(id => {
       if (!seen.has(id)) {
         result.push({
@@ -475,7 +476,6 @@ function normalizeSections(sections) {
     });
     return result;
   }
-  // Legacy object format
   const legacy = { ...LEGACY_DEFAULT_SECTIONS, ...(sections || {}) };
   return [
     { id: 'power',        enabled: legacy.power !== false,        width: 'quarter' },
@@ -602,7 +602,6 @@ class EasyTVCard extends HTMLElement {
     const t = OVERLAY_THEMES[theme] || OVERLAY_THEMES.dark;
     const showSectionBg  = cfg.overlay_section_bg    !== false;
     const showBtnBorders = cfg.overlay_button_borders !== false;
-    const showLabels     = cfg.overlay_show_labels    !== false;
     const gap            = cfg.overlay_gap ?? DEFAULT_GAP;
 
     overlay.style.background = t.background;
@@ -624,7 +623,7 @@ class EasyTVCard extends HTMLElement {
         background: ${showSectionBg ? t.sectionBackground : 'transparent'};
         border: ${showSectionBg ? `1px solid ${t.borderColor}` : '1px solid transparent'};
       }
-      #easytv-overlay .section-label { color: ${showLabels ? t.mutedColor : 'transparent'}; }
+      #easytv-overlay .section-label { color: ${t.mutedColor}; }
       #easytv-overlay .icon-btn {
         background: ${t.buttonBackground};
         border: ${showBtnBorders ? `1px solid ${t.borderColor}` : '1px solid transparent'};
@@ -754,9 +753,13 @@ class EasyTVCard extends HTMLElement {
     return wrap;
   }
 
+  get _showLabels() {
+    return this._config.overlay_show_labels !== false;
+  }
+
   _buildPower() {
     const c = this._commands;
-    const wrap = sectionWrap('Power');
+    const wrap = sectionWrap('Power', this._showLabels);
     wrap.style.flex = '1';
     const row = document.createElement('div');
     row.className = 'btn-row power-only-row';
@@ -771,7 +774,7 @@ class EasyTVCard extends HTMLElement {
     if (!app_select_entity || !this._hass) return null;
     const state = this._hass.states[app_select_entity];
     if (!state) return null;
-    const wrap = sectionWrap('App');
+    const wrap = sectionWrap('App', this._showLabels);
     const sel = document.createElement('select');
     sel.className = 'app-select-native';
     (state.attributes.options || []).forEach(opt => {
@@ -791,7 +794,7 @@ class EasyTVCard extends HTMLElement {
 
   _buildDpad() {
     const c = this._commands;
-    const wrap = sectionWrap('Navigation');
+    const wrap = sectionWrap('Navigation', this._showLabels);
 
     const grid = document.createElement('div');
     grid.className = 'dpad-grid';
@@ -824,7 +827,7 @@ class EasyTVCard extends HTMLElement {
 
   _buildUtility() {
     const c = this._commands;
-    const wrap = sectionWrap('Controls');
+    const wrap = sectionWrap('Controls', this._showLabels);
     const row = document.createElement('div');
     row.className = 'btn-row';
     [
@@ -839,7 +842,7 @@ class EasyTVCard extends HTMLElement {
 
   _buildPlayback() {
     const c = this._commands;
-    const wrap = sectionWrap('Playback');
+    const wrap = sectionWrap('Playback', this._showLabels);
     const row = document.createElement('div');
     row.className = 'btn-row';
     [
@@ -855,7 +858,7 @@ class EasyTVCard extends HTMLElement {
 
   _buildVolume() {
     const c = this._commands;
-    const wrap = sectionWrap('Volume');
+    const wrap = sectionWrap('Volume', this._showLabels);
     const row = document.createElement('div');
     row.className = 'btn-row';
     [
@@ -868,7 +871,7 @@ class EasyTVCard extends HTMLElement {
   }
 
   _buildNumpad() {
-    const wrap = sectionWrap('Channel / Number');
+    const wrap = sectionWrap('Channel / Number', this._showLabels);
     const grid = document.createElement('div');
     grid.className = 'numpad-grid';
     ['1','2','3','4','5','6','7','8','9','*','0','#'].forEach(k => {
@@ -882,7 +885,7 @@ class EasyTVCard extends HTMLElement {
 
   _buildAppShortcuts() {
     const apps = (this._config.app_shortcuts?.length) ? this._config.app_shortcuts : APP_SHORTCUTS;
-    const wrap = sectionWrap('Apps');
+    const wrap = sectionWrap('Apps', this._showLabels);
     const grid = document.createElement('div');
     grid.className = 'app-grid';
     apps.forEach(app => {
@@ -948,7 +951,6 @@ class EasyTVCard extends HTMLElement {
     }
 
     const body = document.createElement('div');
-    // When no header, add the no-header class so CSS gives top padding for the floating close btn
     body.className = showHeader ? 'overlay-body' : 'overlay-body no-header';
 
     normalizeSections(cfg.sections).forEach((section) => {
@@ -1063,7 +1065,6 @@ class EasyTVCardEditor extends HTMLElement {
     const list = document.createElement('div');
     list.className = 'section-list';
 
-    // Single delegated click listener — reads live index from DOM at click time
     list.addEventListener('click', (e) => {
       const moveBtn = e.target.closest('[data-section-action]');
       if (!moveBtn) return;
