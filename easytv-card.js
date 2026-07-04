@@ -1,7 +1,7 @@
-// EasyTV Card v0.3.0
+// EasyTV Card v0.3.1
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.3.0';
+const CARD_VERSION = '0.3.1';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -12,45 +12,62 @@ const TV_PRESETS = {
 
 const DEFAULT_SECTIONS = { dpad:true, playback:true, volume:true, app_selector:true, power:true, utility:true, numpad:false, app_shortcuts:true };
 
-// Common streaming app shortcuts with brand colours and MDI icons
 const APP_SHORTCUTS = [
-  { name:'Netflix',   cmd:'Netflix',        color:'#E50914', icon:'mdi:netflix' },
-  { name:'YouTube',   cmd:'YouTube',        color:'#FF0000', icon:'mdi:youtube' },
-  { name:'Disney+',   cmd:'Disney Plus',    color:'#113CCF', icon:'mdi:disney-plus' },
-  { name:'Prime',     cmd:'Amazon Video',   color:'#00A8E0', icon:'mdi:amazon' },
-  { name:'Spotify',   cmd:'Spotify',        color:'#1DB954', icon:'mdi:spotify' },
-  { name:'Plex',      cmd:'Plex',           color:'#E5A00D', icon:'mdi:plex' },
-  { name:'Apple TV',  cmd:'Apple TV',       color:'#555555', icon:'mdi:apple' },
-  { name:'Hulu',      cmd:'Hulu',           color:'#1CE783', icon:'mdi:television-play' },
-  { name:'HBO Max',   cmd:'HBO Max',        color:'#5822B4', icon:'mdi:television-classic' },
-  { name:'Peacock',   cmd:'Peacock TV',     color:'#FF6B35', icon:'mdi:bird' },
-  { name:'Tubi',      cmd:'Tubi',           color:'#FA4B00', icon:'mdi:television' },
-  { name:'Twitch',    cmd:'Twitch',         color:'#9146FF', icon:'mdi:twitch' },
+  { name:'Netflix', cmd:'Netflix', color:'#E50914', icon:'mdi:netflix' },
+  { name:'YouTube', cmd:'YouTube', color:'#FF0000', icon:'mdi:youtube' },
+  { name:'Disney+', cmd:'Disney Plus', color:'#113CCF', icon:'mdi:disney-plus' },
+  { name:'Prime', cmd:'Amazon Video', color:'#00A8E0', icon:'mdi:amazon' },
+  { name:'Spotify', cmd:'Spotify', color:'#1DB954', icon:'mdi:spotify' },
+  { name:'Plex', cmd:'Plex', color:'#E5A00D', icon:'mdi:plex' },
+  { name:'Apple TV', cmd:'Apple TV', color:'#555555', icon:'mdi:apple' },
+  { name:'Hulu', cmd:'Hulu', color:'#1CE783', icon:'mdi:television-play' },
+  { name:'HBO Max', cmd:'HBO Max', color:'#5822B4', icon:'mdi:television-classic' },
+  { name:'Peacock', cmd:'Peacock TV', color:'#FF6B35', icon:'mdi:bird' },
+  { name:'Tubi', cmd:'Tubi', color:'#FA4B00', icon:'mdi:television' },
+  { name:'Twitch', cmd:'Twitch', color:'#9146FF', icon:'mdi:twitch' },
 ];
 
 const CARD_STYLES = `
-  :host { display: block; }
-  ha-card { background: transparent !important; box-shadow: none !important; overflow: visible; }
+  :host {
+    display: block;
+    --easytv-card-background: var(--ha-card-background, var(--card-background-color, #1c1c1c));
+    --easytv-surface-background: var(--secondary-background-color, var(--card-background-color, #2a2a2a));
+    --easytv-text-color: var(--primary-text-color, #fff);
+    --easytv-muted-color: var(--secondary-text-color, rgba(255,255,255,0.6));
+    --easytv-border-color: var(--divider-color, rgba(255,255,255,0.12));
+    --easytv-accent-color: var(--primary-color, #1976d2);
+    --easytv-overlay-background: var(--lovelace-background, var(--card-background-color, #111));
+    --easytv-button-background: var(--easytv-surface-background);
+    --easytv-button-background-hover: color-mix(in srgb, var(--easytv-button-background) 82%, white);
+    --easytv-button-background-active: color-mix(in srgb, var(--easytv-button-background) 72%, white);
+    --easytv-section-background: var(--ha-card-background, var(--card-background-color, #1c1c1c));
+  }
+  ha-card {
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible;
+  }
   .compact {
     display: flex; align-items: center; justify-content: space-between;
     padding: 10px 14px; border-radius: 16px;
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    background: var(--easytv-card-background);
+    border: 1px solid var(--easytv-border-color);
+    color: var(--easytv-text-color);
   }
   .compact-left { display: flex; align-items: center; gap: 10px; }
-  .tv-icon { --mdc-icon-size: 26px; color: var(--primary-text-color); }
-  .tv-name { font-weight: 600; font-size: 15px; color: var(--primary-text-color); }
+  .tv-icon { --mdc-icon-size: 26px; color: var(--easytv-accent-color); }
+  .tv-name { font-weight: 600; font-size: 15px; color: var(--easytv-text-color); }
   .compact-actions { display: flex; align-items: center; gap: 4px; }
   .icon-btn {
-    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
-    cursor: pointer; color: var(--primary-text-color);
+    background: var(--easytv-button-background);
+    border: 1px solid var(--easytv-border-color);
+    cursor: pointer; color: var(--easytv-text-color);
     width: 44px; height: 44px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent;
   }
-  .icon-btn:hover { background: rgba(255,255,255,0.15); }
-  .icon-btn:active { background: rgba(255,255,255,0.25); transform: scale(0.92); }
+  .icon-btn:hover { background: var(--easytv-button-background-hover); }
+  .icon-btn:active { background: var(--easytv-button-background-active); transform: scale(0.92); }
   .icon-btn ha-icon { --mdc-icon-size: 22px; }
   .icon-btn.compact-action { width: 40px; height: 40px; }
   .icon-btn.compact-action ha-icon { --mdc-icon-size: 20px; }
@@ -59,8 +76,8 @@ const CARD_STYLES = `
 const OVERLAY_STYLES = `
   #easytv-overlay {
     position: fixed; top:0; left:0; right:0; bottom:0; z-index:999999;
-    background: rgba(10,10,20,0.97);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    background: var(--easytv-overlay-background, var(--lovelace-background, var(--card-background-color, #111)));
+    color: var(--easytv-text-color, var(--primary-text-color, #fff));
     display: flex; flex-direction: column; overflow-y: auto;
     font-family: var(--paper-font-body1_-_font-family, sans-serif);
     animation: etvFadeIn 0.2s ease;
@@ -70,17 +87,19 @@ const OVERLAY_STYLES = `
   #easytv-overlay .overlay-header {
     display: flex; align-items: center; gap: 12px;
     padding: 18px 20px 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;
+    border-bottom: 1px solid var(--easytv-border-color, rgba(255,255,255,0.12));
+    flex-shrink: 0;
   }
-  #easytv-overlay .overlay-header ha-icon { --mdc-icon-size: 26px; color: var(--primary-color, #90caf9); }
-  #easytv-overlay .overlay-title { flex:1; font-size:19px; font-weight:700; color:#fff; }
+  #easytv-overlay .overlay-header ha-icon { --mdc-icon-size: 26px; color: var(--easytv-accent-color, var(--primary-color, #1976d2)); }
+  #easytv-overlay .overlay-title { flex:1; font-size:19px; font-weight:700; color: var(--easytv-text-color, #fff); }
   #easytv-overlay .close-btn {
-    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-    cursor:pointer; color:#fff; width:40px; height:40px; border-radius:50%;
+    background: var(--easytv-button-background, var(--secondary-background-color, #2a2a2a));
+    border: 1px solid var(--easytv-border-color, rgba(255,255,255,0.12));
+    cursor:pointer; color: var(--easytv-text-color, #fff); width:40px; height:40px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     transition: background 0.15s; flex-shrink:0;
   }
-  #easytv-overlay .close-btn:hover { background: rgba(255,255,255,0.18); }
+  #easytv-overlay .close-btn:hover { background: var(--easytv-button-background-hover, var(--secondary-background-color, #333)); }
   #easytv-overlay .close-btn ha-icon { --mdc-icon-size: 20px; }
 
   #easytv-overlay .overlay-body {
@@ -88,84 +107,85 @@ const OVERLAY_STYLES = `
     gap: 8px; padding: 16px 16px 48px; flex:1; width: 100%; box-sizing: border-box;
   }
 
-  /* Section wrapper */
   #easytv-overlay .etv-section {
     display: flex; flex-direction: column; gap: 6px;
-    background: rgba(255,255,255,0.04); border-radius: 16px;
+    background: var(--easytv-section-background, var(--ha-card-background, var(--card-background-color, #1c1c1c)));
+    border: 1px solid var(--easytv-border-color, rgba(255,255,255,0.12));
+    border-radius: 16px;
     padding: 12px 12px; width: 100%; box-sizing: border-box;
   }
   #easytv-overlay .section-label {
     font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
-    color: rgba(255,255,255,0.3); padding: 0 2px 4px;
+    color: var(--easytv-muted-color, rgba(255,255,255,0.6)); padding: 0 2px 4px;
   }
 
-  /* Full-width button rows */
   #easytv-overlay .btn-row {
     display: flex; align-items: center; gap: 8px; width: 100%;
   }
   #easytv-overlay .btn-row .icon-btn { flex: 1; border-radius: 14px; height: 56px; width: auto; }
   #easytv-overlay .btn-row .icon-btn ha-icon { --mdc-icon-size: 26px; }
 
-  /* D-pad specific */
   #easytv-overlay .dpad-center-row .icon-btn.select-btn {
     flex: 1.4; height: 64px;
-    background: rgba(var(--rgb-primary-color, 25,118,210), 0.25);
-    border: 2px solid var(--primary-color, #1976d2);
+    background: color-mix(in srgb, var(--easytv-accent-color, var(--primary-color, #1976d2)) 18%, var(--easytv-button-background, #2a2a2a));
+    border: 2px solid var(--easytv-accent-color, var(--primary-color, #1976d2));
   }
   #easytv-overlay .dpad-center-row .icon-btn.select-btn ha-icon { --mdc-icon-size: 30px; }
   #easytv-overlay .dpad-up-row .icon-btn,
   #easytv-overlay .dpad-down-row .icon-btn { height: 52px; }
 
-  /* Generic icon-btn base (non-row usage) */
   #easytv-overlay .icon-btn {
-    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
-    cursor:pointer; color:#fff;
+    background: var(--easytv-button-background, var(--secondary-background-color, #2a2a2a));
+    border: 1px solid var(--easytv-border-color, rgba(255,255,255,0.12));
+    cursor:pointer; color: var(--easytv-text-color, #fff);
     border-radius: 50%; width:62px; height:62px;
     display:flex; align-items:center; justify-content:center;
     transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color:transparent;
     padding:0;
   }
-  #easytv-overlay .icon-btn:hover { background: rgba(255,255,255,0.16); }
-  #easytv-overlay .icon-btn:active { background: rgba(255,255,255,0.26); transform: scale(0.91); }
+  #easytv-overlay .icon-btn:hover { background: var(--easytv-button-background-hover, #333); }
+  #easytv-overlay .icon-btn:active { background: var(--easytv-button-background-active, #444); transform: scale(0.91); }
   #easytv-overlay .icon-btn ha-icon { --mdc-icon-size: 26px; }
 
-  /* Numpad */
   #easytv-overlay .numpad-grid {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%;
   }
   #easytv-overlay .numpad-grid .icon-btn {
     border-radius: 14px; width: auto; height: 52px;
-    font-size: 18px; font-weight: 600; color:#fff;
-    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+    font-size: 18px; font-weight: 600; color: var(--easytv-text-color, #fff);
+    background: var(--easytv-button-background, var(--secondary-background-color, #2a2a2a));
+    border: 1px solid var(--easytv-border-color, rgba(255,255,255,0.12));
   }
   #easytv-overlay .numpad-grid .icon-btn:active { transform: scale(0.93); }
 
-  /* App shortcut grid */
   #easytv-overlay .app-grid {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%;
   }
   #easytv-overlay .app-btn {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 5px; padding: 10px 4px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1);
-    background: rgba(255,255,255,0.06); cursor: pointer;
-    transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent;
-    color: #fff;
+    gap: 5px; padding: 10px 4px; border-radius: 14px;
+    border: 1px solid var(--easytv-border-color, rgba(255,255,255,0.12));
+    background: var(--easytv-button-background, var(--secondary-background-color, #2a2a2a));
+    cursor: pointer; transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent; color: var(--easytv-text-color, #fff);
   }
-  #easytv-overlay .app-btn:hover { background: rgba(255,255,255,0.14); }
+  #easytv-overlay .app-btn:hover { background: var(--easytv-button-background-hover, #333); }
   #easytv-overlay .app-btn:active { transform: scale(0.92); }
   #easytv-overlay .app-btn ha-icon { --mdc-icon-size: 26px; }
-  #easytv-overlay .app-btn span { font-size: 10px; color: rgba(255,255,255,0.7); text-align:center; line-height:1.2; }
+  #easytv-overlay .app-btn span {
+    font-size: 10px; color: var(--easytv-muted-color, rgba(255,255,255,0.6)); text-align:center; line-height:1.2;
+  }
 
-  /* App dropdown */
   #easytv-overlay .app-select-native {
     width: 100%; padding: 14px 16px; border-radius: 12px; box-sizing: border-box;
-    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-    color: #fff; font-size: 15px; font-family: inherit;
+    background: var(--easytv-button-background, var(--secondary-background-color, #2a2a2a));
+    border: 1px solid var(--easytv-border-color, rgba(255,255,255,0.12));
+    color: var(--easytv-text-color, #fff); font-size: 15px; font-family: inherit;
     appearance: none; -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ffffff' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='white' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 16px center; cursor: pointer;
   }
-  #easytv-overlay .app-select-native:focus { outline: none; border-color: var(--primary-color, #1976d2); }
+  #easytv-overlay .app-select-native:focus { outline: none; border-color: var(--easytv-accent-color, var(--primary-color, #1976d2)); }
 `;
 
 const EDITOR_STYLES = `
@@ -200,38 +220,71 @@ function numBtn(label, onClick) {
 }
 
 function sectionWrap(labelText) {
-  const wrap = document.createElement('div'); wrap.className = 'etv-section';
+  const wrap = document.createElement('div');
+  wrap.className = 'etv-section';
   if (labelText) {
-    const lbl = document.createElement('div'); lbl.className = 'section-label'; lbl.textContent = labelText;
+    const lbl = document.createElement('div');
+    lbl.className = 'section-label';
+    lbl.textContent = labelText;
     wrap.appendChild(lbl);
   }
   return wrap;
 }
 
-function btnRow(...btns) {
-  const row = document.createElement('div'); row.className = 'btn-row';
-  btns.forEach(b => row.appendChild(b));
-  return row;
-}
-
 class EasyTVCard extends HTMLElement {
   constructor() {
-    super(); this.attachShadow({ mode:'open' });
-    this._expanded = false; this._overlayEl = null;
+    super();
+    this.attachShadow({ mode:'open' });
+    this._expanded = false;
+    this._overlayEl = null;
+    this._overlayStyleEl = null;
   }
+
   connectedCallback() { this._injectGlobalStyle(); }
   disconnectedCallback() { this._removeOverlay(); }
 
   _injectGlobalStyle() {
     if (document.getElementById('easytv-overlay-styles')) return;
     const s = document.createElement('style');
-    s.id = 'easytv-overlay-styles'; s.textContent = OVERLAY_STYLES;
+    s.id = 'easytv-overlay-styles';
+    s.textContent = OVERLAY_STYLES;
     document.head.appendChild(s);
+  }
+
+  _applyOverlayThemeVars(overlay) {
+    const style = getComputedStyle(this);
+    const vars = [
+      '--easytv-card-background',
+      '--easytv-surface-background',
+      '--easytv-text-color',
+      '--easytv-muted-color',
+      '--easytv-border-color',
+      '--easytv-accent-color',
+      '--easytv-overlay-background',
+      '--easytv-button-background',
+      '--easytv-button-background-hover',
+      '--easytv-button-background-active',
+      '--easytv-section-background',
+      '--primary-color',
+      '--primary-text-color',
+      '--secondary-text-color',
+      '--secondary-background-color',
+      '--card-background-color',
+      '--ha-card-background',
+      '--divider-color',
+      '--lovelace-background'
+    ];
+    vars.forEach(v => {
+      const val = style.getPropertyValue(v);
+      if (val) overlay.style.setProperty(v, val.trim());
+    });
   }
 
   _removeOverlay() {
     if (this._overlayEl && this._overlayEl.parentNode) this._overlayEl.parentNode.removeChild(this._overlayEl);
+    if (this._overlayStyleEl && this._overlayStyleEl.parentNode) this._overlayStyleEl.parentNode.removeChild(this._overlayStyleEl);
     this._overlayEl = null;
+    this._overlayStyleEl = null;
   }
 
   set hass(hass) { this._hass = hass; this._render(); }
@@ -239,8 +292,11 @@ class EasyTVCard extends HTMLElement {
   setConfig(config) {
     if (!config.remote_entity) throw new Error('EasyTV: remote_entity is required');
     this._config = {
-      tv_preset:'roku', expand_mode:'inline', show_name:true,
-      sections:{ ...DEFAULT_SECTIONS }, ...config,
+      tv_preset:'roku',
+      expand_mode:'inline',
+      show_name:true,
+      sections:{ ...DEFAULT_SECTIONS },
+      ...config,
       sections:{ ...DEFAULT_SECTIONS, ...(config.sections||{}) },
     };
     this._render();
@@ -278,9 +334,12 @@ class EasyTVCard extends HTMLElement {
     const state = this._hass.states[app_select_entity];
     if (!state) return null;
     const wrap = sectionWrap('App');
-    const sel = document.createElement('select'); sel.className = 'app-select-native';
+    const sel = document.createElement('select');
+    sel.className = 'app-select-native';
     (state.attributes.options||[]).forEach(opt => {
-      const o = document.createElement('option'); o.value = opt; o.textContent = opt;
+      const o = document.createElement('option');
+      o.value = opt;
+      o.textContent = opt;
       if (opt === state.state) o.selected = true;
       sel.appendChild(o);
     });
@@ -295,26 +354,29 @@ class EasyTVCard extends HTMLElement {
   _buildDpad() {
     const c = this._commands;
     const wrap = sectionWrap('Navigation');
-    // Up row
-    const upRow = document.createElement('div'); upRow.className = 'btn-row dpad-up-row';
+    const upRow = document.createElement('div');
+    upRow.className = 'btn-row dpad-up-row';
     const upBtn = iconBtn('mdi:arrow-up-bold', () => this._send(c.up), 'Up');
     upBtn.style.flex = '1'; upBtn.style.borderRadius = '14px'; upBtn.style.height = '52px';
     upRow.appendChild(upBtn);
-    // Middle row
-    const midRow = document.createElement('div'); midRow.className = 'btn-row dpad-center-row';
+
+    const midRow = document.createElement('div');
+    midRow.className = 'btn-row dpad-center-row';
     const leftBtn = iconBtn('mdi:arrow-left-bold', () => this._send(c.left), 'Left');
     const selBtn = iconBtn('mdi:keyboard-return', () => this._send(c.select), 'Select', 'select-btn');
     const rightBtn = iconBtn('mdi:arrow-right-bold', () => this._send(c.right), 'Right');
     [leftBtn, selBtn, rightBtn].forEach(b => { b.style.flex='1'; b.style.borderRadius='14px'; b.style.height='64px'; });
     selBtn.style.flex = '1.4';
     midRow.appendChild(leftBtn); midRow.appendChild(selBtn); midRow.appendChild(rightBtn);
-    // Bottom row
-    const botRow = document.createElement('div'); botRow.className = 'btn-row dpad-down-row';
+
+    const botRow = document.createElement('div');
+    botRow.className = 'btn-row dpad-down-row';
     const backBtn = iconBtn('mdi:arrow-left', () => this._send(c.back), 'Back');
     const downBtn = iconBtn('mdi:arrow-down-bold', () => this._send(c.down), 'Down');
     const homeBtn = iconBtn('mdi:home-outline', () => this._send(c.home), 'Home');
     [backBtn, downBtn, homeBtn].forEach(b => { b.style.flex='1'; b.style.borderRadius='14px'; b.style.height='52px'; });
     botRow.appendChild(backBtn); botRow.appendChild(downBtn); botRow.appendChild(homeBtn);
+
     wrap.appendChild(upRow); wrap.appendChild(midRow); wrap.appendChild(botRow);
     return wrap;
   }
@@ -322,7 +384,8 @@ class EasyTVCard extends HTMLElement {
   _buildUtility() {
     const c = this._commands;
     const wrap = sectionWrap('Controls');
-    const row = document.createElement('div'); row.className = 'btn-row';
+    const row = document.createElement('div');
+    row.className = 'btn-row';
     const btns = [
       iconBtn('mdi:power', () => this._send(c.power||'power'), 'Power'),
       iconBtn('mdi:import', () => this._send(c.source||'input_av1'), 'Source'),
@@ -338,7 +401,8 @@ class EasyTVCard extends HTMLElement {
   _buildPlayback() {
     const c = this._commands;
     const wrap = sectionWrap('Playback');
-    const row = document.createElement('div'); row.className = 'btn-row';
+    const row = document.createElement('div');
+    row.className = 'btn-row';
     const btns = [
       iconBtn('mdi:skip-previous', () => this._send(c.reverse), 'Prev'),
       iconBtn('mdi:rewind', () => this._send(c.reverse), 'Rewind'),
@@ -354,7 +418,8 @@ class EasyTVCard extends HTMLElement {
   _buildVolume() {
     const c = this._commands;
     const wrap = sectionWrap('Volume');
-    const row = document.createElement('div'); row.className = 'btn-row';
+    const row = document.createElement('div');
+    row.className = 'btn-row';
     const muteBtn = iconBtn('mdi:volume-off', () => this._send(c.volume_mute), 'Mute');
     const volDownBtn = iconBtn('mdi:volume-medium', () => this._send(c.volume_down), 'Vol -');
     const volUpBtn = iconBtn('mdi:volume-high', () => this._send(c.volume_up), 'Vol +');
@@ -365,11 +430,14 @@ class EasyTVCard extends HTMLElement {
 
   _buildNumpad() {
     const wrap = sectionWrap('Channel / Number');
-    const grid = document.createElement('div'); grid.className = 'numpad-grid';
+    const grid = document.createElement('div');
+    grid.className = 'numpad-grid';
     const keys = ['1','2','3','4','5','6','7','8','9','*','0','#'];
     keys.forEach(k => {
       const btn = numBtn(k, () => this._send(k));
-      btn.style.borderRadius = '14px'; btn.style.height = '52px'; btn.style.width = 'auto';
+      btn.style.borderRadius = '14px';
+      btn.style.height = '52px';
+      btn.style.width = 'auto';
       grid.appendChild(btn);
     });
     wrap.appendChild(grid);
@@ -380,12 +448,16 @@ class EasyTVCard extends HTMLElement {
     const customApps = this._config.app_shortcuts;
     const apps = (customApps && customApps.length) ? customApps : APP_SHORTCUTS;
     const wrap = sectionWrap('Apps');
-    const grid = document.createElement('div'); grid.className = 'app-grid';
+    const grid = document.createElement('div');
+    grid.className = 'app-grid';
     apps.forEach(app => {
-      const btn = document.createElement('button'); btn.className = 'app-btn';
+      const btn = document.createElement('button');
+      btn.className = 'app-btn';
       const ico = mkIcon(app.icon || 'mdi:television-play', app.color || null);
       btn.appendChild(ico);
-      const lbl = document.createElement('span'); lbl.textContent = app.name; btn.appendChild(lbl);
+      const lbl = document.createElement('span');
+      lbl.textContent = app.name;
+      btn.appendChild(lbl);
       btn.addEventListener('click', (e) => { e.stopPropagation(); this._send(app.cmd); });
       grid.appendChild(btn);
     });
@@ -394,21 +466,31 @@ class EasyTVCard extends HTMLElement {
   }
 
   _mountOverlay() {
-    this._removeOverlay(); this._injectGlobalStyle();
-    const { name, icon: ico, sections } = this._config;
-    const overlay = document.createElement('div'); overlay.id = 'easytv-overlay';
+    this._removeOverlay();
+    this._injectGlobalStyle();
 
-    const header = document.createElement('div'); header.className = 'overlay-header';
+    const { name, icon: ico, sections } = this._config;
+    const overlay = document.createElement('div');
+    overlay.id = 'easytv-overlay';
+    overlay.className = 'easytv-overlay';
+    this._applyOverlayThemeVars(overlay);
+
+    const header = document.createElement('div');
+    header.className = 'overlay-header';
     header.appendChild(mkIcon(ico || 'mdi:television'));
-    const title = document.createElement('span'); title.className = 'overlay-title'; title.textContent = name || 'TV';
+    const title = document.createElement('span');
+    title.className = 'overlay-title';
+    title.textContent = name || 'TV';
     header.appendChild(title);
-    const closeBtn = document.createElement('button'); closeBtn.className = 'close-btn';
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-btn';
     closeBtn.appendChild(mkIcon('mdi:close'));
     closeBtn.addEventListener('click', (e) => { e.stopPropagation(); this._expanded = false; this._removeOverlay(); });
     header.appendChild(closeBtn);
     overlay.appendChild(header);
 
-    const body = document.createElement('div'); body.className = 'overlay-body';
+    const body = document.createElement('div');
+    body.className = 'overlay-body';
     if (sections.app_selector) { const a = this._buildAppSelector(); if (a) body.appendChild(a); }
     if (sections.utility !== false) body.appendChild(this._buildUtility());
     if (sections.dpad) body.appendChild(this._buildDpad());
@@ -418,6 +500,14 @@ class EasyTVCard extends HTMLElement {
     if (sections.numpad) body.appendChild(this._buildNumpad());
     overlay.appendChild(body);
 
+    if (this._config.card_mod?.style) {
+      const styleEl = document.createElement('style');
+      styleEl.id = 'easytv-overlay-card-mod';
+      styleEl.textContent = this._config.card_mod.style;
+      document.body.appendChild(styleEl);
+      this._overlayStyleEl = styleEl;
+    }
+
     document.body.appendChild(overlay);
     this._overlayEl = overlay;
   }
@@ -425,25 +515,44 @@ class EasyTVCard extends HTMLElement {
   _compactView() {
     const { name, icon: ico, sections, show_name } = this._config;
     const c = this._commands;
-    const wrap = document.createElement('div'); wrap.className = 'compact';
-    const left = document.createElement('div'); left.className = 'compact-left';
-    const tvIco = mkIcon(ico || 'mdi:television'); tvIco.className = 'tv-icon'; left.appendChild(tvIco);
+    const wrap = document.createElement('div');
+    wrap.className = 'compact';
+    const left = document.createElement('div');
+    left.className = 'compact-left';
+    const tvIco = mkIcon(ico || 'mdi:television');
+    tvIco.className = 'tv-icon';
+    left.appendChild(tvIco);
     if (show_name !== false) {
-      const s = document.createElement('span'); s.className = 'tv-name'; s.textContent = name || 'TV'; left.appendChild(s);
+      const s = document.createElement('span');
+      s.className = 'tv-name';
+      s.textContent = name || 'TV';
+      left.appendChild(s);
     }
-    const actions = document.createElement('div'); actions.className = 'compact-actions';
+    const actions = document.createElement('div');
+    actions.className = 'compact-actions';
     if (sections.volume) actions.appendChild(iconBtn('mdi:volume-minus', () => this._send(c.volume_down), 'Vol -', 'compact-action'));
     if (sections.playback) actions.appendChild(iconBtn('mdi:play-pause', () => this._send(c.play), 'Play/Pause', 'compact-action'));
     if (sections.volume) actions.appendChild(iconBtn('mdi:volume-plus', () => this._send(c.volume_up), 'Vol +', 'compact-action'));
     actions.appendChild(iconBtn('mdi:remote', () => this._toggleExpanded(), 'Open Remote', 'compact-action'));
-    wrap.appendChild(left); wrap.appendChild(actions);
+    wrap.appendChild(left);
+    wrap.appendChild(actions);
     return wrap;
   }
 
   _render() {
     if (!this._config) return;
-    const root = this.shadowRoot; root.innerHTML = '';
-    const style = document.createElement('style'); style.textContent = CARD_STYLES; root.appendChild(style);
+    const root = this.shadowRoot;
+    root.innerHTML = '';
+    const style = document.createElement('style');
+    style.textContent = CARD_STYLES;
+    root.appendChild(style);
+
+    if (this._config.card_mod?.style) {
+      const modStyle = document.createElement('style');
+      modStyle.textContent = this._config.card_mod.style;
+      root.appendChild(modStyle);
+    }
+
     const card = document.createElement('ha-card');
     card.appendChild(this._compactView());
     root.appendChild(card);
@@ -498,7 +607,8 @@ class EasyTVCardEditor extends HTMLElement {
       </div>
     `;
     root.querySelectorAll('ha-entity-picker').forEach(el => {
-      el.hass = this._hass; el.value = c[el.dataset.key] || '';
+      el.hass = this._hass;
+      el.value = c[el.dataset.key] || '';
       el.addEventListener('value-changed', (e) => this._set(el.dataset.key, e.detail.value));
     });
     root.querySelectorAll('ha-textfield').forEach(el => {
@@ -525,8 +635,8 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: 'easytv-card',
   name: 'EasyTV Card',
-  description: `TV remote card v${CARD_VERSION} — full-width layout, app shortcuts, numpad, utility row`,
+  description: `TV remote card v${CARD_VERSION} — theme-driven fullscreen remote with card-mod support`,
   preview: true,
 });
 
-console.info(`%c EasyTV Card %c v${CARD_VERSION} `, 'background:#1976d2;color:#fff;font-weight:700;border-radius:4px 0 0 4px;padding:2px 6px', 'background:#333;color:#fff;border-radius:0 4px 4px 0;padding:2px 6px');
+console.info(`%c EasyTV Card %c v${CARD_VERSION} `, 'background:var(--primary-color,#1976d2);color:#fff;font-weight:700;border-radius:4px 0 0 4px;padding:2px 6px', 'background:#333;color:#fff;border-radius:0 4px 4px 0;padding:2px 6px');
