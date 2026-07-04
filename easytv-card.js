@@ -1,7 +1,7 @@
-// EasyTV Card v0.3.4
+// EasyTV Card v0.3.5
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.3.4';
+const CARD_VERSION = '0.3.5';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -109,7 +109,6 @@ const OVERLAY_STYLES = `
     animation: etvFadeIn 0.2s ease;
   }
   @keyframes etvFadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-
   #easytv-overlay .overlay-header {
     display: flex; align-items: center; gap: 12px;
     padding: 18px 20px 12px; flex-shrink: 0;
@@ -122,63 +121,41 @@ const OVERLAY_STYLES = `
     transition: background 0.15s; flex-shrink:0;
   }
   #easytv-overlay .close-btn ha-icon { --mdc-icon-size: 20px; }
-
   #easytv-overlay .overlay-body {
     display: flex; flex-direction: column; align-items: stretch;
     gap: 8px; padding: 16px 16px 48px; flex:1; width: 100%; box-sizing: border-box;
   }
-
   #easytv-overlay .etv-section {
     display: flex; flex-direction: column; gap: 6px;
-    border-radius: 16px;
-    padding: 12px; width: 100%; box-sizing: border-box;
+    border-radius: 16px; padding: 12px; width: 100%; box-sizing: border-box;
   }
   #easytv-overlay .section-label {
-    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
-    padding: 0 2px 4px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; padding: 0 2px 4px;
   }
-
-  #easytv-overlay .btn-row {
-    display: flex; align-items: center; gap: 8px; width: 100%;
-  }
+  #easytv-overlay .btn-row { display: flex; align-items: center; gap: 8px; width: 100%; }
   #easytv-overlay .btn-row .icon-btn { flex: 1; border-radius: 14px; height: 56px; width: auto; }
   #easytv-overlay .btn-row .icon-btn ha-icon { --mdc-icon-size: 26px; }
-
   #easytv-overlay .dpad-center-row .icon-btn.select-btn { flex: 1.4; height: 64px; }
   #easytv-overlay .dpad-center-row .icon-btn.select-btn ha-icon { --mdc-icon-size: 30px; }
-  #easytv-overlay .dpad-up-row .icon-btn,
-  #easytv-overlay .dpad-down-row .icon-btn { height: 52px; }
-
+  #easytv-overlay .dpad-up-row .icon-btn, #easytv-overlay .dpad-down-row .icon-btn { height: 52px; }
   #easytv-overlay .icon-btn {
     cursor:pointer; border-radius: 50%; width:62px; height:62px;
     display:flex; align-items:center; justify-content:center;
-    transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color:transparent;
-    padding:0;
+    transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color:transparent; padding:0;
   }
   #easytv-overlay .icon-btn ha-icon { --mdc-icon-size: 26px; }
-
-  #easytv-overlay .numpad-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%;
-  }
-  #easytv-overlay .numpad-grid .icon-btn {
-    border-radius: 14px; width: auto; height: 52px;
-    font-size: 18px; font-weight: 600;
-  }
+  #easytv-overlay .numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+  #easytv-overlay .numpad-grid .icon-btn { border-radius: 14px; width: auto; height: 52px; font-size: 18px; font-weight: 600; }
   #easytv-overlay .numpad-grid .icon-btn:active { transform: scale(0.93); }
-
-  #easytv-overlay .app-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%;
-  }
+  #easytv-overlay .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; }
   #easytv-overlay .app-btn {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 5px; padding: 10px 4px; border-radius: 14px;
-    cursor: pointer; transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
+    cursor: pointer; transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent;
   }
   #easytv-overlay .app-btn:active { transform: scale(0.92); }
   #easytv-overlay .app-btn ha-icon { --mdc-icon-size: 26px; }
   #easytv-overlay .app-btn span { font-size: 10px; text-align:center; line-height:1.2; }
-
   #easytv-overlay .app-select-native {
     width: 100%; padding: 14px 16px; border-radius: 12px; box-sizing: border-box;
     font-size: 15px; font-family: inherit;
@@ -189,10 +166,28 @@ const OVERLAY_STYLES = `
 `;
 
 const EDITOR_STYLES = `
-  .editor { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
-  h3 { margin: 8px 0 4px; font-size: 13px; font-weight: 600; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.05em; }
-  ha-textfield, ha-entity-picker, ha-select { width: 100%; }
-  ha-formfield { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+  .editor { display: flex; flex-direction: column; gap: 12px; padding: 16px; font-family: var(--paper-font-body1_-_font-family, sans-serif); }
+  h3 { margin: 10px 0 2px; font-size: 11px; font-weight: 600; color: var(--primary-color, #1976d2); text-transform: uppercase; letter-spacing: 0.08em; }
+  .field-wrap { display: flex; flex-direction: column; gap: 4px; }
+  .field-wrap label { font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.6)); padding-left: 2px; }
+  .etv-input, .etv-select {
+    width: 100%; box-sizing: border-box;
+    padding: 10px 12px; border-radius: 8px;
+    border: 1px solid var(--divider-color, rgba(255,255,255,0.15));
+    background: var(--secondary-background-color, #2a2a2a);
+    color: var(--primary-text-color, #fff);
+    font-size: 14px; font-family: inherit;
+    outline: none; transition: border-color 0.15s;
+  }
+  .etv-input:focus, .etv-select:focus { border-color: var(--primary-color, #1976d2); }
+  .etv-select { appearance: none; -webkit-appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23888' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+    padding-right: 32px;
+  }
+  ha-entity-picker { width: 100%; display: block; }
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 6px 2px; }
+  .row label { font-size: 14px; color: var(--primary-text-color, #fff); }
 `;
 
 function mkIcon(name, color) {
@@ -374,32 +369,26 @@ class EasyTVCard extends HTMLElement {
     const c = this._commands;
     const wrap = sectionWrap('Controls');
     const row = document.createElement('div'); row.className = 'btn-row';
-    const btns = [
-      iconBtn('mdi:power', () => this._send(c.power||'power'), 'Power'),
-      iconBtn('mdi:import', () => this._send(c.source||'input_av1'), 'Source'),
-      iconBtn('mdi:menu', () => this._send(c.menu||'menu'), 'Menu'),
-      iconBtn('mdi:cog-outline', () => this._send(c.settings||'settings'), 'Settings'),
-      iconBtn('mdi:information-outline', () => this._send(c.info||'info'), 'Info'),
-    ];
-    btns.forEach(b => { b.style.flex='1'; b.style.borderRadius='14px'; b.style.height='52px'; row.appendChild(b); });
-    wrap.appendChild(row);
-    return wrap;
+    [iconBtn('mdi:power', () => this._send(c.power||'power'), 'Power'),
+     iconBtn('mdi:import', () => this._send(c.source||'input_av1'), 'Source'),
+     iconBtn('mdi:menu', () => this._send(c.menu||'menu'), 'Menu'),
+     iconBtn('mdi:cog-outline', () => this._send(c.settings||'settings'), 'Settings'),
+     iconBtn('mdi:information-outline', () => this._send(c.info||'info'), 'Info')]
+    .forEach(b => { b.style.flex='1'; b.style.borderRadius='14px'; b.style.height='52px'; row.appendChild(b); });
+    wrap.appendChild(row); return wrap;
   }
 
   _buildPlayback() {
     const c = this._commands;
     const wrap = sectionWrap('Playback');
     const row = document.createElement('div'); row.className = 'btn-row';
-    const btns = [
-      iconBtn('mdi:skip-previous', () => this._send(c.reverse), 'Prev'),
-      iconBtn('mdi:rewind', () => this._send(c.reverse), 'Rewind'),
-      iconBtn('mdi:play-pause', () => this._send(c.play), 'Play/Pause'),
-      iconBtn('mdi:fast-forward', () => this._send(c.forward), 'Forward'),
-      iconBtn('mdi:skip-next', () => this._send(c.forward), 'Next'),
-    ];
-    btns.forEach(b => { b.style.flex='1'; b.style.borderRadius='14px'; b.style.height='52px'; row.appendChild(b); });
-    wrap.appendChild(row);
-    return wrap;
+    [iconBtn('mdi:skip-previous', () => this._send(c.reverse), 'Prev'),
+     iconBtn('mdi:rewind', () => this._send(c.reverse), 'Rewind'),
+     iconBtn('mdi:play-pause', () => this._send(c.play), 'Play/Pause'),
+     iconBtn('mdi:fast-forward', () => this._send(c.forward), 'Forward'),
+     iconBtn('mdi:skip-next', () => this._send(c.forward), 'Next')]
+    .forEach(b => { b.style.flex='1'; b.style.borderRadius='14px'; b.style.height='52px'; row.appendChild(b); });
+    wrap.appendChild(row); return wrap;
   }
 
   _buildVolume() {
@@ -410,8 +399,7 @@ class EasyTVCard extends HTMLElement {
      iconBtn('mdi:volume-medium', () => this._send(c.volume_down), 'Vol -'),
      iconBtn('mdi:volume-high', () => this._send(c.volume_up), 'Vol +')]
     .forEach(b => { b.style.flex='1'; b.style.borderRadius='14px'; b.style.height='52px'; row.appendChild(b); });
-    wrap.appendChild(row);
-    return wrap;
+    wrap.appendChild(row); return wrap;
   }
 
   _buildNumpad() {
@@ -422,8 +410,7 @@ class EasyTVCard extends HTMLElement {
       btn.style.borderRadius = '14px'; btn.style.height = '52px'; btn.style.width = 'auto';
       grid.appendChild(btn);
     });
-    wrap.appendChild(grid);
-    return wrap;
+    wrap.appendChild(grid); return wrap;
   }
 
   _buildAppShortcuts() {
@@ -437,8 +424,7 @@ class EasyTVCard extends HTMLElement {
       btn.addEventListener('click', (e) => { e.stopPropagation(); this._send(app.cmd); });
       grid.appendChild(btn);
     });
-    wrap.appendChild(grid);
-    return wrap;
+    wrap.appendChild(grid); return wrap;
   }
 
   _mountOverlay() {
@@ -506,109 +492,144 @@ class EasyTVCard extends HTMLElement {
   getCardSize() { return this._config?.compact_rows || 2; }
 }
 
+// Helper to build a labelled native input field
+function editorField(labelText, inputEl) {
+  const wrap = document.createElement('div'); wrap.className = 'field-wrap';
+  const lbl = document.createElement('label'); lbl.textContent = labelText;
+  wrap.appendChild(lbl); wrap.appendChild(inputEl);
+  return wrap;
+}
+
+function editorInput(value, placeholder) {
+  const el = document.createElement('input');
+  el.className = 'etv-input'; el.type = 'text';
+  el.value = value || ''; el.placeholder = placeholder || '';
+  return el;
+}
+
+function editorSelect(options, currentValue) {
+  const el = document.createElement('select'); el.className = 'etv-select';
+  options.forEach(([val, label]) => {
+    const o = document.createElement('option'); o.value = val; o.textContent = label;
+    if (val === currentValue) o.selected = true;
+    el.appendChild(o);
+  });
+  return el;
+}
+
+function editorRow(labelText, switchEl) {
+  const row = document.createElement('div'); row.className = 'row';
+  const lbl = document.createElement('label'); lbl.textContent = labelText;
+  row.appendChild(lbl); row.appendChild(switchEl);
+  return row;
+}
+
+function editorSwitch(checked) {
+  const el = document.createElement('ha-switch');
+  if (checked) el.setAttribute('checked', '');
+  return el;
+}
+
+function editorH3(text) {
+  const h = document.createElement('h3'); h.textContent = text; return h;
+}
+
 class EasyTVCardEditor extends HTMLElement {
   constructor() { super(); this.attachShadow({ mode: 'open' }); }
-  set hass(hass) { this._hass = hass; }
+  set hass(hass) { this._hass = hass; this._updatePickers(); }
   setConfig(config) { this._config = config; this._render(); }
   _fire(config) { this.dispatchEvent(new CustomEvent('config-changed', { detail: { config }, bubbles: true, composed: true })); }
   _set(key, value) { this._fire({ ...this._config, [key]: value }); }
   _setSection(key, value) { this._fire({ ...this._config, sections: { ...this._config.sections, [key]: value } }); }
 
+  _updatePickers() {
+    if (!this._hass || !this.shadowRoot) return;
+    const rp = this.shadowRoot.querySelector('#etv-remote');
+    const ap = this.shadowRoot.querySelector('#etv-appselect');
+    if (rp) rp.hass = this._hass;
+    if (ap) ap.hass = this._hass;
+  }
+
   _render() {
     if (!this._config) return;
     const c = this._config; const s = c.sections || {};
     const root = this.shadowRoot;
+    root.innerHTML = '';
 
-    root.innerHTML = `
-      <style>${EDITOR_STYLES}</style>
-      <div class="editor">
-        <h3>General</h3>
-        <ha-textfield id="etv-name" label="Card Title (e.g. My TV)"></ha-textfield>
-        <ha-textfield id="etv-icon" label="Icon (e.g. mdi:television)"></ha-textfield>
-        <h3>Entities</h3>
-        <ha-entity-picker id="etv-remote" label="Remote Entity (required)"></ha-entity-picker>
-        <ha-entity-picker id="etv-appselect" label="App Select Entity (Roku)"></ha-entity-picker>
-        <h3>TV Preset</h3>
-        <ha-select id="etv-preset" label="TV Preset">
-          <mwc-list-item value="roku">Roku</mwc-list-item>
-          <mwc-list-item value="google_tv">Google TV</mwc-list-item>
-          <mwc-list-item value="samsung">Samsung</mwc-list-item>
-          <mwc-list-item value="generic">Generic</mwc-list-item>
-        </ha-select>
-        <h3>Behaviour</h3>
-        <ha-select id="etv-expandmode" label="Expand Mode">
-          <mwc-list-item value="inline">Inline Expand</mwc-list-item>
-          <mwc-list-item value="popup">Popup (Bubble Card)</mwc-list-item>
-        </ha-select>
-        <ha-textfield id="etv-popuphash" label="Popup Hash (e.g. #MyTV-PopUp)"></ha-textfield>
-        <h3>Sections</h3>
-        <ha-formfield label="Controls (Power/Source/Menu)"><ha-switch id="etv-s-utility" ${s.utility!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-formfield label="D-Pad Navigation"><ha-switch id="etv-s-dpad" ${s.dpad!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-formfield label="Playback Controls"><ha-switch id="etv-s-playback" ${s.playback!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-formfield label="Volume Controls"><ha-switch id="etv-s-volume" ${s.volume!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-formfield label="App Shortcuts Grid"><ha-switch id="etv-s-appshortcuts" ${s.app_shortcuts!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-formfield label="App Selector Dropdown (Roku)"><ha-switch id="etv-s-appselector" ${s.app_selector!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-formfield label="Number Pad (0-9)"><ha-switch id="etv-s-numpad" ${s.numpad?'checked':''}></ha-switch></ha-formfield>
-        <h3>Appearance</h3>
-        <ha-formfield label="Show Name"><ha-switch id="etv-showname" ${c.show_name!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-select id="etv-overlaytheme" label="Overlay Theme">
-          <mwc-list-item value="dark">Dark (blur)</mwc-list-item>
-          <mwc-list-item value="light">Light (blur)</mwc-list-item>
-        </ha-select>
-      </div>
-    `;
+    const style = document.createElement('style'); style.textContent = EDITOR_STYLES; root.appendChild(style);
+    const editor = document.createElement('div'); editor.className = 'editor';
 
-    // Wire up entity pickers immediately (they handle their own upgrade)
-    const remotePicker = root.querySelector('#etv-remote');
-    remotePicker.hass = this._hass;
+    // --- General ---
+    editor.appendChild(editorH3('General'));
+    const nameEl = editorInput(c.name, 'e.g. My TV');
+    nameEl.addEventListener('change', e => this._set('name', e.target.value));
+    editor.appendChild(editorField('Card Title', nameEl));
+
+    const iconEl = editorInput(c.icon, 'e.g. mdi:television');
+    iconEl.addEventListener('change', e => this._set('icon', e.target.value));
+    editor.appendChild(editorField('Icon', iconEl));
+
+    // --- Entities ---
+    editor.appendChild(editorH3('Entities'));
+    const remotePicker = document.createElement('ha-entity-picker');
+    remotePicker.id = 'etv-remote';
+    remotePicker.setAttribute('label', 'Remote Entity (required)');
+    if (this._hass) remotePicker.hass = this._hass;
     remotePicker.value = c.remote_entity || '';
     remotePicker.addEventListener('value-changed', e => this._set('remote_entity', e.detail.value));
+    editor.appendChild(editorField('Remote Entity (required)', remotePicker));
 
-    const appPicker = root.querySelector('#etv-appselect');
-    appPicker.hass = this._hass;
+    const appPicker = document.createElement('ha-entity-picker');
+    appPicker.id = 'etv-appselect';
+    appPicker.setAttribute('label', 'App Select Entity');
+    if (this._hass) appPicker.hass = this._hass;
     appPicker.value = c.app_select_entity || '';
     appPicker.addEventListener('value-changed', e => this._set('app_select_entity', e.detail.value));
+    editor.appendChild(editorField('App Select Entity (Roku)', appPicker));
 
-    // Defer ha-textfield and ha-select value assignment until after custom element upgrade
-    setTimeout(() => {
-      const nameEl = root.querySelector('#etv-name');
-      nameEl.value = c.name || '';
-      nameEl.addEventListener('change', e => this._set('name', e.target.value));
+    // --- TV Preset ---
+    editor.appendChild(editorH3('TV Preset'));
+    const presetEl = editorSelect([['roku','Roku'],['google_tv','Google TV'],['samsung','Samsung'],['generic','Generic']], c.tv_preset || 'roku');
+    presetEl.addEventListener('change', e => this._set('tv_preset', e.target.value));
+    editor.appendChild(editorField('TV Preset', presetEl));
 
-      const iconEl = root.querySelector('#etv-icon');
-      iconEl.value = c.icon || '';
-      iconEl.addEventListener('change', e => this._set('icon', e.target.value));
+    // --- Behaviour ---
+    editor.appendChild(editorH3('Behaviour'));
+    const expandEl = editorSelect([['inline','Inline Expand'],['popup','Popup (Bubble Card)']], c.expand_mode || 'inline');
+    expandEl.addEventListener('change', e => this._set('expand_mode', e.target.value));
+    editor.appendChild(editorField('Expand Mode', expandEl));
 
-      const hashEl = root.querySelector('#etv-popuphash');
-      hashEl.value = c.popup_hash || '';
-      hashEl.addEventListener('change', e => this._set('popup_hash', e.target.value));
+    const hashEl = editorInput(c.popup_hash, 'e.g. #MyTV-PopUp');
+    hashEl.addEventListener('change', e => this._set('popup_hash', e.target.value));
+    editor.appendChild(editorField('Popup Hash', hashEl));
 
-      // ha-select: set value and listen for value-changed (fires AFTER value updates, unlike 'selected')
-      const presetEl = root.querySelector('#etv-preset');
-      presetEl.value = c.tv_preset || 'roku';
-      presetEl.addEventListener('value-changed', e => { e.stopPropagation(); this._set('tv_preset', e.detail.value); });
-      presetEl.addEventListener('closed', e => e.stopPropagation());
+    // --- Sections ---
+    editor.appendChild(editorH3('Sections'));
+    [
+      ['Controls (Power/Source/Menu)', 'utility', s.utility !== false],
+      ['D-Pad Navigation', 'dpad', s.dpad !== false],
+      ['Playback Controls', 'playback', s.playback !== false],
+      ['Volume Controls', 'volume', s.volume !== false],
+      ['App Shortcuts Grid', 'app_shortcuts', s.app_shortcuts !== false],
+      ['App Selector Dropdown (Roku)', 'app_selector', s.app_selector !== false],
+      ['Number Pad (0-9)', 'numpad', !!s.numpad],
+    ].forEach(([label, key, checked]) => {
+      const sw = editorSwitch(checked);
+      sw.addEventListener('change', e => this._setSection(key, e.target.checked));
+      editor.appendChild(editorRow(label, sw));
+    });
 
-      const expandEl = root.querySelector('#etv-expandmode');
-      expandEl.value = c.expand_mode || 'inline';
-      expandEl.addEventListener('value-changed', e => { e.stopPropagation(); this._set('expand_mode', e.detail.value); });
-      expandEl.addEventListener('closed', e => e.stopPropagation());
+    // --- Appearance ---
+    editor.appendChild(editorH3('Appearance'));
+    const showNameSw = editorSwitch(c.show_name !== false);
+    showNameSw.addEventListener('change', e => this._set('show_name', e.target.checked));
+    editor.appendChild(editorRow('Show Name', showNameSw));
 
-      const themeEl = root.querySelector('#etv-overlaytheme');
-      themeEl.value = c.overlay_theme || 'dark';
-      themeEl.addEventListener('value-changed', e => { e.stopPropagation(); this._set('overlay_theme', e.detail.value); });
-      themeEl.addEventListener('closed', e => e.stopPropagation());
-    }, 0);
+    const themeEl = editorSelect([['dark','Dark (blur)'],['light','Light (blur)']], c.overlay_theme || 'dark');
+    themeEl.addEventListener('change', e => this._set('overlay_theme', e.target.value));
+    editor.appendChild(editorField('Overlay Theme', themeEl));
 
-    // Switches — wired immediately, they are native-like and don't need deferral
-    root.querySelector('#etv-s-utility').addEventListener('change', e => this._setSection('utility', e.target.checked));
-    root.querySelector('#etv-s-dpad').addEventListener('change', e => this._setSection('dpad', e.target.checked));
-    root.querySelector('#etv-s-playback').addEventListener('change', e => this._setSection('playback', e.target.checked));
-    root.querySelector('#etv-s-volume').addEventListener('change', e => this._setSection('volume', e.target.checked));
-    root.querySelector('#etv-s-appshortcuts').addEventListener('change', e => this._setSection('app_shortcuts', e.target.checked));
-    root.querySelector('#etv-s-appselector').addEventListener('change', e => this._setSection('app_selector', e.target.checked));
-    root.querySelector('#etv-s-numpad').addEventListener('change', e => this._setSection('numpad', e.target.checked));
-    root.querySelector('#etv-showname').addEventListener('change', e => this._set('show_name', e.target.checked));
+    root.appendChild(editor);
   }
 }
 
