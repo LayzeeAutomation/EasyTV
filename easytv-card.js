@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.3
+// EasyTV Card v0.4.4
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.3';
+const CARD_VERSION = '0.4.4';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -22,6 +22,8 @@ const SECTION_LABELS = {
   app_shortcuts: 'Apps',
   numpad: 'Channel / Number',
 };
+
+const VALID_WIDTHS = ['quarter', 'half', 'three-quarter', 'full'];
 
 const QUICK_ACTION_DEFS = {
   volume_down:  { icon: 'mdi:volume-minus', title: 'Vol −', cmd: (c) => c.volume_down },
@@ -180,8 +182,10 @@ const OVERLAY_STYLES = `
     gap: 8px; padding: 16px 16px 48px; flex:1; width: 100%; box-sizing: border-box;
   }
   #easytv-overlay .overlay-section { min-width: 0; box-sizing: border-box; }
-  #easytv-overlay .overlay-section.width-full { width: 100%; }
-  #easytv-overlay .overlay-section.width-half { width: calc(50% - 4px); }
+  #easytv-overlay .overlay-section.width-full         { width: 100%; }
+  #easytv-overlay .overlay-section.width-half         { width: calc(50% - 4px); }
+  #easytv-overlay .overlay-section.width-three-quarter { width: calc(75% - 4px); }
+  #easytv-overlay .overlay-section.width-quarter      { width: calc(25% - 4px); }
   #easytv-overlay .etv-section {
     display: flex; flex-direction: column; gap: 6px;
     border-radius: 16px; padding: 12px; width: 100%; box-sizing: border-box;
@@ -193,7 +197,10 @@ const OVERLAY_STYLES = `
   #easytv-overlay .power-only-row .icon-btn { height: 56px; }
   #easytv-overlay .dpad-center-row .icon-btn.select-btn { flex: 1.4; height: 64px; }
   #easytv-overlay .dpad-center-row .icon-btn.select-btn ha-icon { --mdc-icon-size: 30px; }
-  #easytv-overlay .dpad-up-row .icon-btn, #easytv-overlay .dpad-down-row .icon-btn { height: 52px; }
+  #easytv-overlay .dpad-up-row,
+  #easytv-overlay .dpad-down-row { justify-content: center; }
+  #easytv-overlay .dpad-up-row .icon-btn,
+  #easytv-overlay .dpad-down-row .icon-btn { flex: none; width: 52px; height: 52px; border-radius: 14px; }
   #easytv-overlay .icon-btn {
     cursor:pointer; border-radius: 50%; width:62px; height:62px;
     display:flex; align-items:center; justify-content:center;
@@ -220,7 +227,9 @@ const OVERLAY_STYLES = `
   }
   #easytv-overlay .app-select-native:focus { outline: none; }
   @media (max-width: 600px) {
-    #easytv-overlay .overlay-section.width-half { width: 100%; }
+    #easytv-overlay .overlay-section.width-half,
+    #easytv-overlay .overlay-section.width-three-quarter,
+    #easytv-overlay .overlay-section.width-quarter { width: 100%; }
   }
 `;
 
@@ -272,7 +281,7 @@ const EDITOR_STYLES = `
   }
   .section-handle { cursor: grab; }
   .section-name { font-size: 14px; color: var(--primary-text-color, #fff); }
-  .section-width { min-width: 86px; }
+  .section-width { min-width: 110px; }
   .editor-note {
     font-size: 12px; line-height: 1.45;
     color: var(--secondary-text-color, rgba(255,255,255,0.6));
@@ -316,10 +325,14 @@ function sectionWrap(labelText) {
   return wrap;
 }
 
+function normalizeWidth(w) {
+  return VALID_WIDTHS.includes(w) ? w : 'full';
+}
+
 function buildDefaultSectionLayout() {
   return [
-    { id: 'power', enabled: true, width: 'half' },
-    { id: 'app_selector', enabled: true, width: 'half' },
+    { id: 'power', enabled: true, width: 'quarter' },
+    { id: 'app_selector', enabled: true, width: 'three-quarter' },
     { id: 'utility', enabled: true, width: 'full' },
     { id: 'dpad', enabled: true, width: 'full' },
     { id: 'playback', enabled: true, width: 'full' },
@@ -334,14 +347,18 @@ function normalizeSections(sections) {
     const map = new Map();
     sections.forEach((s) => {
       if (!s || !s.id) return;
-      map.set(s.id, { id: s.id, enabled: s.enabled !== false, width: s.width === 'half' ? 'half' : 'full' });
+      map.set(s.id, { id: s.id, enabled: s.enabled !== false, width: normalizeWidth(s.width) });
     });
-    return SECTION_ORDER.map((id) => map.get(id) || { id, enabled: id === 'numpad' ? false : true, width: (id === 'power' || id === 'app_selector') ? 'half' : 'full' });
+    return SECTION_ORDER.map((id) => map.get(id) || {
+      id,
+      enabled: id !== 'numpad',
+      width: (id === 'power') ? 'quarter' : (id === 'app_selector') ? 'three-quarter' : 'full',
+    });
   }
   const legacy = { ...LEGACY_DEFAULT_SECTIONS, ...(sections || {}) };
   return [
-    { id: 'power', enabled: legacy.power !== false, width: 'half' },
-    { id: 'app_selector', enabled: legacy.app_selector !== false, width: 'half' },
+    { id: 'power', enabled: legacy.power !== false, width: 'quarter' },
+    { id: 'app_selector', enabled: legacy.app_selector !== false, width: 'three-quarter' },
     { id: 'utility', enabled: legacy.utility !== false, width: 'full' },
     { id: 'dpad', enabled: legacy.dpad !== false, width: 'full' },
     { id: 'playback', enabled: legacy.playback !== false, width: 'full' },
@@ -644,11 +661,13 @@ class EasyTVCard extends HTMLElement {
   _buildDpad() {
     const c = this._commands;
     const wrap = sectionWrap('Navigation');
+
+    // Up — centred, fixed size, does not stretch
     const upRow = document.createElement('div');
     upRow.className = 'btn-row dpad-up-row';
-    const upBtn = iconBtn('mdi:arrow-up-bold', () => this._send(c.up), 'Up');
-    upBtn.style.flex = '1'; upBtn.style.borderRadius = '14px'; upBtn.style.height = '52px';
-    upRow.appendChild(upBtn);
+    upRow.appendChild(iconBtn('mdi:arrow-up-bold', () => this._send(c.up), 'Up'));
+
+    // Middle row — left / select / right
     const midRow = document.createElement('div');
     midRow.className = 'btn-row dpad-center-row';
     const leftBtn  = iconBtn('mdi:arrow-left-bold',  () => this._send(c.left),   'Left');
@@ -657,14 +676,25 @@ class EasyTVCard extends HTMLElement {
     [leftBtn, selBtn, rightBtn].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '64px'; });
     selBtn.style.flex = '1.4';
     midRow.appendChild(leftBtn); midRow.appendChild(selBtn); midRow.appendChild(rightBtn);
+
+    // Bottom row — back / down / home
     const botRow = document.createElement('div');
     botRow.className = 'btn-row dpad-down-row';
-    const backBtn = iconBtn('mdi:arrow-left',       () => this._send(c.back), 'Back');
-    const downBtn = iconBtn('mdi:arrow-down-bold',  () => this._send(c.down), 'Down');
-    const homeBtn = iconBtn('mdi:home-outline',     () => this._send(c.home), 'Home');
-    [backBtn, downBtn, homeBtn].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '52px'; });
-    botRow.appendChild(backBtn); botRow.appendChild(downBtn); botRow.appendChild(homeBtn);
-    wrap.appendChild(upRow); wrap.appendChild(midRow); wrap.appendChild(botRow);
+    botRow.appendChild(iconBtn('mdi:arrow-down-bold', () => this._send(c.down), 'Down'));
+
+    // Extra row — back and home flanking down
+    const extraRow = document.createElement('div');
+    extraRow.className = 'btn-row';
+    const backBtn = iconBtn('mdi:arrow-left',   () => this._send(c.back), 'Back');
+    const homeBtn = iconBtn('mdi:home-outline', () => this._send(c.home), 'Home');
+    [backBtn, homeBtn].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '52px'; });
+    extraRow.appendChild(backBtn);
+    extraRow.appendChild(homeBtn);
+
+    wrap.appendChild(upRow);
+    wrap.appendChild(midRow);
+    wrap.appendChild(botRow);
+    wrap.appendChild(extraRow);
     return wrap;
   }
 
@@ -786,7 +816,7 @@ class EasyTVCard extends HTMLElement {
       const content = this._buildSectionById(section.id);
       if (!content) return;
       const container = document.createElement('div');
-      container.className = `overlay-section width-${section.width === 'half' ? 'half' : 'full'}`;
+      container.className = `overlay-section width-${normalizeWidth(section.width)}`;
       container.appendChild(content);
       body.appendChild(container);
     });
@@ -885,7 +915,7 @@ class EasyTVCardEditor extends HTMLElement {
     parent.appendChild(editorH3('Layout'));
     const note = document.createElement('div');
     note.className = 'editor-note';
-    note.textContent = 'Reorder sections, toggle them on or off, and choose full or half width.';
+    note.textContent = 'Reorder sections and set widths. Use ¼ + ¾ or ½ + ½ pairs to place sections side by side.';
     parent.appendChild(note);
     const list = document.createElement('div');
     list.className = 'section-list';
@@ -901,7 +931,11 @@ class EasyTVCardEditor extends HTMLElement {
       name.textContent = SECTION_LABELS[section.id] || section.id;
       const sw = editorSwitch(section.enabled !== false);
       sw.addEventListener('change', e => this._updateSection(index, { enabled: e.target.checked }));
-      const width = editorSelect([['full','Full'],['half','Half']], section.width || 'full', 'etv-select section-width');
+      const width = editorSelect(
+        [['full','Full'],['three-quarter','¾'],['half','½'],['quarter','¼']],
+        normalizeWidth(section.width),
+        'etv-select section-width'
+      );
       width.addEventListener('change', e => this._updateSection(index, { width: e.target.value }));
       const moves = document.createElement('div');
       moves.style.cssText = 'display:flex;gap:4px;';
