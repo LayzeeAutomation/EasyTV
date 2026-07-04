@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.10
+// EasyTV Card v0.4.11
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.10';
+const CARD_VERSION = '0.4.11';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -192,7 +192,7 @@ const OVERLAY_STYLES = `
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: var(--etv-gap, 8px);
-    padding: 8px 12px 48px;
+    padding: 4px 12px 32px;
     flex: 1; width: 100%; box-sizing: border-box;
     align-items: start;
   }
@@ -202,18 +202,19 @@ const OVERLAY_STYLES = `
   #easytv-overlay .overlay-section.width-half          { grid-column: span 2; }
   #easytv-overlay .overlay-section.width-quarter       { grid-column: span 1; }
 
+  /* Section wrapper — minimal padding so sections sit snug */
   #easytv-overlay .etv-section {
     display: flex; flex-direction: column; gap: 6px;
-    border-radius: 16px; padding: 12px; width: 100%; box-sizing: border-box;
+    border-radius: 16px; padding: 8px; width: 100%; box-sizing: border-box;
   }
   #easytv-overlay .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; padding: 0 2px 4px; }
 
   /* \u2500\u2500 Generic btn-row \u2500\u2500 */
-  #easytv-overlay .btn-row { display: flex; align-items: center; gap: 8px; width: 100%; }
+  #easytv-overlay .btn-row { display: flex; align-items: center; gap: 6px; width: 100%; }
   #easytv-overlay .btn-row .icon-btn { flex: 1; border-radius: 14px; height: 52px; width: auto; }
   #easytv-overlay .btn-row .icon-btn ha-icon { --mdc-icon-size: 24px; }
 
-  /* Power button fills its quarter-section height to match the app dropdown */
+  /* Power fills quarter-section height */
   #easytv-overlay .power-only-row { flex: 1; }
   #easytv-overlay .power-only-row .icon-btn {
     flex: 1 !important;
@@ -224,11 +225,8 @@ const OVERLAY_STYLES = `
   }
 
   /* \u2500\u2500 D-pad 3\u00d73 grid \u2500\u2500
-     Fixed 52px rows — same height as all other button rows.
-     No aspect-ratio so it doesn't blow up to screen width.
-       row1: empty  up     empty
-       row2: left   select right
-       row3: back   down   home                                   */
+     Fixed 52px rows. Select cell uses place-self:center + explicit
+     52\u00d752px so border-radius:50% always produces a true circle.      */
   #easytv-overlay .dpad-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -236,6 +234,7 @@ const OVERLAY_STYLES = `
     gap: 6px;
     width: 100%;
   }
+  /* All dpad buttons fill their cell */
   #easytv-overlay .dpad-grid .icon-btn {
     width: 100% !important;
     height: 100% !important;
@@ -244,9 +243,15 @@ const OVERLAY_STYLES = `
     padding: 0 !important;
   }
   #easytv-overlay .dpad-grid .icon-btn ha-icon { --mdc-icon-size: 24px; }
+
+  /* Select: fixed square centred in its cell so 50% radius = true circle */
   #easytv-overlay .dpad-grid .icon-btn.select-btn {
+    width: 52px !important;
+    height: 52px !important;
     border-radius: 50% !important;
+    place-self: center;
   }
+
   #easytv-overlay .dpad-grid .dpad-empty {
     background: transparent;
     border: none;
@@ -1068,7 +1073,6 @@ class EasyTVCardEditor extends HTMLElement {
     const editor = document.createElement('div');
     editor.className = 'editor';
 
-    // \u2500\u2500 Global Settings \u2500\u2500
     const globalPanel = editorPanel('Global Settings', 'Core entities and command mapping shared by both the small card and the pop-out remote.');
     globalPanel.appendChild(editorH3('Identity'));
     const nameEl = editorInput(c.name, 'e.g. My TV');
@@ -1109,7 +1113,6 @@ class EasyTVCardEditor extends HTMLElement {
     globalPanel.appendChild(editorField('card_mod CSS', cssEl));
     editor.appendChild(globalPanel);
 
-    // \u2500\u2500 Card Settings \u2500\u2500
     const cardPanel = editorPanel('Card Settings', 'Controls the small always-visible card.');
     cardPanel.appendChild(editorH3('Appearance'));
     const modeEl = editorSelect([['single','Single row'],['double','Double row']], c.compact_mode || 'single');
@@ -1127,7 +1130,6 @@ class EasyTVCardEditor extends HTMLElement {
     this._renderQAEditor(cardPanel);
     editor.appendChild(cardPanel);
 
-    // \u2500\u2500 Pop Out Settings \u2500\u2500
     const popoutPanel = editorPanel('Pop Out Settings', 'Controls the fullscreen remote overlay.');
     popoutPanel.appendChild(editorH3('Appearance'));
     const themeEl = editorSelect([['dark','Dark (blur)'],['light','Light (blur)']], c.overlay_theme || 'dark');
