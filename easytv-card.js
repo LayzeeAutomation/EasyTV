@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.12
+// EasyTV Card v0.4.13
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.12';
+const CARD_VERSION = '0.4.13';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -317,7 +317,7 @@ const EDITOR_STYLES = `
   .row label { font-size: 14px; color: var(--primary-text-color, #fff); }
   .section-list, .qa-list { display: flex; flex-direction: column; gap: 6px; }
 
-  /* ── Section accordion item ── */
+  /* \u2500\u2500 Section accordion item \u2500\u2500 */
   .section-item {
     border-radius: 10px;
     background: var(--secondary-background-color, #2a2a2a);
@@ -1004,7 +1004,6 @@ class EasyTVCardEditor extends HTMLElement {
 
   _updateSection(index, patch) {
     let next = this._config.sections.map((item, i) => i === index ? { ...item, ...patch } : item);
-    // Auto-sort: enabled → top, disabled → bottom (stable within each group)
     if ('enabled' in patch) next = autoSortSections(next);
     this._setSections(next);
   }
@@ -1048,8 +1047,11 @@ class EasyTVCardEditor extends HTMLElement {
 
       const item = document.createElement('div');
       item.className = 'section-item' + (enabled ? '' : ' disabled');
+      // Store the current index as a data attribute so click handlers always
+      // read the live position rather than closing over a stale value.
+      item.dataset.sectionIndex = String(index);
 
-      // ── Row 1: handle · name · toggle ──
+      // \u2500\u2500 Row 1: handle \u00b7 name \u00b7 toggle \u2500\u2500
       const row1 = document.createElement('div');
       row1.className = 'section-row1';
 
@@ -1064,7 +1066,8 @@ class EasyTVCardEditor extends HTMLElement {
 
       const sw = editorSwitch(enabled);
       sw.addEventListener('change', e => {
-        this._updateSection(index, { enabled: e.target.checked });
+        const currentIndex = parseInt(e.target.closest('.section-item').dataset.sectionIndex, 10);
+        this._updateSection(currentIndex, { enabled: e.target.checked });
       });
 
       row1.appendChild(handle);
@@ -1072,7 +1075,7 @@ class EasyTVCardEditor extends HTMLElement {
       row1.appendChild(sw);
       item.appendChild(row1);
 
-      // ── Row 2: width · ↑ · ↓  (only when enabled) ──
+      // \u2500\u2500 Row 2: width \u00b7 \u2191 \u00b7 \u2193  (only when enabled) \u2500\u2500
       const row2 = document.createElement('div');
       row2.className = 'section-row2' + (enabled ? ' open' : '');
 
@@ -1084,15 +1087,24 @@ class EasyTVCardEditor extends HTMLElement {
         if (val === normalizeWidth(section.width)) o.selected = true;
         widthSel.appendChild(o);
       });
-      widthSel.addEventListener('change', e => this._updateSection(index, { width: e.target.value }));
+      widthSel.addEventListener('change', e => {
+        const currentIndex = parseInt(e.target.closest('.section-item').dataset.sectionIndex, 10);
+        this._updateSection(currentIndex, { width: e.target.value });
+      });
 
       const upBtn = document.createElement('button');
       upBtn.className = 'section-move'; upBtn.textContent = '\u2191'; upBtn.title = 'Move up';
-      upBtn.addEventListener('click', () => this._moveSection(index, -1));
+      upBtn.addEventListener('click', e => {
+        const currentIndex = parseInt(e.target.closest('.section-item').dataset.sectionIndex, 10);
+        this._moveSection(currentIndex, -1);
+      });
 
       const dnBtn = document.createElement('button');
       dnBtn.className = 'section-move'; dnBtn.textContent = '\u2193'; dnBtn.title = 'Move down';
-      dnBtn.addEventListener('click', () => this._moveSection(index, 1));
+      dnBtn.addEventListener('click', e => {
+        const currentIndex = parseInt(e.target.closest('.section-item').dataset.sectionIndex, 10);
+        this._moveSection(currentIndex, 1);
+      });
 
       row2.appendChild(widthSel);
       row2.appendChild(upBtn);
@@ -1121,6 +1133,7 @@ class EasyTVCardEditor extends HTMLElement {
       if (!def) return;
       const item = document.createElement('div');
       item.className = 'qa-item';
+      item.dataset.qaIndex = String(index);
       const handle = document.createElement('button');
       handle.className = 'section-handle'; handle.textContent = '\u283f';
       const name = document.createElement('div');
@@ -1129,13 +1142,22 @@ class EasyTVCardEditor extends HTMLElement {
       moves.style.cssText = 'display:flex;gap:4px;';
       const up = document.createElement('button');
       up.className = 'section-move'; up.textContent = '\u2191';
-      up.addEventListener('click', () => this._moveQA(index, -1));
+      up.addEventListener('click', e => {
+        const i = parseInt(e.target.closest('.qa-item').dataset.qaIndex, 10);
+        this._moveQA(i, -1);
+      });
       const dn = document.createElement('button');
       dn.className = 'section-move'; dn.textContent = '\u2193';
-      dn.addEventListener('click', () => this._moveQA(index, 1));
+      dn.addEventListener('click', e => {
+        const i = parseInt(e.target.closest('.qa-item').dataset.qaIndex, 10);
+        this._moveQA(i, 1);
+      });
       const rm = document.createElement('button');
       rm.className = 'section-move'; rm.textContent = '\u2715'; rm.style.color = '#e74c3c';
-      rm.addEventListener('click', () => this._removeQA(index));
+      rm.addEventListener('click', e => {
+        const i = parseInt(e.target.closest('.qa-item').dataset.qaIndex, 10);
+        this._removeQA(i);
+      });
       moves.appendChild(up); moves.appendChild(dn); moves.appendChild(rm);
       item.appendChild(handle); item.appendChild(name); item.appendChild(moves);
       list.appendChild(item);
