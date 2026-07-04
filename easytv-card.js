@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.11
+// EasyTV Card v0.4.12
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.11';
+const CARD_VERSION = '0.4.12';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -202,7 +202,6 @@ const OVERLAY_STYLES = `
   #easytv-overlay .overlay-section.width-half          { grid-column: span 2; }
   #easytv-overlay .overlay-section.width-quarter       { grid-column: span 1; }
 
-  /* Section wrapper — minimal padding so sections sit snug */
   #easytv-overlay .etv-section {
     display: flex; flex-direction: column; gap: 6px;
     border-radius: 16px; padding: 8px; width: 100%; box-sizing: border-box;
@@ -224,9 +223,7 @@ const OVERLAY_STYLES = `
     width: auto !important;
   }
 
-  /* \u2500\u2500 D-pad 3\u00d73 grid \u2500\u2500
-     Fixed 52px rows. Select cell uses place-self:center + explicit
-     52\u00d752px so border-radius:50% always produces a true circle.      */
+  /* \u2500\u2500 D-pad 3\u00d73 grid \u2500\u2500 */
   #easytv-overlay .dpad-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -234,7 +231,6 @@ const OVERLAY_STYLES = `
     gap: 6px;
     width: 100%;
   }
-  /* All dpad buttons fill their cell */
   #easytv-overlay .dpad-grid .icon-btn {
     width: 100% !important;
     height: 100% !important;
@@ -244,7 +240,6 @@ const OVERLAY_STYLES = `
   }
   #easytv-overlay .dpad-grid .icon-btn ha-icon { --mdc-icon-size: 24px; }
 
-  /* Select: fixed square centred in its cell so 50% radius = true circle */
   #easytv-overlay .dpad-grid .icon-btn.select-btn {
     width: 52px !important;
     height: 52px !important;
@@ -320,22 +315,73 @@ const EDITOR_STYLES = `
   ha-entity-picker { width: 100%; display: block; }
   .row { display: flex; justify-content: space-between; align-items: center; padding: 6px 2px; gap: 12px; }
   .row label { font-size: 14px; color: var(--primary-text-color, #fff); }
-  .section-list, .qa-list { display: flex; flex-direction: column; gap: 8px; }
-  .section-item, .qa-item {
+  .section-list, .qa-list { display: flex; flex-direction: column; gap: 6px; }
+
+  /* ── Section accordion item ── */
+  .section-item {
+    border-radius: 10px;
+    background: var(--secondary-background-color, #2a2a2a);
+    border: 1px solid var(--divider-color, rgba(255,255,255,0.15));
+    overflow: hidden;
+    transition: border-color 0.2s, opacity 0.2s;
+  }
+  .section-item.disabled { opacity: 0.5; }
+
+  /* Line 1: always visible */
+  .section-row1 {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 10px;
+    min-height: 44px;
+  }
+  .section-handle {
+    border: 0; background: transparent; color: var(--secondary-text-color, rgba(255,255,255,0.5));
+    font-size: 16px; cursor: grab; width: 24px; height: 24px; border-radius: 4px;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .section-name {
+    flex: 1; font-size: 14px; color: var(--primary-text-color, #fff);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* Line 2: only when enabled — accordion */
+  .section-row2 {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0 10px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.22s ease, padding 0.22s ease;
+  }
+  .section-row2.open {
+    max-height: 52px;
+    padding: 0 10px 10px;
+  }
+  .section-width {
+    flex: 1;
+    padding: 7px 10px; border-radius: 8px;
+    border: 1px solid var(--divider-color, rgba(255,255,255,0.15));
+    background: var(--ha-card-background, rgba(255,255,255,0.05));
+    color: var(--primary-text-color, #fff);
+    font-size: 13px; font-family: inherit;
+    appearance: none; -webkit-appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23888' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 8px center; padding-right: 26px;
+    outline: none;
+  }
+  .section-move {
+    border: 0; background: transparent; color: var(--secondary-text-color, rgba(255,255,255,0.6));
+    font-size: 16px; cursor: pointer; width: 30px; height: 30px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0;
+  }
+  .section-move:hover { background: rgba(255,255,255,0.08); }
+
+  .qa-item {
     display: grid; align-items: center;
+    grid-template-columns: 28px 1fr auto;
+    gap: 8px;
     padding: 10px 12px; border-radius: 10px;
     background: var(--secondary-background-color, #2a2a2a);
     border: 1px solid var(--divider-color, rgba(255,255,255,0.15));
   }
-  .section-item { grid-template-columns: 32px 1fr auto auto auto; gap: 8px; }
-  .qa-item { grid-template-columns: 32px 1fr auto; gap: 8px; }
-  .section-handle, .section-move {
-    border: 0; background: transparent; color: var(--secondary-text-color, rgba(255,255,255,0.6));
-    font-size: 18px; cursor: pointer; width: 28px; height: 28px; border-radius: 6px;
-  }
-  .section-handle { cursor: grab; }
-  .section-name { font-size: 14px; color: var(--primary-text-color, #fff); }
-  .section-width { min-width: 110px; }
   .editor-note {
     font-size: 12px; line-height: 1.45;
     color: var(--secondary-text-color, rgba(255,255,255,0.6));
@@ -420,6 +466,13 @@ function normalizeSections(sections) {
     { id: 'app_shortcuts',enabled: legacy.app_shortcuts !== false,width: 'full' },
     { id: 'numpad',       enabled: !!legacy.numpad,               width: 'full' },
   ];
+}
+
+/** Stable sort: enabled items first (preserving their relative order), disabled last */
+function autoSortSections(sections) {
+  const on  = sections.filter(s => s.enabled !== false);
+  const off = sections.filter(s => s.enabled === false);
+  return [...on, ...off];
 }
 
 function editorField(labelText, inputEl) {
@@ -950,7 +1003,9 @@ class EasyTVCardEditor extends HTMLElement {
   }
 
   _updateSection(index, patch) {
-    const next = this._config.sections.map((item, i) => i === index ? { ...item, ...patch } : item);
+    let next = this._config.sections.map((item, i) => i === index ? { ...item, ...patch } : item);
+    // Auto-sort: enabled → top, disabled → bottom (stable within each group)
+    if ('enabled' in patch) next = autoSortSections(next);
     this._setSections(next);
   }
 
@@ -982,40 +1037,71 @@ class EasyTVCardEditor extends HTMLElement {
     parent.appendChild(editorH3('Layout'));
     const note = document.createElement('div');
     note.className = 'editor-note';
-    note.textContent = 'Reorder sections and set widths. Use \u00bc + \u00be or \u00bd + \u00bd pairs to place sections side by side.';
+    note.textContent = 'Toggle sections on/off. When on, set width and order. Disabled sections sink to the bottom automatically.';
     parent.appendChild(note);
+
     const list = document.createElement('div');
     list.className = 'section-list';
+
     this._config.sections.forEach((section, index) => {
+      const enabled = section.enabled !== false;
+
       const item = document.createElement('div');
-      item.className = 'section-item';
+      item.className = 'section-item' + (enabled ? '' : ' disabled');
+
+      // ── Row 1: handle · name · toggle ──
+      const row1 = document.createElement('div');
+      row1.className = 'section-row1';
+
       const handle = document.createElement('button');
       handle.className = 'section-handle';
       handle.textContent = '\u283f';
-      handle.title = 'Drag handle';
-      const name = document.createElement('div');
-      name.className = 'section-name';
-      name.textContent = SECTION_LABELS[section.id] || section.id;
-      const sw = editorSwitch(section.enabled !== false);
-      sw.addEventListener('change', e => this._updateSection(index, { enabled: e.target.checked }));
-      const width = editorSelect(
-        [['full','Full'],['three-quarter','\u00be'],['half','\u00bd'],['quarter','\u00bc']],
-        normalizeWidth(section.width),
-        'etv-select section-width'
-      );
-      width.addEventListener('change', e => this._updateSection(index, { width: e.target.value }));
-      const moves = document.createElement('div');
-      moves.style.cssText = 'display:flex;gap:4px;';
-      const up = document.createElement('button');
-      up.className = 'section-move'; up.textContent = '\u2191';
-      up.addEventListener('click', () => this._moveSection(index, -1));
-      const dn = document.createElement('button');
-      dn.className = 'section-move'; dn.textContent = '\u2193';
-      dn.addEventListener('click', () => this._moveSection(index, 1));
-      moves.appendChild(up); moves.appendChild(dn);
-      item.appendChild(handle); item.appendChild(name); item.appendChild(sw); item.appendChild(width); item.appendChild(moves);
+      handle.title = 'Drag handle (coming soon)';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'section-name';
+      nameEl.textContent = SECTION_LABELS[section.id] || section.id;
+
+      const sw = editorSwitch(enabled);
+      sw.addEventListener('change', e => {
+        this._updateSection(index, { enabled: e.target.checked });
+      });
+
+      row1.appendChild(handle);
+      row1.appendChild(nameEl);
+      row1.appendChild(sw);
+      item.appendChild(row1);
+
+      // ── Row 2: width · ↑ · ↓  (only when enabled) ──
+      const row2 = document.createElement('div');
+      row2.className = 'section-row2' + (enabled ? ' open' : '');
+
+      const widthSel = document.createElement('select');
+      widthSel.className = 'section-width';
+      [['full','Full width'],['three-quarter','\u00be width'],['half','\u00bd width'],['quarter','\u00bc width']].forEach(([val, lbl]) => {
+        const o = document.createElement('option');
+        o.value = val; o.textContent = lbl;
+        if (val === normalizeWidth(section.width)) o.selected = true;
+        widthSel.appendChild(o);
+      });
+      widthSel.addEventListener('change', e => this._updateSection(index, { width: e.target.value }));
+
+      const upBtn = document.createElement('button');
+      upBtn.className = 'section-move'; upBtn.textContent = '\u2191'; upBtn.title = 'Move up';
+      upBtn.addEventListener('click', () => this._moveSection(index, -1));
+
+      const dnBtn = document.createElement('button');
+      dnBtn.className = 'section-move'; dnBtn.textContent = '\u2193'; dnBtn.title = 'Move down';
+      dnBtn.addEventListener('click', () => this._moveSection(index, 1));
+
+      row2.appendChild(widthSel);
+      row2.appendChild(upBtn);
+      row2.appendChild(dnBtn);
+      item.appendChild(row2);
+
       list.appendChild(item);
     });
+
     parent.appendChild(list);
   }
 
