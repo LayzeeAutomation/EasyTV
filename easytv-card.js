@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.1
+// EasyTV Card v0.4.2
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.1';
+const CARD_VERSION = '0.4.2';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -24,34 +24,34 @@ const SECTION_LABELS = {
 };
 
 const QUICK_ACTION_DEFS = {
-  volume_down:  { icon: 'mdi:volume-minus',      title: 'Vol −',      cmd: (c) => c.volume_down },
-  volume_up:    { icon: 'mdi:volume-plus',        title: 'Vol +',      cmd: (c) => c.volume_up },
-  volume_mute:  { icon: 'mdi:volume-off',         title: 'Mute',       cmd: (c) => c.volume_mute },
-  play_pause:   { icon: 'mdi:play-pause',         title: 'Play/Pause', cmd: (c) => c.play },
-  power:        { icon: 'mdi:power',              title: 'Power',      cmd: (c) => c.power || 'power' },
-  back:         { icon: 'mdi:arrow-left',         title: 'Back',       cmd: (c) => c.back },
-  home:         { icon: 'mdi:home-outline',       title: 'Home',       cmd: (c) => c.home },
-  source:       { icon: 'mdi:import',             title: 'Source',     cmd: (c) => c.source || 'input_av1' },
-  forward:      { icon: 'mdi:fast-forward',       title: 'Forward',    cmd: (c) => c.forward },
-  rewind:       { icon: 'mdi:rewind',             title: 'Rewind',     cmd: (c) => c.reverse },
+  volume_down:  { icon: 'mdi:volume-minus', title: 'Vol −', cmd: (c) => c.volume_down },
+  volume_up:    { icon: 'mdi:volume-plus', title: 'Vol +', cmd: (c) => c.volume_up },
+  volume_mute:  { icon: 'mdi:volume-off', title: 'Mute', cmd: (c) => c.volume_mute },
+  play_pause:   { icon: 'mdi:play-pause', title: 'Play/Pause', cmd: (c) => c.play },
+  power:        { icon: 'mdi:power', title: 'Power', cmd: (c) => c.power || 'power' },
+  back:         { icon: 'mdi:arrow-left', title: 'Back', cmd: (c) => c.back },
+  home:         { icon: 'mdi:home-outline', title: 'Home', cmd: (c) => c.home },
+  source:       { icon: 'mdi:import', title: 'Source', cmd: (c) => c.source || 'input_av1' },
+  forward:      { icon: 'mdi:fast-forward', title: 'Forward', cmd: (c) => c.forward },
+  rewind:       { icon: 'mdi:rewind', title: 'Rewind', cmd: (c) => c.reverse },
 };
 
 const DEFAULT_QUICK_SINGLE = ['volume_down', 'play_pause', 'volume_up'];
 const DEFAULT_QUICK_DOUBLE = ['volume_down', 'play_pause', 'volume_up', 'power', 'home', 'back'];
 
 const APP_SHORTCUTS = [
-  { name:'Netflix',  cmd:'Netflix',      color:'#E50914', icon:'mdi:netflix' },
-  { name:'YouTube',  cmd:'YouTube',      color:'#FF0000', icon:'mdi:youtube' },
-  { name:'Disney+',  cmd:'Disney Plus',  color:'#113CCF', icon:'mdi:disney-plus' },
-  { name:'Prime',    cmd:'Amazon Video', color:'#00A8E0', icon:'mdi:amazon' },
-  { name:'Spotify',  cmd:'Spotify',      color:'#1DB954', icon:'mdi:spotify' },
-  { name:'Plex',     cmd:'Plex',         color:'#E5A00D', icon:'mdi:plex' },
-  { name:'Apple TV', cmd:'Apple TV',     color:'#888888', icon:'mdi:apple' },
-  { name:'Hulu',     cmd:'Hulu',         color:'#1CE783', icon:'mdi:television-play' },
-  { name:'HBO Max',  cmd:'HBO Max',      color:'#5822B4', icon:'mdi:television-classic' },
-  { name:'Peacock',  cmd:'Peacock TV',   color:'#FF6B35', icon:'mdi:bird' },
-  { name:'Tubi',     cmd:'Tubi',         color:'#FA4B00', icon:'mdi:television' },
-  { name:'Twitch',   cmd:'Twitch',       color:'#9146FF', icon:'mdi:twitch' },
+  { name:'Netflix', cmd:'Netflix', color:'#E50914', icon:'mdi:netflix' },
+  { name:'YouTube', cmd:'YouTube', color:'#FF0000', icon:'mdi:youtube' },
+  { name:'Disney+', cmd:'Disney Plus', color:'#113CCF', icon:'mdi:disney-plus' },
+  { name:'Prime', cmd:'Amazon Video', color:'#00A8E0', icon:'mdi:amazon' },
+  { name:'Spotify', cmd:'Spotify', color:'#1DB954', icon:'mdi:spotify' },
+  { name:'Plex', cmd:'Plex', color:'#E5A00D', icon:'mdi:plex' },
+  { name:'Apple TV', cmd:'Apple TV', color:'#888888', icon:'mdi:apple' },
+  { name:'Hulu', cmd:'Hulu', color:'#1CE783', icon:'mdi:television-play' },
+  { name:'HBO Max', cmd:'HBO Max', color:'#5822B4', icon:'mdi:television-classic' },
+  { name:'Peacock', cmd:'Peacock TV', color:'#FF6B35', icon:'mdi:bird' },
+  { name:'Tubi', cmd:'Tubi', color:'#FA4B00', icon:'mdi:television' },
+  { name:'Twitch', cmd:'Twitch', color:'#9146FF', icon:'mdi:twitch' },
 ];
 
 const OVERLAY_THEMES = {
@@ -101,8 +101,6 @@ const CARD_STYLES = `
     box-shadow: none !important;
     overflow: visible;
   }
-
-  /* ── SINGLE compact ── */
   .compact-single {
     display: flex; align-items: center; justify-content: space-between;
     padding: 10px 14px; border-radius: 16px;
@@ -113,8 +111,6 @@ const CARD_STYLES = `
   }
   .compact-single .c-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
   .compact-single .c-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-
-  /* ── DOUBLE compact ── */
   .compact-double {
     display: flex; flex-direction: column;
     padding: 14px 14px 12px; border-radius: 16px;
@@ -123,13 +119,9 @@ const CARD_STYLES = `
     color: var(--easytv-text-color);
     gap: 12px;
   }
-  .compact-double .d-top {
-    display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  }
+  .compact-double .d-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .compact-double .d-top-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-  .compact-double .d-bottom {
-    display: flex; align-items: center; gap: 8px;
-  }
+  .compact-double .d-bottom { display: flex; align-items: center; gap: 8px; }
   .compact-double .d-bottom .qa-btn {
     flex: 1; height: 46px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
@@ -137,14 +129,11 @@ const CARD_STYLES = `
     border: 1px solid var(--easytv-border-color);
     color: var(--easytv-text-color);
     cursor: pointer; transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-    padding: 0;
+    -webkit-tap-highlight-color: transparent; padding: 0;
   }
   .compact-double .d-bottom .qa-btn:hover { background: var(--easytv-button-background-hover); }
   .compact-double .d-bottom .qa-btn:active { background: var(--easytv-button-background-active); transform: scale(0.93); }
   .compact-double .d-bottom .qa-btn ha-icon { --mdc-icon-size: 22px; }
-
-  /* ── shared ── */
   .tv-icon { --mdc-icon-size: 26px; color: var(--easytv-accent-color); }
   .tv-name { font-weight: 600; font-size: 15px; color: var(--easytv-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .icon-btn {
@@ -233,8 +222,17 @@ const OVERLAY_STYLES = `
 `;
 
 const EDITOR_STYLES = `
-  .editor { display: flex; flex-direction: column; gap: 12px; padding: 16px; font-family: var(--paper-font-body1_-_font-family, sans-serif); }
-  h3 { margin: 10px 0 2px; font-size: 11px; font-weight: 600; color: var(--primary-color, #1976d2); text-transform: uppercase; letter-spacing: 0.08em; }
+  .editor { display: flex; flex-direction: column; gap: 14px; padding: 16px; font-family: var(--paper-font-body1_-_font-family, sans-serif); }
+  .editor-panel {
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 14px; border-radius: 14px;
+    background: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.03)));
+    border: 1px solid var(--divider-color, rgba(255,255,255,0.12));
+  }
+  .editor-panel-header { display: flex; flex-direction: column; gap: 4px; }
+  .editor-panel-title { font-size: 14px; font-weight: 700; color: var(--primary-text-color, #fff); }
+  .editor-panel-desc { font-size: 12px; line-height: 1.4; color: var(--secondary-text-color, rgba(255,255,255,0.6)); }
+  h3 { margin: 4px 0 0; font-size: 11px; font-weight: 600; color: var(--primary-color, #1976d2); text-transform: uppercase; letter-spacing: 0.08em; }
   .field-wrap { display: flex; flex-direction: column; gap: 4px; }
   .field-wrap label { font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.6)); padding-left: 2px; }
   .etv-input, .etv-select {
@@ -247,12 +245,13 @@ const EDITOR_STYLES = `
     outline: none; transition: border-color 0.15s;
   }
   .etv-input:focus, .etv-select:focus { border-color: var(--primary-color, #1976d2); }
-  .etv-select { appearance: none; -webkit-appearance: none; cursor: pointer;
+  .etv-select {
+    appearance: none; -webkit-appearance: none; cursor: pointer;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23888' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
   }
   ha-entity-picker { width: 100%; display: block; }
-  .row { display: flex; justify-content: space-between; align-items: center; padding: 6px 2px; }
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 6px 2px; gap: 12px; }
   .row label { font-size: 14px; color: var(--primary-text-color, #fff); }
   .section-list, .qa-list { display: flex; flex-direction: column; gap: 8px; }
   .section-item, .qa-item {
@@ -270,11 +269,10 @@ const EDITOR_STYLES = `
   .section-handle { cursor: grab; }
   .section-name { font-size: 14px; color: var(--primary-text-color, #fff); }
   .section-width { min-width: 86px; }
-  .qa-add {
-    padding: 10px; border-radius: 10px; text-align: center; cursor: pointer;
-    border: 1px dashed var(--divider-color, rgba(255,255,255,0.2));
-    background: transparent; color: var(--primary-color, #1976d2);
-    font-size: 13px; font-family: inherit;
+  .editor-note {
+    font-size: 12px; line-height: 1.45;
+    color: var(--secondary-text-color, rgba(255,255,255,0.6));
+    padding: 2px 2px 0;
   }
 `;
 
@@ -316,14 +314,14 @@ function sectionWrap(labelText) {
 
 function buildDefaultSectionLayout() {
   return [
-    { id: 'power',        enabled: true,  width: 'half' },
-    { id: 'app_selector', enabled: true,  width: 'half' },
-    { id: 'utility',      enabled: true,  width: 'full' },
-    { id: 'dpad',         enabled: true,  width: 'full' },
-    { id: 'playback',     enabled: true,  width: 'full' },
-    { id: 'volume',       enabled: true,  width: 'full' },
-    { id: 'app_shortcuts',enabled: true,  width: 'full' },
-    { id: 'numpad',       enabled: false, width: 'full' },
+    { id: 'power', enabled: true, width: 'half' },
+    { id: 'app_selector', enabled: true, width: 'half' },
+    { id: 'utility', enabled: true, width: 'full' },
+    { id: 'dpad', enabled: true, width: 'full' },
+    { id: 'playback', enabled: true, width: 'full' },
+    { id: 'volume', enabled: true, width: 'full' },
+    { id: 'app_shortcuts', enabled: true, width: 'full' },
+    { id: 'numpad', enabled: false, width: 'full' },
   ];
 }
 
@@ -338,35 +336,43 @@ function normalizeSections(sections) {
   }
   const legacy = { ...LEGACY_DEFAULT_SECTIONS, ...(sections || {}) };
   return [
-    { id: 'power',         enabled: legacy.power !== false,         width: 'half' },
-    { id: 'app_selector',  enabled: legacy.app_selector !== false,  width: 'half' },
-    { id: 'utility',       enabled: legacy.utility !== false,       width: 'full' },
-    { id: 'dpad',          enabled: legacy.dpad !== false,          width: 'full' },
-    { id: 'playback',      enabled: legacy.playback !== false,      width: 'full' },
-    { id: 'volume',        enabled: legacy.volume !== false,        width: 'full' },
+    { id: 'power', enabled: legacy.power !== false, width: 'half' },
+    { id: 'app_selector', enabled: legacy.app_selector !== false, width: 'half' },
+    { id: 'utility', enabled: legacy.utility !== false, width: 'full' },
+    { id: 'dpad', enabled: legacy.dpad !== false, width: 'full' },
+    { id: 'playback', enabled: legacy.playback !== false, width: 'full' },
+    { id: 'volume', enabled: legacy.volume !== false, width: 'full' },
     { id: 'app_shortcuts', enabled: legacy.app_shortcuts !== false, width: 'full' },
-    { id: 'numpad',        enabled: !!legacy.numpad,                width: 'full' },
+    { id: 'numpad', enabled: !!legacy.numpad, width: 'full' },
   ];
 }
 
 function editorField(labelText, inputEl) {
-  const wrap = document.createElement('div'); wrap.className = 'field-wrap';
-  const lbl = document.createElement('label'); lbl.textContent = labelText;
-  wrap.appendChild(lbl); wrap.appendChild(inputEl);
+  const wrap = document.createElement('div');
+  wrap.className = 'field-wrap';
+  const lbl = document.createElement('label');
+  lbl.textContent = labelText;
+  wrap.appendChild(lbl);
+  wrap.appendChild(inputEl);
   return wrap;
 }
 
 function editorInput(value, placeholder) {
   const el = document.createElement('input');
-  el.className = 'etv-input'; el.type = 'text';
-  el.value = value || ''; el.placeholder = placeholder || '';
+  el.className = 'etv-input';
+  el.type = 'text';
+  el.value = value || '';
+  el.placeholder = placeholder || '';
   return el;
 }
 
 function editorSelect(options, currentValue, className = 'etv-select') {
-  const el = document.createElement('select'); el.className = className;
+  const el = document.createElement('select');
+  el.className = className;
   options.forEach(([val, label]) => {
-    const o = document.createElement('option'); o.value = val; o.textContent = label;
+    const o = document.createElement('option');
+    o.value = val;
+    o.textContent = label;
     if (val === currentValue) o.selected = true;
     el.appendChild(o);
   });
@@ -374,9 +380,12 @@ function editorSelect(options, currentValue, className = 'etv-select') {
 }
 
 function editorRow(labelText, switchEl) {
-  const row = document.createElement('div'); row.className = 'row';
-  const lbl = document.createElement('label'); lbl.textContent = labelText;
-  row.appendChild(lbl); row.appendChild(switchEl);
+  const row = document.createElement('div');
+  row.className = 'row';
+  const lbl = document.createElement('label');
+  lbl.textContent = labelText;
+  row.appendChild(lbl);
+  row.appendChild(switchEl);
   return row;
 }
 
@@ -387,7 +396,26 @@ function editorSwitch(checked) {
 }
 
 function editorH3(text) {
-  const h = document.createElement('h3'); h.textContent = text; return h;
+  const h = document.createElement('h3');
+  h.textContent = text;
+  return h;
+}
+
+function editorPanel(title, desc) {
+  const panel = document.createElement('div');
+  panel.className = 'editor-panel';
+  const header = document.createElement('div');
+  header.className = 'editor-panel-header';
+  const titleEl = document.createElement('div');
+  titleEl.className = 'editor-panel-title';
+  titleEl.textContent = title;
+  const descEl = document.createElement('div');
+  descEl.className = 'editor-panel-desc';
+  descEl.textContent = desc;
+  header.appendChild(titleEl);
+  header.appendChild(descEl);
+  panel.appendChild(header);
+  return panel;
 }
 
 class EasyTVCard extends HTMLElement {
@@ -444,7 +472,8 @@ class EasyTVCard extends HTMLElement {
   _removeOverlay() {
     if (this._overlayEl && this._overlayEl.parentNode) this._overlayEl.parentNode.removeChild(this._overlayEl);
     if (this._overlayStyleEl && this._overlayStyleEl.parentNode) this._overlayStyleEl.parentNode.removeChild(this._overlayStyleEl);
-    this._overlayEl = null; this._overlayStyleEl = null;
+    this._overlayEl = null;
+    this._overlayStyleEl = null;
   }
 
   set hass(hass) { this._hass = hass; this._render(); }
@@ -463,7 +492,7 @@ class EasyTVCard extends HTMLElement {
 
   get _commands() {
     const base = TV_PRESETS[this._config.tv_preset] || TV_PRESETS.generic;
-    return { ...base, ...(this._config.command_overrides||{}) };
+    return { ...base, ...(this._config.command_overrides || {}) };
   }
 
   _send(command) {
@@ -476,57 +505,64 @@ class EasyTVCard extends HTMLElement {
     if (this._expanded) this._mountOverlay(); else this._removeOverlay();
   }
 
-  _quickActionBtn(key, extraClass = '') {
-    const def = QUICK_ACTION_DEFS[key];
-    if (!def) return null;
-    const btn = document.createElement('button');
-    btn.className = 'qa-btn' + (extraClass ? ' ' + extraClass : '');
-    btn.title = def.title;
-    btn.appendChild(mkIcon(def.icon));
-    btn.addEventListener('click', (e) => { e.stopPropagation(); this._send(def.cmd(this._commands)); });
-    return btn;
-  }
-
   _compactSingle() {
     const { name, icon: ico, show_name, quick_actions } = this._config;
     const actions = (quick_actions && quick_actions.length) ? quick_actions.slice(0, 3) : DEFAULT_QUICK_SINGLE;
-
-    const wrap = document.createElement('div'); wrap.className = 'compact-single';
-    const left = document.createElement('div'); left.className = 'c-left';
-    const tvIco = mkIcon(ico || 'mdi:television'); tvIco.className = 'tv-icon'; left.appendChild(tvIco);
+    const wrap = document.createElement('div');
+    wrap.className = 'compact-single';
+    const left = document.createElement('div');
+    left.className = 'c-left';
+    const tvIco = mkIcon(ico || 'mdi:television');
+    tvIco.className = 'tv-icon';
+    left.appendChild(tvIco);
     if (show_name !== false) {
-      const s = document.createElement('span'); s.className = 'tv-name'; s.textContent = name || 'My TV'; left.appendChild(s);
+      const s = document.createElement('span');
+      s.className = 'tv-name';
+      s.textContent = name || 'My TV';
+      left.appendChild(s);
     }
-    const right = document.createElement('div'); right.className = 'c-actions';
+    const right = document.createElement('div');
+    right.className = 'c-actions';
     actions.forEach((key) => {
-      const def = QUICK_ACTION_DEFS[key]; if (!def) return;
+      const def = QUICK_ACTION_DEFS[key];
+      if (!def) return;
       right.appendChild(iconBtn(def.icon, () => this._send(def.cmd(this._commands)), def.title));
     });
     right.appendChild(iconBtn('mdi:remote', () => this._toggleExpanded(), 'Open Remote'));
-    wrap.appendChild(left); wrap.appendChild(right);
+    wrap.appendChild(left);
+    wrap.appendChild(right);
     return wrap;
   }
 
   _compactDouble() {
     const { name, icon: ico, show_name, quick_actions } = this._config;
     const actions = (quick_actions && quick_actions.length) ? quick_actions.slice(0, 6) : DEFAULT_QUICK_DOUBLE;
-
-    const wrap = document.createElement('div'); wrap.className = 'compact-double';
-
-    const top = document.createElement('div'); top.className = 'd-top';
-    const topLeft = document.createElement('div'); topLeft.className = 'd-top-left';
-    const tvIco = mkIcon(ico || 'mdi:television'); tvIco.className = 'tv-icon'; topLeft.appendChild(tvIco);
+    const wrap = document.createElement('div');
+    wrap.className = 'compact-double';
+    const top = document.createElement('div');
+    top.className = 'd-top';
+    const topLeft = document.createElement('div');
+    topLeft.className = 'd-top-left';
+    const tvIco = mkIcon(ico || 'mdi:television');
+    tvIco.className = 'tv-icon';
+    topLeft.appendChild(tvIco);
     if (show_name !== false) {
-      const s = document.createElement('span'); s.className = 'tv-name'; s.textContent = name || 'My TV'; topLeft.appendChild(s);
+      const s = document.createElement('span');
+      s.className = 'tv-name';
+      s.textContent = name || 'My TV';
+      topLeft.appendChild(s);
     }
     top.appendChild(topLeft);
     top.appendChild(iconBtn('mdi:remote', () => this._toggleExpanded(), 'Open Remote'));
     wrap.appendChild(top);
-
-    const bottom = document.createElement('div'); bottom.className = 'd-bottom';
+    const bottom = document.createElement('div');
+    bottom.className = 'd-bottom';
     actions.forEach((key) => {
-      const def = QUICK_ACTION_DEFS[key]; if (!def) return;
-      const btn = document.createElement('button'); btn.className = 'qa-btn'; btn.title = def.title;
+      const def = QUICK_ACTION_DEFS[key];
+      if (!def) return;
+      const btn = document.createElement('button');
+      btn.className = 'qa-btn';
+      btn.title = def.title;
       btn.appendChild(mkIcon(def.icon));
       btn.addEventListener('click', (e) => { e.stopPropagation(); this._send(def.cmd(this._commands)); });
       bottom.appendChild(btn);
@@ -535,15 +571,17 @@ class EasyTVCard extends HTMLElement {
     return wrap;
   }
 
-  // ── Overlay section builders ────────────────────────────────────────
-
   _buildPower() {
     const c = this._commands;
     const wrap = sectionWrap('Power');
-    const row = document.createElement('div'); row.className = 'btn-row power-only-row';
-    const btn = iconBtn('mdi:power', () => this._send(c.power||'power'), 'Power');
-    btn.style.flex = '1'; btn.style.borderRadius = '14px';
-    row.appendChild(btn); wrap.appendChild(row); return wrap;
+    const row = document.createElement('div');
+    row.className = 'btn-row power-only-row';
+    const btn = iconBtn('mdi:power', () => this._send(c.power || 'power'), 'Power');
+    btn.style.flex = '1';
+    btn.style.borderRadius = '14px';
+    row.appendChild(btn);
+    wrap.appendChild(row);
+    return wrap;
   }
 
   _buildAppSelector() {
@@ -552,9 +590,12 @@ class EasyTVCard extends HTMLElement {
     const state = this._hass.states[app_select_entity];
     if (!state) return null;
     const wrap = sectionWrap('App');
-    const sel = document.createElement('select'); sel.className = 'app-select-native';
-    (state.attributes.options||[]).forEach(opt => {
-      const o = document.createElement('option'); o.value = opt; o.textContent = opt;
+    const sel = document.createElement('select');
+    sel.className = 'app-select-native';
+    (state.attributes.options || []).forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt;
+      o.textContent = opt;
       if (opt === state.state) o.selected = true;
       sel.appendChild(o);
     });
@@ -562,104 +603,134 @@ class EasyTVCard extends HTMLElement {
       e.stopPropagation();
       this._hass.callService('select', 'select_option', { entity_id: app_select_entity, option: e.target.value });
     });
-    wrap.appendChild(sel); return wrap;
+    wrap.appendChild(sel);
+    return wrap;
   }
 
   _buildDpad() {
     const c = this._commands;
     const wrap = sectionWrap('Navigation');
-    const upRow = document.createElement('div'); upRow.className = 'btn-row dpad-up-row';
+    const upRow = document.createElement('div');
+    upRow.className = 'btn-row dpad-up-row';
     const upBtn = iconBtn('mdi:arrow-up-bold', () => this._send(c.up), 'Up');
-    upBtn.style.flex = '1'; upBtn.style.borderRadius = '14px'; upBtn.style.height = '52px';
+    upBtn.style.flex = '1';
+    upBtn.style.borderRadius = '14px';
+    upBtn.style.height = '52px';
     upRow.appendChild(upBtn);
-    const midRow = document.createElement('div'); midRow.className = 'btn-row dpad-center-row';
+    const midRow = document.createElement('div');
+    midRow.className = 'btn-row dpad-center-row';
     const leftBtn = iconBtn('mdi:arrow-left-bold', () => this._send(c.left), 'Left');
     const selBtn = iconBtn('mdi:keyboard-return', () => this._send(c.select), 'Select', 'select-btn');
     const rightBtn = iconBtn('mdi:arrow-right-bold', () => this._send(c.right), 'Right');
-    [leftBtn, selBtn, rightBtn].forEach(b => { b.style.flex='1'; b.style.borderRadius='14px'; b.style.height='64px'; });
+    [leftBtn, selBtn, rightBtn].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '64px'; });
     selBtn.style.flex = '1.4';
-    midRow.appendChild(leftBtn); midRow.appendChild(selBtn); midRow.appendChild(rightBtn);
-    const botRow = document.createElement('div'); botRow.className = 'btn-row dpad-down-row';
+    midRow.appendChild(leftBtn);
+    midRow.appendChild(selBtn);
+    midRow.appendChild(rightBtn);
+    const botRow = document.createElement('div');
+    botRow.className = 'btn-row dpad-down-row';
     const backBtn = iconBtn('mdi:arrow-left', () => this._send(c.back), 'Back');
     const downBtn = iconBtn('mdi:arrow-down-bold', () => this._send(c.down), 'Down');
     const homeBtn = iconBtn('mdi:home-outline', () => this._send(c.home), 'Home');
-    [backBtn, downBtn, homeBtn].forEach(b => { b.style.flex='1'; b.style.borderRadius='14px'; b.style.height='52px'; });
-    botRow.appendChild(backBtn); botRow.appendChild(downBtn); botRow.appendChild(homeBtn);
-    wrap.appendChild(upRow); wrap.appendChild(midRow); wrap.appendChild(botRow);
+    [backBtn, downBtn, homeBtn].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '52px'; });
+    botRow.appendChild(backBtn);
+    botRow.appendChild(downBtn);
+    botRow.appendChild(homeBtn);
+    wrap.appendChild(upRow);
+    wrap.appendChild(midRow);
+    wrap.appendChild(botRow);
     return wrap;
   }
 
   _buildUtility() {
     const c = this._commands;
     const wrap = sectionWrap('Controls');
-    const row = document.createElement('div'); row.className = 'btn-row';
-    [iconBtn('mdi:import', () => this._send(c.source||'input_av1'), 'Source'),
-     iconBtn('mdi:menu', () => this._send(c.menu||'menu'), 'Menu'),
-     iconBtn('mdi:cog-outline', () => this._send(c.settings||'settings'), 'Settings'),
-     iconBtn('mdi:information-outline', () => this._send(c.info||'info'), 'Info')]
-    .forEach(b => { b.style.flex='1'; b.style.borderRadius='14px'; b.style.height='52px'; row.appendChild(b); });
-    wrap.appendChild(row); return wrap;
+    const row = document.createElement('div');
+    row.className = 'btn-row';
+    [
+      iconBtn('mdi:import', () => this._send(c.source || 'input_av1'), 'Source'),
+      iconBtn('mdi:menu', () => this._send(c.menu || 'menu'), 'Menu'),
+      iconBtn('mdi:cog-outline', () => this._send(c.settings || 'settings'), 'Settings'),
+      iconBtn('mdi:information-outline', () => this._send(c.info || 'info'), 'Info')
+    ].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '52px'; row.appendChild(b); });
+    wrap.appendChild(row);
+    return wrap;
   }
 
   _buildPlayback() {
     const c = this._commands;
     const wrap = sectionWrap('Playback');
-    const row = document.createElement('div'); row.className = 'btn-row';
-    [iconBtn('mdi:skip-previous', () => this._send(c.reverse), 'Prev'),
-     iconBtn('mdi:rewind', () => this._send(c.reverse), 'Rewind'),
-     iconBtn('mdi:play-pause', () => this._send(c.play), 'Play/Pause'),
-     iconBtn('mdi:fast-forward', () => this._send(c.forward), 'Forward'),
-     iconBtn('mdi:skip-next', () => this._send(c.forward), 'Next')]
-    .forEach(b => { b.style.flex='1'; b.style.borderRadius='14px'; b.style.height='52px'; row.appendChild(b); });
-    wrap.appendChild(row); return wrap;
+    const row = document.createElement('div');
+    row.className = 'btn-row';
+    [
+      iconBtn('mdi:skip-previous', () => this._send(c.reverse), 'Prev'),
+      iconBtn('mdi:rewind', () => this._send(c.reverse), 'Rewind'),
+      iconBtn('mdi:play-pause', () => this._send(c.play), 'Play/Pause'),
+      iconBtn('mdi:fast-forward', () => this._send(c.forward), 'Forward'),
+      iconBtn('mdi:skip-next', () => this._send(c.forward), 'Next')
+    ].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '52px'; row.appendChild(b); });
+    wrap.appendChild(row);
+    return wrap;
   }
 
   _buildVolume() {
     const c = this._commands;
     const wrap = sectionWrap('Volume');
-    const row = document.createElement('div'); row.className = 'btn-row';
-    [iconBtn('mdi:volume-off', () => this._send(c.volume_mute), 'Mute'),
-     iconBtn('mdi:volume-medium', () => this._send(c.volume_down), 'Vol -'),
-     iconBtn('mdi:volume-high', () => this._send(c.volume_up), 'Vol +')]
-    .forEach(b => { b.style.flex='1'; b.style.borderRadius='14px'; b.style.height='52px'; row.appendChild(b); });
-    wrap.appendChild(row); return wrap;
+    const row = document.createElement('div');
+    row.className = 'btn-row';
+    [
+      iconBtn('mdi:volume-off', () => this._send(c.volume_mute), 'Mute'),
+      iconBtn('mdi:volume-medium', () => this._send(c.volume_down), 'Vol -'),
+      iconBtn('mdi:volume-high', () => this._send(c.volume_up), 'Vol +')
+    ].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '52px'; row.appendChild(b); });
+    wrap.appendChild(row);
+    return wrap;
   }
 
   _buildNumpad() {
     const wrap = sectionWrap('Channel / Number');
-    const grid = document.createElement('div'); grid.className = 'numpad-grid';
+    const grid = document.createElement('div');
+    grid.className = 'numpad-grid';
     ['1','2','3','4','5','6','7','8','9','*','0','#'].forEach(k => {
       const btn = numBtn(k, () => this._send(k));
-      btn.style.borderRadius = '14px'; btn.style.height = '52px'; btn.style.width = 'auto';
+      btn.style.borderRadius = '14px';
+      btn.style.height = '52px';
+      btn.style.width = 'auto';
       grid.appendChild(btn);
     });
-    wrap.appendChild(grid); return wrap;
+    wrap.appendChild(grid);
+    return wrap;
   }
 
   _buildAppShortcuts() {
     const apps = (this._config.app_shortcuts?.length) ? this._config.app_shortcuts : APP_SHORTCUTS;
     const wrap = sectionWrap('Apps');
-    const grid = document.createElement('div'); grid.className = 'app-grid';
+    const grid = document.createElement('div');
+    grid.className = 'app-grid';
     apps.forEach(app => {
-      const btn = document.createElement('button'); btn.className = 'app-btn';
+      const btn = document.createElement('button');
+      btn.className = 'app-btn';
       btn.appendChild(mkIcon(app.icon || 'mdi:television-play', app.color || null));
-      const lbl = document.createElement('span'); lbl.textContent = app.name; btn.appendChild(lbl);
+      const lbl = document.createElement('span');
+      lbl.textContent = app.name;
+      btn.appendChild(lbl);
       btn.addEventListener('click', (e) => { e.stopPropagation(); this._send(app.cmd); });
       grid.appendChild(btn);
     });
-    wrap.appendChild(grid); return wrap;
+    wrap.appendChild(grid);
+    return wrap;
   }
 
   _buildSectionById(id) {
     switch (id) {
-      case 'power':         return this._buildPower();
-      case 'app_selector':  return this._buildAppSelector();
-      case 'utility':       return this._buildUtility();
-      case 'dpad':          return this._buildDpad();
-      case 'playback':      return this._buildPlayback();
-      case 'volume':        return this._buildVolume();
+      case 'power': return this._buildPower();
+      case 'app_selector': return this._buildAppSelector();
+      case 'utility': return this._buildUtility();
+      case 'dpad': return this._buildDpad();
+      case 'playback': return this._buildPlayback();
+      case 'volume': return this._buildVolume();
       case 'app_shortcuts': return this._buildAppShortcuts();
-      case 'numpad':        return this._buildNumpad();
+      case 'numpad': return this._buildNumpad();
       default: return null;
     }
   }
@@ -668,20 +739,24 @@ class EasyTVCard extends HTMLElement {
     this._removeOverlay();
     this._injectGlobalStyle();
     const { name, icon: ico } = this._config;
-    const overlay = document.createElement('div'); overlay.id = 'easytv-overlay';
+    const overlay = document.createElement('div');
+    overlay.id = 'easytv-overlay';
     this._applyOverlayTheme(overlay);
-
-    const header = document.createElement('div'); header.className = 'overlay-header';
+    const header = document.createElement('div');
+    header.className = 'overlay-header';
     header.appendChild(mkIcon(ico || 'mdi:television'));
-    const title = document.createElement('span'); title.className = 'overlay-title'; title.textContent = name || 'My TV';
+    const title = document.createElement('span');
+    title.className = 'overlay-title';
+    title.textContent = name || 'My TV';
     header.appendChild(title);
-    const closeBtn = document.createElement('button'); closeBtn.className = 'close-btn';
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-btn';
     closeBtn.appendChild(mkIcon('mdi:close'));
     closeBtn.addEventListener('click', (e) => { e.stopPropagation(); this._expanded = false; this._removeOverlay(); });
     header.appendChild(closeBtn);
     overlay.appendChild(header);
-
-    const body = document.createElement('div'); body.className = 'overlay-body';
+    const body = document.createElement('div');
+    body.className = 'overlay-body';
     normalizeSections(this._config.sections).forEach((section) => {
       if (!section.enabled) return;
       const content = this._buildSectionById(section.id);
@@ -692,11 +767,12 @@ class EasyTVCard extends HTMLElement {
       body.appendChild(container);
     });
     overlay.appendChild(body);
-
     if (this._config.card_mod?.style) {
-      const styleEl = document.createElement('style'); styleEl.id = 'easytv-overlay-card-mod';
+      const styleEl = document.createElement('style');
+      styleEl.id = 'easytv-overlay-card-mod';
       styleEl.textContent = this._config.card_mod.style;
-      document.body.appendChild(styleEl); this._overlayStyleEl = styleEl;
+      document.body.appendChild(styleEl);
+      this._overlayStyleEl = styleEl;
     }
     document.body.appendChild(overlay);
     this._overlayEl = overlay;
@@ -704,10 +780,15 @@ class EasyTVCard extends HTMLElement {
 
   _render() {
     if (!this._config) return;
-    const root = this.shadowRoot; root.innerHTML = '';
-    const style = document.createElement('style'); style.textContent = CARD_STYLES; root.appendChild(style);
+    const root = this.shadowRoot;
+    root.innerHTML = '';
+    const style = document.createElement('style');
+    style.textContent = CARD_STYLES;
+    root.appendChild(style);
     if (this._config.card_mod?.style) {
-      const modStyle = document.createElement('style'); modStyle.textContent = this._config.card_mod.style; root.appendChild(modStyle);
+      const modStyle = document.createElement('style');
+      modStyle.textContent = this._config.card_mod.style;
+      root.appendChild(modStyle);
     }
     const card = document.createElement('ha-card');
     const mode = this._config.compact_mode || 'single';
@@ -717,8 +798,6 @@ class EasyTVCard extends HTMLElement {
 
   getCardSize() { return (this._config?.compact_mode === 'double') ? 3 : 2; }
 }
-
-// ── Editor ────────────────────────────────────────────────────────────
 
 class EasyTVCardEditor extends HTMLElement {
   constructor() { super(); this.attachShadow({ mode: 'open' }); }
@@ -778,54 +857,100 @@ class EasyTVCardEditor extends HTMLElement {
     return (this._config.compact_mode === 'double') ? [...DEFAULT_QUICK_DOUBLE] : [...DEFAULT_QUICK_SINGLE];
   }
 
-  _renderSectionEditor(editor) {
-    editor.appendChild(editorH3('Overlay Sections'));
-    const list = document.createElement('div'); list.className = 'section-list';
+  _renderSectionEditor(parent) {
+    parent.appendChild(editorH3('Layout'));
+    const note = document.createElement('div');
+    note.className = 'editor-note';
+    note.textContent = 'These settings only affect the pop-out remote. Reorder sections, toggle them on or off, and choose full or half width.';
+    parent.appendChild(note);
+    const list = document.createElement('div');
+    list.className = 'section-list';
     this._config.sections.forEach((section, index) => {
-      const item = document.createElement('div'); item.className = 'section-item';
-      const handle = document.createElement('button'); handle.className = 'section-handle'; handle.textContent = '⠿'; handle.title = 'Drag handle';
-      const name = document.createElement('div'); name.className = 'section-name'; name.textContent = SECTION_LABELS[section.id] || section.id;
+      const item = document.createElement('div');
+      item.className = 'section-item';
+      const handle = document.createElement('button');
+      handle.className = 'section-handle';
+      handle.textContent = '⠿';
+      handle.title = 'Drag handle';
+      const name = document.createElement('div');
+      name.className = 'section-name';
+      name.textContent = SECTION_LABELS[section.id] || section.id;
       const sw = editorSwitch(section.enabled !== false);
       sw.addEventListener('change', e => this._updateSection(index, { enabled: e.target.checked }));
       const width = editorSelect([['full','Full'],['half','Half']], section.width || 'full', 'etv-select section-width');
       width.addEventListener('change', e => this._updateSection(index, { width: e.target.value }));
-      const moves = document.createElement('div'); moves.style.cssText = 'display:flex;gap:4px;';
-      const up = document.createElement('button'); up.className = 'section-move'; up.textContent = '↑'; up.addEventListener('click', () => this._moveSection(index, -1));
-      const dn = document.createElement('button'); dn.className = 'section-move'; dn.textContent = '↓'; dn.addEventListener('click', () => this._moveSection(index, 1));
-      moves.appendChild(up); moves.appendChild(dn);
-      item.appendChild(handle); item.appendChild(name); item.appendChild(sw); item.appendChild(width); item.appendChild(moves);
+      const moves = document.createElement('div');
+      moves.style.cssText = 'display:flex;gap:4px;';
+      const up = document.createElement('button');
+      up.className = 'section-move';
+      up.textContent = '↑';
+      up.addEventListener('click', () => this._moveSection(index, -1));
+      const dn = document.createElement('button');
+      dn.className = 'section-move';
+      dn.textContent = '↓';
+      dn.addEventListener('click', () => this._moveSection(index, 1));
+      moves.appendChild(up);
+      moves.appendChild(dn);
+      item.appendChild(handle);
+      item.appendChild(name);
+      item.appendChild(sw);
+      item.appendChild(width);
+      item.appendChild(moves);
       list.appendChild(item);
     });
-    editor.appendChild(list);
+    parent.appendChild(list);
   }
 
-  _renderQAEditor(editor) {
+  _renderQAEditor(parent) {
     const mode = this._config.compact_mode || 'single';
     const limit = mode === 'double' ? 6 : 3;
     const qa = this._config.quick_actions || this._defaultQA();
-    editor.appendChild(editorH3(`Quick Actions (max ${limit})`));
-    const list = document.createElement('div'); list.className = 'qa-list';
+    parent.appendChild(editorH3('Quick Actions'));
+    const note = document.createElement('div');
+    note.className = 'editor-note';
+    note.textContent = `These buttons appear on the small card. ${mode === 'double' ? 'Double row mode supports up to 6 buttons.' : 'Single row mode supports up to 3 buttons.'}`;
+    parent.appendChild(note);
+    const list = document.createElement('div');
+    list.className = 'qa-list';
     qa.slice(0, limit).forEach((key, index) => {
-      const def = QUICK_ACTION_DEFS[key]; if (!def) return;
-      const item = document.createElement('div'); item.className = 'qa-item';
-      const handle = document.createElement('button'); handle.className = 'section-handle'; handle.textContent = '⠿';
-      const name = document.createElement('div'); name.className = 'section-name'; name.textContent = def.title;
-      const moves = document.createElement('div'); moves.style.cssText = 'display:flex;gap:4px;';
-      const up = document.createElement('button'); up.className = 'section-move'; up.textContent = '↑'; up.addEventListener('click', () => this._moveQA(index, -1));
-      const dn = document.createElement('button'); dn.className = 'section-move'; dn.textContent = '↓'; dn.addEventListener('click', () => this._moveQA(index, 1));
-      const rm = document.createElement('button'); rm.className = 'section-move'; rm.textContent = '✕'; rm.style.color = '#e74c3c'; rm.addEventListener('click', () => this._removeQA(index));
-      moves.appendChild(up); moves.appendChild(dn); moves.appendChild(rm);
-      item.appendChild(handle); item.appendChild(name); item.appendChild(moves);
+      const def = QUICK_ACTION_DEFS[key];
+      if (!def) return;
+      const item = document.createElement('div');
+      item.className = 'qa-item';
+      const handle = document.createElement('button');
+      handle.className = 'section-handle';
+      handle.textContent = '⠿';
+      const name = document.createElement('div');
+      name.className = 'section-name';
+      name.textContent = def.title;
+      const moves = document.createElement('div');
+      moves.style.cssText = 'display:flex;gap:4px;';
+      const up = document.createElement('button');
+      up.className = 'section-move';
+      up.textContent = '↑';
+      up.addEventListener('click', () => this._moveQA(index, -1));
+      const dn = document.createElement('button');
+      dn.className = 'section-move';
+      dn.textContent = '↓';
+      dn.addEventListener('click', () => this._moveQA(index, 1));
+      const rm = document.createElement('button');
+      rm.className = 'section-move';
+      rm.textContent = '✕';
+      rm.style.color = '#e74c3c';
+      rm.addEventListener('click', () => this._removeQA(index));
+      moves.appendChild(up);
+      moves.appendChild(dn);
+      moves.appendChild(rm);
+      item.appendChild(handle);
+      item.appendChild(name);
+      item.appendChild(moves);
       list.appendChild(item);
     });
-    editor.appendChild(list);
+    parent.appendChild(list);
     if (qa.length < limit) {
-      const addSel = editorSelect(
-        [['', '— Add action —'], ...Object.entries(QUICK_ACTION_DEFS).map(([k, v]) => [k, v.title])],
-        '', 'etv-select'
-      );
+      const addSel = editorSelect([['', '— Add action —'], ...Object.entries(QUICK_ACTION_DEFS).map(([k, v]) => [k, v.title])], '', 'etv-select');
       addSel.addEventListener('change', e => { if (e.target.value) { this._addQA(e.target.value); e.target.value = ''; } });
-      editor.appendChild(addSel);
+      parent.appendChild(addSel);
     }
   }
 
@@ -834,53 +959,57 @@ class EasyTVCardEditor extends HTMLElement {
     const c = this._config;
     const root = this.shadowRoot;
     root.innerHTML = '';
-    const style = document.createElement('style'); style.textContent = EDITOR_STYLES; root.appendChild(style);
-    const editor = document.createElement('div'); editor.className = 'editor';
+    const style = document.createElement('style');
+    style.textContent = EDITOR_STYLES;
+    root.appendChild(style);
+    const editor = document.createElement('div');
+    editor.className = 'editor';
 
-    editor.appendChild(editorH3('General'));
+    const globalPanel = editorPanel('Global Settings', 'Core entities and command mapping used by both the small card and the pop-out remote.');
+    globalPanel.appendChild(editorH3('Identity'));
     const nameEl = editorInput(c.name, 'e.g. My TV');
     nameEl.addEventListener('change', e => this._set('name', e.target.value));
-    editor.appendChild(editorField('Card Title', nameEl));
-
+    globalPanel.appendChild(editorField('Card Title', nameEl));
     const iconEl = editorInput(c.icon, 'e.g. mdi:television');
     iconEl.addEventListener('change', e => this._set('icon', e.target.value));
-    editor.appendChild(editorField('Icon', iconEl));
-
-    editor.appendChild(editorH3('Entities'));
+    globalPanel.appendChild(editorField('Icon', iconEl));
+    globalPanel.appendChild(editorH3('Entities'));
     const remotePicker = document.createElement('ha-entity-picker');
     remotePicker.id = 'etv-remote';
     if (this._hass) remotePicker.hass = this._hass;
     remotePicker.value = c.remote_entity || '';
     remotePicker.addEventListener('value-changed', e => this._set('remote_entity', e.detail.value));
-    editor.appendChild(editorField('Remote Entity (required)', remotePicker));
-
+    globalPanel.appendChild(editorField('Remote Entity (required)', remotePicker));
     const appPicker = document.createElement('ha-entity-picker');
     appPicker.id = 'etv-appselect';
     if (this._hass) appPicker.hass = this._hass;
     appPicker.value = c.app_select_entity || '';
     appPicker.addEventListener('value-changed', e => this._set('app_select_entity', e.detail.value));
-    editor.appendChild(editorField('App Select Entity (Roku)', appPicker));
-
-    editor.appendChild(editorH3('TV Preset'));
+    globalPanel.appendChild(editorField('App Select Entity', appPicker));
+    globalPanel.appendChild(editorH3('Commands'));
     const presetEl = editorSelect([['roku','Roku'],['google_tv','Google TV'],['samsung','Samsung'],['generic','Generic']], c.tv_preset || 'roku');
     presetEl.addEventListener('change', e => this._set('tv_preset', e.target.value));
-    editor.appendChild(editorField('TV Preset', presetEl));
+    globalPanel.appendChild(editorField('TV Preset', presetEl));
+    editor.appendChild(globalPanel);
 
-    editor.appendChild(editorH3('Card Style'));
+    const cardPanel = editorPanel('Card Settings', 'Settings for the small always-visible card before you open the full remote.');
+    cardPanel.appendChild(editorH3('Appearance'));
     const modeEl = editorSelect([['single','Single row'],['double','Double row']], c.compact_mode || 'single');
     modeEl.addEventListener('change', e => this._set('compact_mode', e.target.value));
-    editor.appendChild(editorField('Compact Mode', modeEl));
-
+    cardPanel.appendChild(editorField('Compact Mode', modeEl));
     const showNameSw = editorSwitch(c.show_name !== false);
     showNameSw.addEventListener('change', e => this._set('show_name', e.target.checked));
-    editor.appendChild(editorRow('Show Name', showNameSw));
+    cardPanel.appendChild(editorRow('Show Name', showNameSw));
+    this._renderQAEditor(cardPanel);
+    editor.appendChild(cardPanel);
 
+    const popoutPanel = editorPanel('Pop Out Settings', 'Settings for the fullscreen remote that opens when you tap the remote button.');
+    popoutPanel.appendChild(editorH3('Appearance'));
     const themeEl = editorSelect([['dark','Dark (blur)'],['light','Light (blur)']], c.overlay_theme || 'dark');
     themeEl.addEventListener('change', e => this._set('overlay_theme', e.target.value));
-    editor.appendChild(editorField('Overlay Theme', themeEl));
-
-    this._renderQAEditor(editor);
-    this._renderSectionEditor(editor);
+    popoutPanel.appendChild(editorField('Overlay Theme', themeEl));
+    this._renderSectionEditor(popoutPanel);
+    editor.appendChild(popoutPanel);
 
     root.appendChild(editor);
   }
@@ -893,7 +1022,7 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: 'easytv-card',
   name: 'EasyTV Card',
-  description: `TV remote card v${CARD_VERSION} — single/double compact modes`,
+  description: `TV remote card v${CARD_VERSION} — cleaner grouped editor`,
   preview: true,
 });
 
