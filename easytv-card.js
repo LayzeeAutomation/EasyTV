@@ -1,7 +1,7 @@
-// EasyTV Card v0.1.7
+// EasyTV Card v0.2.0
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.1.7';
+const CARD_VERSION = '0.2.0';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power' },
