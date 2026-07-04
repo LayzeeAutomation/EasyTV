@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.5
+// EasyTV Card v0.4.6
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.5';
+const CARD_VERSION = '0.4.6';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -25,7 +25,6 @@ const SECTION_LABELS = {
 
 const VALID_WIDTHS = ['quarter', 'half', 'three-quarter', 'full'];
 
-// Gap options: label -> px value used in overlay-body gap & width calc
 const GAP_OPTIONS = [
   ['0',  'None (0px)'],
   ['4',  'Tight (4px)'],
@@ -165,7 +164,21 @@ const CARD_STYLES = `
   .no-btn-border .qa-btn { border-color: transparent !important; }
 `;
 
-// OVERLAY_STYLES uses a CSS custom property --etv-gap so _mountOverlay can set it inline.
+// ─── OVERLAY STYLES ────────────────────────────────────────────────────────
+// Layout uses a 4-column CSS grid so ¼/¾ and ½/½ pairs always sit on the
+// same row regardless of padding or gap values.
+//   width-full          → grid-column: span 4
+//   width-three-quarter → grid-column: span 3
+//   width-half          → grid-column: span 2
+//   width-quarter       → grid-column: span 1
+//
+// The gap between grid items is set via --etv-gap (written as an inline style
+// on #easytv-overlay by _applyOverlayTheme).
+//
+// D-pad buttons: ALL directional arrow buttons (up/down/left/right) are forced
+// to the same 56×56 px square via explicit CSS rules that cannot be overridden
+// by flex or the base .icon-btn circle defaults. The select button stays a
+// 64×64 circle.
 const OVERLAY_STYLES = `
   #easytv-overlay {
     position: fixed; top:0; left:0; right:0; bottom:0; z-index:999999;
@@ -188,42 +201,74 @@ const OVERLAY_STYLES = `
     transition: background 0.15s; flex-shrink:0;
   }
   #easytv-overlay .close-btn ha-icon { --mdc-icon-size: 20px; }
+
+  /* ── Grid body ── */
   #easytv-overlay .overlay-body {
-    display: flex; flex-wrap: wrap; align-items: flex-start; align-content: flex-start;
-    gap: var(--etv-gap, 8px); padding: 16px 16px 48px; flex:1; width: 100%; box-sizing: border-box;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--etv-gap, 8px);
+    padding: 8px 12px 48px;
+    flex: 1; width: 100%; box-sizing: border-box;
   }
+  #easytv-overlay .overlay-body.has-header { padding-top: 8px; }
   #easytv-overlay .overlay-section { min-width: 0; box-sizing: border-box; }
-  #easytv-overlay .overlay-section.width-full          { width: 100%; }
-  #easytv-overlay .overlay-section.width-half          { width: calc(50% - var(--etv-gap-half, 4px)); }
-  #easytv-overlay .overlay-section.width-three-quarter { width: calc(75% - var(--etv-gap-quarter, 2px)); }
-  #easytv-overlay .overlay-section.width-quarter       { width: calc(25% - var(--etv-gap-three-quarter, 6px)); }
+  #easytv-overlay .overlay-section.width-full          { grid-column: span 4; }
+  #easytv-overlay .overlay-section.width-three-quarter { grid-column: span 3; }
+  #easytv-overlay .overlay-section.width-half          { grid-column: span 2; }
+  #easytv-overlay .overlay-section.width-quarter       { grid-column: span 1; }
+
   #easytv-overlay .etv-section {
     display: flex; flex-direction: column; gap: 6px;
     border-radius: 16px; padding: 12px; width: 100%; box-sizing: border-box;
     height: 100%;
   }
   #easytv-overlay .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; padding: 0 2px 4px; }
+
+  /* ── Generic btn-row ── */
   #easytv-overlay .btn-row { display: flex; align-items: center; gap: 8px; width: 100%; }
   #easytv-overlay .btn-row .icon-btn { flex: 1; border-radius: 14px; height: 56px; width: auto; }
   #easytv-overlay .btn-row .icon-btn ha-icon { --mdc-icon-size: 26px; }
   #easytv-overlay .power-only-row .icon-btn { height: 56px; }
-  /* D-pad: all directional buttons same height */
+
+  /* ── D-pad ──
+     All four directional arrows are identical 56×56 squares.
+     !important is used to beat the base .icon-btn circle (width:62px; height:62px)
+     and any inline styles set in JS.                                          */
   #easytv-overlay .dpad-up-row,
-  #easytv-overlay .dpad-down-row { justify-content: center; }
+  #easytv-overlay .dpad-down-row { justify-content: center; gap: 8px; }
+
   #easytv-overlay .dpad-up-row .icon-btn,
-  #easytv-overlay .dpad-down-row .icon-btn { flex: none; width: 56px; height: 56px; border-radius: 14px; }
-  #easytv-overlay .dpad-center-row .icon-btn { height: 56px; }
+  #easytv-overlay .dpad-down-row .icon-btn.dpad-dir {
+    flex: 1 !important;
+    width: auto !important;
+    height: 56px !important;
+    border-radius: 14px !important;
+  }
+
+  #easytv-overlay .dpad-center-row .icon-btn.dpad-dir {
+    flex: 1 !important;
+    width: auto !important;
+    height: 56px !important;
+    border-radius: 14px !important;
+  }
+
+  /* Select circle stays fixed size, centred, does not stretch */
   #easytv-overlay .dpad-center-row .icon-btn.select-btn {
-    flex: none; width: 64px; height: 64px;
+    flex: 0 0 auto !important;
+    width: 64px !important;
+    height: 64px !important;
     border-radius: 50% !important;
   }
   #easytv-overlay .dpad-center-row .icon-btn.select-btn ha-icon { --mdc-icon-size: 28px; }
+
+  /* Base overlay icon-btn */
   #easytv-overlay .icon-btn {
     cursor:pointer; border-radius: 50%; width:62px; height:62px;
     display:flex; align-items:center; justify-content:center;
     transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color:transparent; padding:0;
   }
   #easytv-overlay .icon-btn ha-icon { --mdc-icon-size: 26px; }
+
   #easytv-overlay .numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
   #easytv-overlay .numpad-grid .icon-btn { border-radius: 14px; width: auto; height: 52px; font-size: 18px; font-weight: 600; }
   #easytv-overlay .numpad-grid .icon-btn:active { transform: scale(0.93); }
@@ -244,9 +289,9 @@ const OVERLAY_STYLES = `
   }
   #easytv-overlay .app-select-native:focus { outline: none; }
   @media (max-width: 600px) {
-    #easytv-overlay .overlay-section.width-half,
     #easytv-overlay .overlay-section.width-three-quarter,
-    #easytv-overlay .overlay-section.width-quarter { width: 100%; }
+    #easytv-overlay .overlay-section.width-half,
+    #easytv-overlay .overlay-section.width-quarter { grid-column: span 4; }
   }
 `;
 
@@ -465,16 +510,6 @@ function editorPanel(title, desc) {
   return panel;
 }
 
-// Compute the CSS custom properties for gap-aware fractional widths.
-// With a flex-wrap body and a gap of G px:
-//   half         = calc(50% - G/2)
-//   quarter      = calc(25% - G * 3/4)   [leaves room for 3 gaps in 4-col]
-//   three-quarter = calc(75% - G * 1/4)
-function gapVars(gapPx) {
-  const g = parseInt(gapPx, 10) || 0;
-  return `--etv-gap:${g}px; --etv-gap-half:${g / 2}px; --etv-gap-quarter:${g * 0.75}px; --etv-gap-three-quarter:${g * 0.25}px;`;
-}
-
 class EasyTVCard extends HTMLElement {
   constructor() {
     super();
@@ -508,9 +543,8 @@ class EasyTVCard extends HTMLElement {
     overlay.style.backdropFilter = t.backdropFilter;
     overlay.style.webkitBackdropFilter = t.backdropFilter;
     overlay.style.color = t.textColor;
-    // Set gap CSS custom properties on the overlay element itself so the
-    // calc() expressions in OVERLAY_STYLES resolve correctly.
-    overlay.style.cssText += '; ' + gapVars(gap);
+    // Write the gap var directly on the overlay so the CSS grid gap picks it up
+    overlay.style.setProperty('--etv-gap', `${parseInt(gap, 10) || 0}px`);
 
     const dynId = 'easytv-overlay-theme-dynamic';
     let dynStyle = document.getElementById(dynId);
@@ -695,28 +729,26 @@ class EasyTVCard extends HTMLElement {
     const c = this._commands;
     const wrap = sectionWrap('Navigation');
 
-    // Row 1 — Up (centred, fixed size)
+    // Row 1 — Up (uses dpad-up-row centering + dpad-dir sizing from CSS)
     const upRow = document.createElement('div');
     upRow.className = 'btn-row dpad-up-row';
-    upRow.appendChild(iconBtn('mdi:arrow-up-bold', () => this._send(c.up), 'Up'));
+    const upBtn = iconBtn('mdi:arrow-up-bold', () => this._send(c.up), 'Up', 'dpad-dir');
+    upRow.appendChild(upBtn);
 
-    // Row 2 — Left / Select (circle) / Right, all equal height
+    // Row 2 — Left / Select (circle) / Right
     const midRow = document.createElement('div');
     midRow.className = 'btn-row dpad-center-row';
-    const leftBtn  = iconBtn('mdi:arrow-left-bold',  () => this._send(c.left),   'Left');
+    const leftBtn  = iconBtn('mdi:arrow-left-bold',  () => this._send(c.left),   'Left',   'dpad-dir');
     const selBtn   = iconBtn('mdi:keyboard-return',  () => this._send(c.select), 'Select', 'select-btn');
-    const rightBtn = iconBtn('mdi:arrow-right-bold', () => this._send(c.right),  'Right');
-    [leftBtn, rightBtn].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '56px'; });
-    // select btn is a circle — size set via CSS, no flex stretch
+    const rightBtn = iconBtn('mdi:arrow-right-bold', () => this._send(c.right),  'Right',  'dpad-dir');
     midRow.appendChild(leftBtn); midRow.appendChild(selBtn); midRow.appendChild(rightBtn);
 
-    // Row 3 — Back / Down / Home  (3 equal buttons)
+    // Row 3 — Back / Down / Home (all dpad-dir = same square size)
     const botRow = document.createElement('div');
     botRow.className = 'btn-row dpad-down-row';
-    const backBtn = iconBtn('mdi:arrow-left',        () => this._send(c.back), 'Back');
-    const downBtn = iconBtn('mdi:arrow-down-bold',   () => this._send(c.down), 'Down');
-    const homeBtn = iconBtn('mdi:home-outline',      () => this._send(c.home), 'Home');
-    [backBtn, downBtn, homeBtn].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '56px'; });
+    const backBtn = iconBtn('mdi:arrow-left',      () => this._send(c.back), 'Back', 'dpad-dir');
+    const downBtn = iconBtn('mdi:arrow-down-bold', () => this._send(c.down), 'Down', 'dpad-dir');
+    const homeBtn = iconBtn('mdi:home-outline',    () => this._send(c.home), 'Home', 'dpad-dir');
     botRow.appendChild(backBtn); botRow.appendChild(downBtn); botRow.appendChild(homeBtn);
 
     wrap.appendChild(upRow);
@@ -819,26 +851,46 @@ class EasyTVCard extends HTMLElement {
   _mountOverlay() {
     this._removeOverlay();
     this._injectGlobalStyle();
-    const { name, icon: ico } = this._config;
+    const cfg = this._config;
+    const { name, icon: ico } = cfg;
+    const showHeader = cfg.show_name !== false;
+
     const overlay = document.createElement('div');
     overlay.id = 'easytv-overlay';
     this._applyOverlayTheme(overlay);
-    const header = document.createElement('div');
-    header.className = 'overlay-header';
-    header.appendChild(mkIcon(ico || 'mdi:television'));
-    const title = document.createElement('span');
-    title.className = 'overlay-title';
-    title.textContent = name || 'My TV';
-    header.appendChild(title);
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'close-btn';
-    closeBtn.appendChild(mkIcon('mdi:close'));
-    closeBtn.addEventListener('click', (e) => { e.stopPropagation(); this._expanded = false; this._removeOverlay(); });
-    header.appendChild(closeBtn);
-    overlay.appendChild(header);
+
+    // Header — only rendered when show_name is not false
+    if (showHeader) {
+      const header = document.createElement('div');
+      header.className = 'overlay-header';
+      header.appendChild(mkIcon(ico || 'mdi:television'));
+      const title = document.createElement('span');
+      title.className = 'overlay-title';
+      title.textContent = name || 'My TV';
+      header.appendChild(title);
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'close-btn';
+      closeBtn.appendChild(mkIcon('mdi:close'));
+      closeBtn.addEventListener('click', (e) => { e.stopPropagation(); this._expanded = false; this._removeOverlay(); });
+      header.appendChild(closeBtn);
+      overlay.appendChild(header);
+    } else {
+      // No header — place a minimal close button floating top-right
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'close-btn';
+      closeBtn.style.cssText = 'position:absolute;top:12px;right:12px;z-index:10;';
+      closeBtn.appendChild(mkIcon('mdi:close'));
+      closeBtn.addEventListener('click', (e) => { e.stopPropagation(); this._expanded = false; this._removeOverlay(); });
+      overlay.style.position = 'fixed'; // ensure absolute child is relative to overlay
+      overlay.appendChild(closeBtn);
+    }
+
     const body = document.createElement('div');
-    body.className = 'overlay-body';
-    normalizeSections(this._config.sections).forEach((section) => {
+    body.className = 'overlay-body' + (showHeader ? ' has-header' : '');
+    // When no header, add extra top padding to clear the floating close button
+    if (!showHeader) body.style.paddingTop = '52px';
+
+    normalizeSections(cfg.sections).forEach((section) => {
       if (!section.enabled) return;
       const content = this._buildSectionById(section.id);
       if (!content) return;
@@ -848,10 +900,11 @@ class EasyTVCard extends HTMLElement {
       body.appendChild(container);
     });
     overlay.appendChild(body);
-    if (this._config.card_mod?.style) {
+
+    if (cfg.card_mod?.style) {
       const styleEl = document.createElement('style');
       styleEl.id = 'easytv-overlay-card-mod';
-      styleEl.textContent = this._config.card_mod.style;
+      styleEl.textContent = cfg.card_mod.style;
       document.body.appendChild(styleEl);
       this._overlayStyleEl = styleEl;
     }
@@ -1107,7 +1160,9 @@ class EasyTVCardEditor extends HTMLElement {
     const overlayBtnBorderSw = editorSwitch(c.overlay_button_borders !== false);
     overlayBtnBorderSw.addEventListener('change', e => this._set('overlay_button_borders', e.target.checked));
     popoutPanel.appendChild(editorRow('Button Borders', overlayBtnBorderSw));
-    // Section gap
+    const showNameOverlaySw = editorSwitch(c.show_name !== false);
+    showNameOverlaySw.addEventListener('change', e => this._set('show_name', e.target.checked));
+    popoutPanel.appendChild(editorRow('Show Header / Name', showNameOverlaySw));
     const gapEl = editorSelect(GAP_OPTIONS, String(c.overlay_gap ?? DEFAULT_GAP));
     gapEl.addEventListener('change', e => this._set('overlay_gap', e.target.value));
     popoutPanel.appendChild(editorField('Section Gap', gapEl));
