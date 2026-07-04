@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.4
+// EasyTV Card v0.4.5
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.4';
+const CARD_VERSION = '0.4.5';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -25,35 +25,45 @@ const SECTION_LABELS = {
 
 const VALID_WIDTHS = ['quarter', 'half', 'three-quarter', 'full'];
 
+// Gap options: label -> px value used in overlay-body gap & width calc
+const GAP_OPTIONS = [
+  ['0',  'None (0px)'],
+  ['4',  'Tight (4px)'],
+  ['8',  'Normal (8px)'],
+  ['12', 'Relaxed (12px)'],
+  ['16', 'Spacious (16px)'],
+];
+const DEFAULT_GAP = '8';
+
 const QUICK_ACTION_DEFS = {
   volume_down:  { icon: 'mdi:volume-minus', title: 'Vol −', cmd: (c) => c.volume_down },
-  volume_up:    { icon: 'mdi:volume-plus', title: 'Vol +', cmd: (c) => c.volume_up },
-  volume_mute:  { icon: 'mdi:volume-off', title: 'Mute', cmd: (c) => c.volume_mute },
-  play_pause:   { icon: 'mdi:play-pause', title: 'Play/Pause', cmd: (c) => c.play },
-  power:        { icon: 'mdi:power', title: 'Power', cmd: (c) => c.power || 'power' },
-  back:         { icon: 'mdi:arrow-left', title: 'Back', cmd: (c) => c.back },
-  home:         { icon: 'mdi:home-outline', title: 'Home', cmd: (c) => c.home },
-  source:       { icon: 'mdi:import', title: 'Source', cmd: (c) => c.source || 'input_av1' },
+  volume_up:    { icon: 'mdi:volume-plus',  title: 'Vol +', cmd: (c) => c.volume_up },
+  volume_mute:  { icon: 'mdi:volume-off',   title: 'Mute',  cmd: (c) => c.volume_mute },
+  play_pause:   { icon: 'mdi:play-pause',   title: 'Play/Pause', cmd: (c) => c.play },
+  power:        { icon: 'mdi:power',        title: 'Power', cmd: (c) => c.power || 'power' },
+  back:         { icon: 'mdi:arrow-left',   title: 'Back',  cmd: (c) => c.back },
+  home:         { icon: 'mdi:home-outline', title: 'Home',  cmd: (c) => c.home },
+  source:       { icon: 'mdi:import',       title: 'Source',cmd: (c) => c.source || 'input_av1' },
   forward:      { icon: 'mdi:fast-forward', title: 'Forward', cmd: (c) => c.forward },
-  rewind:       { icon: 'mdi:rewind', title: 'Rewind', cmd: (c) => c.reverse },
+  rewind:       { icon: 'mdi:rewind',       title: 'Rewind',  cmd: (c) => c.reverse },
 };
 
 const DEFAULT_QUICK_SINGLE = ['volume_down', 'play_pause', 'volume_up'];
 const DEFAULT_QUICK_DOUBLE = ['volume_down', 'play_pause', 'volume_up', 'power', 'home', 'back'];
 
 const APP_SHORTCUTS = [
-  { name:'Netflix', cmd:'Netflix', color:'#E50914', icon:'mdi:netflix' },
-  { name:'YouTube', cmd:'YouTube', color:'#FF0000', icon:'mdi:youtube' },
-  { name:'Disney+', cmd:'Disney Plus', color:'#113CCF', icon:'mdi:disney-plus' },
-  { name:'Prime', cmd:'Amazon Video', color:'#00A8E0', icon:'mdi:amazon' },
-  { name:'Spotify', cmd:'Spotify', color:'#1DB954', icon:'mdi:spotify' },
-  { name:'Plex', cmd:'Plex', color:'#E5A00D', icon:'mdi:plex' },
-  { name:'Apple TV', cmd:'Apple TV', color:'#888888', icon:'mdi:apple' },
-  { name:'Hulu', cmd:'Hulu', color:'#1CE783', icon:'mdi:television-play' },
-  { name:'HBO Max', cmd:'HBO Max', color:'#5822B4', icon:'mdi:television-classic' },
-  { name:'Peacock', cmd:'Peacock TV', color:'#FF6B35', icon:'mdi:bird' },
-  { name:'Tubi', cmd:'Tubi', color:'#FA4B00', icon:'mdi:television' },
-  { name:'Twitch', cmd:'Twitch', color:'#9146FF', icon:'mdi:twitch' },
+  { name:'Netflix',  cmd:'Netflix',       color:'#E50914', icon:'mdi:netflix' },
+  { name:'YouTube',  cmd:'YouTube',       color:'#FF0000', icon:'mdi:youtube' },
+  { name:'Disney+',  cmd:'Disney Plus',   color:'#113CCF', icon:'mdi:disney-plus' },
+  { name:'Prime',    cmd:'Amazon Video',  color:'#00A8E0', icon:'mdi:amazon' },
+  { name:'Spotify',  cmd:'Spotify',       color:'#1DB954', icon:'mdi:spotify' },
+  { name:'Plex',     cmd:'Plex',          color:'#E5A00D', icon:'mdi:plex' },
+  { name:'Apple TV', cmd:'Apple TV',      color:'#888888', icon:'mdi:apple' },
+  { name:'Hulu',     cmd:'Hulu',          color:'#1CE783', icon:'mdi:television-play' },
+  { name:'HBO Max',  cmd:'HBO Max',       color:'#5822B4', icon:'mdi:television-classic' },
+  { name:'Peacock',  cmd:'Peacock TV',    color:'#FF6B35', icon:'mdi:bird' },
+  { name:'Tubi',     cmd:'Tubi',          color:'#FA4B00', icon:'mdi:television' },
+  { name:'Twitch',   cmd:'Twitch',        color:'#9146FF', icon:'mdi:twitch' },
 ];
 
 const OVERLAY_THEMES = {
@@ -155,6 +165,7 @@ const CARD_STYLES = `
   .no-btn-border .qa-btn { border-color: transparent !important; }
 `;
 
+// OVERLAY_STYLES uses a CSS custom property --etv-gap so _mountOverlay can set it inline.
 const OVERLAY_STYLES = `
   #easytv-overlay {
     position: fixed; top:0; left:0; right:0; bottom:0; z-index:999999;
@@ -179,28 +190,34 @@ const OVERLAY_STYLES = `
   #easytv-overlay .close-btn ha-icon { --mdc-icon-size: 20px; }
   #easytv-overlay .overlay-body {
     display: flex; flex-wrap: wrap; align-items: flex-start; align-content: flex-start;
-    gap: 8px; padding: 16px 16px 48px; flex:1; width: 100%; box-sizing: border-box;
+    gap: var(--etv-gap, 8px); padding: 16px 16px 48px; flex:1; width: 100%; box-sizing: border-box;
   }
   #easytv-overlay .overlay-section { min-width: 0; box-sizing: border-box; }
-  #easytv-overlay .overlay-section.width-full         { width: 100%; }
-  #easytv-overlay .overlay-section.width-half         { width: calc(50% - 4px); }
-  #easytv-overlay .overlay-section.width-three-quarter { width: calc(75% - 4px); }
-  #easytv-overlay .overlay-section.width-quarter      { width: calc(25% - 4px); }
+  #easytv-overlay .overlay-section.width-full          { width: 100%; }
+  #easytv-overlay .overlay-section.width-half          { width: calc(50% - var(--etv-gap-half, 4px)); }
+  #easytv-overlay .overlay-section.width-three-quarter { width: calc(75% - var(--etv-gap-quarter, 2px)); }
+  #easytv-overlay .overlay-section.width-quarter       { width: calc(25% - var(--etv-gap-three-quarter, 6px)); }
   #easytv-overlay .etv-section {
     display: flex; flex-direction: column; gap: 6px;
     border-radius: 16px; padding: 12px; width: 100%; box-sizing: border-box;
+    height: 100%;
   }
   #easytv-overlay .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; padding: 0 2px 4px; }
   #easytv-overlay .btn-row { display: flex; align-items: center; gap: 8px; width: 100%; }
   #easytv-overlay .btn-row .icon-btn { flex: 1; border-radius: 14px; height: 56px; width: auto; }
   #easytv-overlay .btn-row .icon-btn ha-icon { --mdc-icon-size: 26px; }
   #easytv-overlay .power-only-row .icon-btn { height: 56px; }
-  #easytv-overlay .dpad-center-row .icon-btn.select-btn { flex: 1.4; height: 64px; }
-  #easytv-overlay .dpad-center-row .icon-btn.select-btn ha-icon { --mdc-icon-size: 30px; }
+  /* D-pad: all directional buttons same height */
   #easytv-overlay .dpad-up-row,
   #easytv-overlay .dpad-down-row { justify-content: center; }
   #easytv-overlay .dpad-up-row .icon-btn,
-  #easytv-overlay .dpad-down-row .icon-btn { flex: none; width: 52px; height: 52px; border-radius: 14px; }
+  #easytv-overlay .dpad-down-row .icon-btn { flex: none; width: 56px; height: 56px; border-radius: 14px; }
+  #easytv-overlay .dpad-center-row .icon-btn { height: 56px; }
+  #easytv-overlay .dpad-center-row .icon-btn.select-btn {
+    flex: none; width: 64px; height: 64px;
+    border-radius: 50% !important;
+  }
+  #easytv-overlay .dpad-center-row .icon-btn.select-btn ha-icon { --mdc-icon-size: 28px; }
   #easytv-overlay .icon-btn {
     cursor:pointer; border-radius: 50%; width:62px; height:62px;
     display:flex; align-items:center; justify-content:center;
@@ -331,14 +348,14 @@ function normalizeWidth(w) {
 
 function buildDefaultSectionLayout() {
   return [
-    { id: 'power', enabled: true, width: 'quarter' },
-    { id: 'app_selector', enabled: true, width: 'three-quarter' },
-    { id: 'utility', enabled: true, width: 'full' },
-    { id: 'dpad', enabled: true, width: 'full' },
-    { id: 'playback', enabled: true, width: 'full' },
-    { id: 'volume', enabled: true, width: 'full' },
-    { id: 'app_shortcuts', enabled: true, width: 'full' },
-    { id: 'numpad', enabled: false, width: 'full' },
+    { id: 'power',        enabled: true,  width: 'quarter' },
+    { id: 'app_selector', enabled: true,  width: 'three-quarter' },
+    { id: 'utility',      enabled: true,  width: 'full' },
+    { id: 'dpad',         enabled: true,  width: 'full' },
+    { id: 'playback',     enabled: true,  width: 'full' },
+    { id: 'volume',       enabled: true,  width: 'full' },
+    { id: 'app_shortcuts',enabled: true,  width: 'full' },
+    { id: 'numpad',       enabled: false, width: 'full' },
   ];
 }
 
@@ -357,14 +374,14 @@ function normalizeSections(sections) {
   }
   const legacy = { ...LEGACY_DEFAULT_SECTIONS, ...(sections || {}) };
   return [
-    { id: 'power', enabled: legacy.power !== false, width: 'quarter' },
+    { id: 'power',        enabled: legacy.power !== false,        width: 'quarter' },
     { id: 'app_selector', enabled: legacy.app_selector !== false, width: 'three-quarter' },
-    { id: 'utility', enabled: legacy.utility !== false, width: 'full' },
-    { id: 'dpad', enabled: legacy.dpad !== false, width: 'full' },
-    { id: 'playback', enabled: legacy.playback !== false, width: 'full' },
-    { id: 'volume', enabled: legacy.volume !== false, width: 'full' },
-    { id: 'app_shortcuts', enabled: legacy.app_shortcuts !== false, width: 'full' },
-    { id: 'numpad', enabled: !!legacy.numpad, width: 'full' },
+    { id: 'utility',      enabled: legacy.utility !== false,      width: 'full' },
+    { id: 'dpad',         enabled: legacy.dpad !== false,         width: 'full' },
+    { id: 'playback',     enabled: legacy.playback !== false,     width: 'full' },
+    { id: 'volume',       enabled: legacy.volume !== false,       width: 'full' },
+    { id: 'app_shortcuts',enabled: legacy.app_shortcuts !== false,width: 'full' },
+    { id: 'numpad',       enabled: !!legacy.numpad,               width: 'full' },
   ];
 }
 
@@ -448,6 +465,16 @@ function editorPanel(title, desc) {
   return panel;
 }
 
+// Compute the CSS custom properties for gap-aware fractional widths.
+// With a flex-wrap body and a gap of G px:
+//   half         = calc(50% - G/2)
+//   quarter      = calc(25% - G * 3/4)   [leaves room for 3 gaps in 4-col]
+//   three-quarter = calc(75% - G * 1/4)
+function gapVars(gapPx) {
+  const g = parseInt(gapPx, 10) || 0;
+  return `--etv-gap:${g}px; --etv-gap-half:${g / 2}px; --etv-gap-quarter:${g * 0.75}px; --etv-gap-three-quarter:${g * 0.25}px;`;
+}
+
 class EasyTVCard extends HTMLElement {
   constructor() {
     super();
@@ -475,10 +502,16 @@ class EasyTVCard extends HTMLElement {
     const showSectionBg  = cfg.overlay_section_bg    !== false;
     const showBtnBorders = cfg.overlay_button_borders !== false;
     const showLabels     = cfg.overlay_show_labels    !== false;
+    const gap            = cfg.overlay_gap ?? DEFAULT_GAP;
+
     overlay.style.background = t.background;
     overlay.style.backdropFilter = t.backdropFilter;
     overlay.style.webkitBackdropFilter = t.backdropFilter;
     overlay.style.color = t.textColor;
+    // Set gap CSS custom properties on the overlay element itself so the
+    // calc() expressions in OVERLAY_STYLES resolve correctly.
+    overlay.style.cssText += '; ' + gapVars(gap);
+
     const dynId = 'easytv-overlay-theme-dynamic';
     let dynStyle = document.getElementById(dynId);
     if (!dynStyle) { dynStyle = document.createElement('style'); dynStyle.id = dynId; document.head.appendChild(dynStyle); }
@@ -662,39 +695,33 @@ class EasyTVCard extends HTMLElement {
     const c = this._commands;
     const wrap = sectionWrap('Navigation');
 
-    // Up — centred, fixed size, does not stretch
+    // Row 1 — Up (centred, fixed size)
     const upRow = document.createElement('div');
     upRow.className = 'btn-row dpad-up-row';
     upRow.appendChild(iconBtn('mdi:arrow-up-bold', () => this._send(c.up), 'Up'));
 
-    // Middle row — left / select / right
+    // Row 2 — Left / Select (circle) / Right, all equal height
     const midRow = document.createElement('div');
     midRow.className = 'btn-row dpad-center-row';
     const leftBtn  = iconBtn('mdi:arrow-left-bold',  () => this._send(c.left),   'Left');
     const selBtn   = iconBtn('mdi:keyboard-return',  () => this._send(c.select), 'Select', 'select-btn');
     const rightBtn = iconBtn('mdi:arrow-right-bold', () => this._send(c.right),  'Right');
-    [leftBtn, selBtn, rightBtn].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '64px'; });
-    selBtn.style.flex = '1.4';
+    [leftBtn, rightBtn].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '56px'; });
+    // select btn is a circle — size set via CSS, no flex stretch
     midRow.appendChild(leftBtn); midRow.appendChild(selBtn); midRow.appendChild(rightBtn);
 
-    // Bottom row — back / down / home
+    // Row 3 — Back / Down / Home  (3 equal buttons)
     const botRow = document.createElement('div');
     botRow.className = 'btn-row dpad-down-row';
-    botRow.appendChild(iconBtn('mdi:arrow-down-bold', () => this._send(c.down), 'Down'));
-
-    // Extra row — back and home flanking down
-    const extraRow = document.createElement('div');
-    extraRow.className = 'btn-row';
-    const backBtn = iconBtn('mdi:arrow-left',   () => this._send(c.back), 'Back');
-    const homeBtn = iconBtn('mdi:home-outline', () => this._send(c.home), 'Home');
-    [backBtn, homeBtn].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '52px'; });
-    extraRow.appendChild(backBtn);
-    extraRow.appendChild(homeBtn);
+    const backBtn = iconBtn('mdi:arrow-left',        () => this._send(c.back), 'Back');
+    const downBtn = iconBtn('mdi:arrow-down-bold',   () => this._send(c.down), 'Down');
+    const homeBtn = iconBtn('mdi:home-outline',      () => this._send(c.home), 'Home');
+    [backBtn, downBtn, homeBtn].forEach(b => { b.style.flex = '1'; b.style.borderRadius = '14px'; b.style.height = '56px'; });
+    botRow.appendChild(backBtn); botRow.appendChild(downBtn); botRow.appendChild(homeBtn);
 
     wrap.appendChild(upRow);
     wrap.appendChild(midRow);
     wrap.appendChild(botRow);
-    wrap.appendChild(extraRow);
     return wrap;
   }
 
@@ -777,14 +804,14 @@ class EasyTVCard extends HTMLElement {
 
   _buildSectionById(id) {
     switch (id) {
-      case 'power':        return this._buildPower();
-      case 'app_selector': return this._buildAppSelector();
-      case 'utility':      return this._buildUtility();
-      case 'dpad':         return this._buildDpad();
-      case 'playback':     return this._buildPlayback();
-      case 'volume':       return this._buildVolume();
-      case 'app_shortcuts':return this._buildAppShortcuts();
-      case 'numpad':       return this._buildNumpad();
+      case 'power':         return this._buildPower();
+      case 'app_selector':  return this._buildAppSelector();
+      case 'utility':       return this._buildUtility();
+      case 'dpad':          return this._buildDpad();
+      case 'playback':      return this._buildPlayback();
+      case 'volume':        return this._buildVolume();
+      case 'app_shortcuts': return this._buildAppShortcuts();
+      case 'numpad':        return this._buildNumpad();
       default: return null;
     }
   }
@@ -1080,6 +1107,10 @@ class EasyTVCardEditor extends HTMLElement {
     const overlayBtnBorderSw = editorSwitch(c.overlay_button_borders !== false);
     overlayBtnBorderSw.addEventListener('change', e => this._set('overlay_button_borders', e.target.checked));
     popoutPanel.appendChild(editorRow('Button Borders', overlayBtnBorderSw));
+    // Section gap
+    const gapEl = editorSelect(GAP_OPTIONS, String(c.overlay_gap ?? DEFAULT_GAP));
+    gapEl.addEventListener('change', e => this._set('overlay_gap', e.target.value));
+    popoutPanel.appendChild(editorField('Section Gap', gapEl));
     this._renderSectionEditor(popoutPanel);
     editor.appendChild(popoutPanel);
 
