@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.13
+// EasyTV Card v0.4.14
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.13';
+const CARD_VERSION = '0.4.14';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -343,7 +343,7 @@ const EDITOR_STYLES = `
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
-  /* Line 2: only when enabled — accordion */
+  /* Line 2: only when enabled \u2014 accordion */
   .section-row2 {
     display: flex; align-items: center; gap: 6px;
     padding: 0 10px;
@@ -918,6 +918,7 @@ class EasyTVCard extends HTMLElement {
       header.appendChild(closeBtn);
       overlay.appendChild(header);
     } else {
+      // Close button floats absolutely — does not affect layout/padding
       const closeBtn = document.createElement('button');
       closeBtn.className = 'close-btn';
       closeBtn.style.cssText = 'position:absolute;top:12px;right:12px;z-index:10;';
@@ -928,7 +929,7 @@ class EasyTVCard extends HTMLElement {
 
     const body = document.createElement('div');
     body.className = 'overlay-body';
-    if (!showHeader) body.style.paddingTop = '52px';
+    // No paddingTop here — absolute close btn takes no layout space
 
     normalizeSections(cfg.sections).forEach((section) => {
       if (!section.enabled) return;
@@ -1042,16 +1043,37 @@ class EasyTVCardEditor extends HTMLElement {
     const list = document.createElement('div');
     list.className = 'section-list';
 
+    // ── Single delegated listener on the list container ──
+    // Reads the action type and index from data attributes at click time.
+    // This avoids any stale-closure problem since no index is captured at build time.
+    list.addEventListener('click', (e) => {
+      const moveBtn = e.target.closest('[data-section-action]');
+      if (!moveBtn) return;
+      const item = moveBtn.closest('.section-item');
+      if (!item) return;
+      const idx = parseInt(item.dataset.sectionIndex, 10);
+      const action = moveBtn.dataset.sectionAction;
+      if (action === 'up')   this._moveSection(idx, -1);
+      if (action === 'down') this._moveSection(idx,  1);
+    });
+
+    list.addEventListener('change', (e) => {
+      const widthSel = e.target.closest('.section-width');
+      if (!widthSel) return;
+      const item = widthSel.closest('.section-item');
+      if (!item) return;
+      const idx = parseInt(item.dataset.sectionIndex, 10);
+      this._updateSection(idx, { width: e.target.value });
+    });
+
     this._config.sections.forEach((section, index) => {
       const enabled = section.enabled !== false;
 
       const item = document.createElement('div');
       item.className = 'section-item' + (enabled ? '' : ' disabled');
-      // Store the current index as a data attribute so click handlers always
-      // read the live position rather than closing over a stale value.
       item.dataset.sectionIndex = String(index);
 
-      // \u2500\u2500 Row 1: handle \u00b7 name \u00b7 toggle \u2500\u2500
+      // Row 1: handle · name · toggle
       const row1 = document.createElement('div');
       row1.className = 'section-row1';
 
@@ -1075,7 +1097,7 @@ class EasyTVCardEditor extends HTMLElement {
       row1.appendChild(sw);
       item.appendChild(row1);
 
-      // \u2500\u2500 Row 2: width \u00b7 \u2191 \u00b7 \u2193  (only when enabled) \u2500\u2500
+      // Row 2: width · ↑ · ↓ (only when enabled)
       const row2 = document.createElement('div');
       row2.className = 'section-row2' + (enabled ? ' open' : '');
 
@@ -1087,24 +1109,18 @@ class EasyTVCardEditor extends HTMLElement {
         if (val === normalizeWidth(section.width)) o.selected = true;
         widthSel.appendChild(o);
       });
-      widthSel.addEventListener('change', e => {
-        const currentIndex = parseInt(e.target.closest('.section-item').dataset.sectionIndex, 10);
-        this._updateSection(currentIndex, { width: e.target.value });
-      });
 
       const upBtn = document.createElement('button');
-      upBtn.className = 'section-move'; upBtn.textContent = '\u2191'; upBtn.title = 'Move up';
-      upBtn.addEventListener('click', e => {
-        const currentIndex = parseInt(e.target.closest('.section-item').dataset.sectionIndex, 10);
-        this._moveSection(currentIndex, -1);
-      });
+      upBtn.className = 'section-move';
+      upBtn.textContent = '\u2191';
+      upBtn.title = 'Move up';
+      upBtn.dataset.sectionAction = 'up';
 
       const dnBtn = document.createElement('button');
-      dnBtn.className = 'section-move'; dnBtn.textContent = '\u2193'; dnBtn.title = 'Move down';
-      dnBtn.addEventListener('click', e => {
-        const currentIndex = parseInt(e.target.closest('.section-item').dataset.sectionIndex, 10);
-        this._moveSection(currentIndex, 1);
-      });
+      dnBtn.className = 'section-move';
+      dnBtn.textContent = '\u2193';
+      dnBtn.title = 'Move down';
+      dnBtn.dataset.sectionAction = 'down';
 
       row2.appendChild(widthSel);
       row2.appendChild(upBtn);
@@ -1126,43 +1142,55 @@ class EasyTVCardEditor extends HTMLElement {
     note.className = 'editor-note';
     note.textContent = `${mode === 'double' ? 'Double row supports up to 6 buttons.' : 'Single row supports up to 3 buttons.'}`;
     parent.appendChild(note);
+
     const list = document.createElement('div');
     list.className = 'qa-list';
+
+    // Delegated listener for QA move/remove
+    list.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-qa-action]');
+      if (!btn) return;
+      const item = btn.closest('.qa-item');
+      if (!item) return;
+      const idx = parseInt(item.dataset.qaIndex, 10);
+      const action = btn.dataset.qaAction;
+      if (action === 'up')     this._moveQA(idx, -1);
+      if (action === 'down')   this._moveQA(idx,  1);
+      if (action === 'remove') this._removeQA(idx);
+    });
+
     qa.slice(0, limit).forEach((key, index) => {
       const def = QUICK_ACTION_DEFS[key];
       if (!def) return;
       const item = document.createElement('div');
       item.className = 'qa-item';
       item.dataset.qaIndex = String(index);
+
       const handle = document.createElement('button');
       handle.className = 'section-handle'; handle.textContent = '\u283f';
+
       const name = document.createElement('div');
       name.className = 'section-name'; name.textContent = def.title;
+
       const moves = document.createElement('div');
       moves.style.cssText = 'display:flex;gap:4px;';
+
       const up = document.createElement('button');
-      up.className = 'section-move'; up.textContent = '\u2191';
-      up.addEventListener('click', e => {
-        const i = parseInt(e.target.closest('.qa-item').dataset.qaIndex, 10);
-        this._moveQA(i, -1);
-      });
+      up.className = 'section-move'; up.textContent = '\u2191'; up.dataset.qaAction = 'up';
+
       const dn = document.createElement('button');
-      dn.className = 'section-move'; dn.textContent = '\u2193';
-      dn.addEventListener('click', e => {
-        const i = parseInt(e.target.closest('.qa-item').dataset.qaIndex, 10);
-        this._moveQA(i, 1);
-      });
+      dn.className = 'section-move'; dn.textContent = '\u2193'; dn.dataset.qaAction = 'down';
+
       const rm = document.createElement('button');
-      rm.className = 'section-move'; rm.textContent = '\u2715'; rm.style.color = '#e74c3c';
-      rm.addEventListener('click', e => {
-        const i = parseInt(e.target.closest('.qa-item').dataset.qaIndex, 10);
-        this._removeQA(i);
-      });
+      rm.className = 'section-move'; rm.textContent = '\u2715'; rm.style.color = '#e74c3c'; rm.dataset.qaAction = 'remove';
+
       moves.appendChild(up); moves.appendChild(dn); moves.appendChild(rm);
       item.appendChild(handle); item.appendChild(name); item.appendChild(moves);
       list.appendChild(item);
     });
+
     parent.appendChild(list);
+
     if (qa.length < limit) {
       const addSel = editorSelect([['', '\u2014 Add action \u2014'], ...Object.entries(QUICK_ACTION_DEFS).map(([k, v]) => [k, v.title])], '', 'etv-select');
       addSel.addEventListener('change', e => { if (e.target.value) { this._addQA(e.target.value); e.target.value = ''; } });
