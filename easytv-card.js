@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.14
+// EasyTV Card v0.4.15
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.14';
+const CARD_VERSION = '0.4.15';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -195,6 +195,10 @@ const OVERLAY_STYLES = `
     padding: 4px 12px 32px;
     flex: 1; width: 100%; box-sizing: border-box;
     align-items: start;
+  }
+  /* When no header is shown, leave room for the floating close button */
+  #easytv-overlay .overlay-body.no-header {
+    padding-top: 56px;
   }
   #easytv-overlay .overlay-section { min-width: 0; box-sizing: border-box; }
   #easytv-overlay .overlay-section.width-full          { grid-column: span 4; }
@@ -442,19 +446,36 @@ function buildDefaultSectionLayout() {
   ];
 }
 
+/**
+ * Normalize sections from config.
+ * When the config already contains an array, we PRESERVE the order from the
+ * array (user may have reordered sections) and only fill in any missing ids.
+ * Re-sorting by SECTION_ORDER is intentionally avoided here so that
+ * _moveSection changes survive the setConfig round-trip.
+ */
 function normalizeSections(sections) {
   if (Array.isArray(sections)) {
-    const map = new Map();
-    sections.forEach((s) => {
-      if (!s || !s.id) return;
-      map.set(s.id, { id: s.id, enabled: s.enabled !== false, width: normalizeWidth(s.width) });
+    // Build a set of ids that are already present in the array
+    const seen = new Set();
+    const result = sections
+      .filter(s => s && s.id && SECTION_ORDER.includes(s.id))
+      .map(s => {
+        seen.add(s.id);
+        return { id: s.id, enabled: s.enabled !== false, width: normalizeWidth(s.width) };
+      });
+    // Append any ids missing from the saved array (new sections added in future versions)
+    SECTION_ORDER.forEach(id => {
+      if (!seen.has(id)) {
+        result.push({
+          id,
+          enabled: id !== 'numpad',
+          width: (id === 'power') ? 'quarter' : (id === 'app_selector') ? 'three-quarter' : 'full',
+        });
+      }
     });
-    return SECTION_ORDER.map((id) => map.get(id) || {
-      id,
-      enabled: id !== 'numpad',
-      width: (id === 'power') ? 'quarter' : (id === 'app_selector') ? 'three-quarter' : 'full',
-    });
+    return result;
   }
+  // Legacy object format
   const legacy = { ...LEGACY_DEFAULT_SECTIONS, ...(sections || {}) };
   return [
     { id: 'power',        enabled: legacy.power !== false,        width: 'quarter' },
@@ -918,7 +939,6 @@ class EasyTVCard extends HTMLElement {
       header.appendChild(closeBtn);
       overlay.appendChild(header);
     } else {
-      // Close button floats absolutely — does not affect layout/padding
       const closeBtn = document.createElement('button');
       closeBtn.className = 'close-btn';
       closeBtn.style.cssText = 'position:absolute;top:12px;right:12px;z-index:10;';
@@ -928,8 +948,8 @@ class EasyTVCard extends HTMLElement {
     }
 
     const body = document.createElement('div');
-    body.className = 'overlay-body';
-    // No paddingTop here — absolute close btn takes no layout space
+    // When no header, add the no-header class so CSS gives top padding for the floating close btn
+    body.className = showHeader ? 'overlay-body' : 'overlay-body no-header';
 
     normalizeSections(cfg.sections).forEach((section) => {
       if (!section.enabled) return;
@@ -1043,9 +1063,7 @@ class EasyTVCardEditor extends HTMLElement {
     const list = document.createElement('div');
     list.className = 'section-list';
 
-    // ── Single delegated listener on the list container ──
-    // Reads the action type and index from data attributes at click time.
-    // This avoids any stale-closure problem since no index is captured at build time.
+    // Single delegated click listener — reads live index from DOM at click time
     list.addEventListener('click', (e) => {
       const moveBtn = e.target.closest('[data-section-action]');
       if (!moveBtn) return;
@@ -1073,7 +1091,6 @@ class EasyTVCardEditor extends HTMLElement {
       item.className = 'section-item' + (enabled ? '' : ' disabled');
       item.dataset.sectionIndex = String(index);
 
-      // Row 1: handle · name · toggle
       const row1 = document.createElement('div');
       row1.className = 'section-row1';
 
@@ -1097,7 +1114,6 @@ class EasyTVCardEditor extends HTMLElement {
       row1.appendChild(sw);
       item.appendChild(row1);
 
-      // Row 2: width · ↑ · ↓ (only when enabled)
       const row2 = document.createElement('div');
       row2.className = 'section-row2' + (enabled ? ' open' : '');
 
@@ -1146,7 +1162,6 @@ class EasyTVCardEditor extends HTMLElement {
     const list = document.createElement('div');
     list.className = 'qa-list';
 
-    // Delegated listener for QA move/remove
     list.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-qa-action]');
       if (!btn) return;
