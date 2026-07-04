@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.8
+// EasyTV Card v0.4.9
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.8';
+const CARD_VERSION = '0.4.9';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -194,6 +194,7 @@ const OVERLAY_STYLES = `
     gap: var(--etv-gap, 8px);
     padding: 8px 12px 48px;
     flex: 1; width: 100%; box-sizing: border-box;
+    align-items: stretch;
   }
   #easytv-overlay .overlay-section { min-width: 0; box-sizing: border-box; }
   #easytv-overlay .overlay-section.width-full          { grid-column: span 4; }
@@ -212,42 +213,51 @@ const OVERLAY_STYLES = `
   #easytv-overlay .btn-row { display: flex; align-items: center; gap: 8px; width: 100%; }
   #easytv-overlay .btn-row .icon-btn { flex: 1; border-radius: 14px; height: 56px; width: auto; }
   #easytv-overlay .btn-row .icon-btn ha-icon { --mdc-icon-size: 26px; }
-  #easytv-overlay .power-only-row .icon-btn { height: 56px; }
 
-  /* ── D-pad ──
-     Up row: single button centred, fixed 56×56 square.
-     Center & bottom rows: dpad-dir buttons share remaining space (flex:1)
-     around the fixed select circle.                                        */
-  #easytv-overlay .dpad-up-row { justify-content: center; }
-  #easytv-overlay .dpad-up-row .icon-btn.dpad-dir {
-    flex: 0 0 auto !important;
-    width: 56px !important;
-    height: 56px !important;
-    border-radius: 14px !important;
-  }
-
-  #easytv-overlay .dpad-center-row .icon-btn.dpad-dir {
+  /* Power button fills its quarter-section height to match the app dropdown */
+  #easytv-overlay .power-only-row { flex: 1; }
+  #easytv-overlay .power-only-row .icon-btn {
     flex: 1 !important;
-    width: auto !important;
-    height: 56px !important;
+    height: 100% !important;
+    min-height: 52px;
     border-radius: 14px !important;
+    width: auto !important;
   }
 
-  #easytv-overlay .dpad-down-row .icon-btn.dpad-dir {
-    flex: 1 !important;
-    width: auto !important;
-    height: 56px !important;
-    border-radius: 14px !important;
+  /* ── D-pad 3×3 grid ──
+     9 equal cells. Buttons placed by grid-area:
+       row1: _ up _
+       row2: left select right
+       row3: back down home
+     The .dpad-empty spacer fills corners.                          */
+  #easytv-overlay .dpad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 6px;
+    width: 100%;
+    /* square aspect: each cell = 1/3 of container width */
+    aspect-ratio: 1;
   }
-
-  /* Select circle — fixed size, does not stretch */
-  #easytv-overlay .dpad-center-row .icon-btn.select-btn {
-    flex: 0 0 auto !important;
-    width: 64px !important;
-    height: 64px !important;
+  #easytv-overlay .dpad-grid .icon-btn {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 14px !important;
+    border-radius: 14px !important;
+    flex: none !important;
+    padding: 0 !important;
+  }
+  #easytv-overlay .dpad-grid .icon-btn ha-icon { --mdc-icon-size: 26px; }
+  /* Select button same shape as others, accent border only */
+  #easytv-overlay .dpad-grid .icon-btn.select-btn {
     border-radius: 50% !important;
   }
-  #easytv-overlay .dpad-center-row .icon-btn.select-btn ha-icon { --mdc-icon-size: 28px; }
+  #easytv-overlay .dpad-grid .dpad-empty {
+    /* invisible spacer occupying corner cells */
+    background: transparent;
+    border: none;
+    pointer-events: none;
+  }
 
   /* Base overlay icon-btn */
   #easytv-overlay .icon-btn {
@@ -549,7 +559,7 @@ class EasyTVCard extends HTMLElement {
       }
       #easytv-overlay .icon-btn:hover { background: ${t.buttonHover}; }
       #easytv-overlay .icon-btn:active { background: ${t.buttonActive}; transform: scale(0.91); }
-      #easytv-overlay .dpad-center-row .icon-btn.select-btn { background: color-mix(in srgb, var(--primary-color, #1976d2) 22%, ${t.buttonBackground}); border: 2px solid var(--primary-color, #1976d2); }
+      #easytv-overlay .dpad-grid .icon-btn.select-btn { background: color-mix(in srgb, var(--primary-color, #1976d2) 22%, ${t.buttonBackground}); border: 2px solid var(--primary-color, #1976d2); }
       #easytv-overlay .numpad-grid .icon-btn { color: ${t.textColor}; }
       #easytv-overlay .app-btn {
         background: ${t.buttonBackground};
@@ -674,11 +684,10 @@ class EasyTVCard extends HTMLElement {
   _buildPower() {
     const c = this._commands;
     const wrap = sectionWrap('Power');
+    wrap.style.flex = '1';
     const row = document.createElement('div');
     row.className = 'btn-row power-only-row';
     const btn = iconBtn('mdi:power', () => this._send(c.power || 'power'), 'Power');
-    btn.style.flex = '1';
-    btn.style.borderRadius = '14px';
     row.appendChild(btn);
     wrap.appendChild(row);
     return wrap;
@@ -711,28 +720,37 @@ class EasyTVCard extends HTMLElement {
     const c = this._commands;
     const wrap = sectionWrap('Navigation');
 
-    // Row 1 — Up: single centred fixed-square button
-    const upRow = document.createElement('div');
-    upRow.className = 'btn-row dpad-up-row';
-    upRow.appendChild(iconBtn('mdi:arrow-up-bold', () => this._send(c.up), 'Up', 'dpad-dir'));
+    // 3x3 CSS grid:
+    //  col:  1      2       3
+    // row1: empty  up     empty
+    // row2: left   select  right
+    // row3: back   down    home
+    const grid = document.createElement('div');
+    grid.className = 'dpad-grid';
 
-    // Row 2 — Left / Select / Right
-    const midRow = document.createElement('div');
-    midRow.className = 'btn-row dpad-center-row';
-    midRow.appendChild(iconBtn('mdi:arrow-left-bold',  () => this._send(c.left),   'Left',   'dpad-dir'));
-    midRow.appendChild(iconBtn('mdi:keyboard-return',  () => this._send(c.select), 'Select', 'select-btn'));
-    midRow.appendChild(iconBtn('mdi:arrow-right-bold', () => this._send(c.right),  'Right',  'dpad-dir'));
+    const empty1 = document.createElement('div');
+    empty1.className = 'dpad-empty';
+    const upBtn    = iconBtn('mdi:arrow-up-bold',    () => this._send(c.up),     'Up');
+    const empty2   = document.createElement('div');
+    empty2.className = 'dpad-empty';
+    const leftBtn  = iconBtn('mdi:arrow-left-bold',  () => this._send(c.left),   'Left');
+    const selBtn   = iconBtn('mdi:keyboard-return',  () => this._send(c.select), 'Select', 'select-btn');
+    const rightBtn = iconBtn('mdi:arrow-right-bold', () => this._send(c.right),  'Right');
+    const backBtn  = iconBtn('mdi:arrow-left',       () => this._send(c.back),   'Back');
+    const downBtn  = iconBtn('mdi:arrow-down-bold',  () => this._send(c.down),   'Down');
+    const homeBtn  = iconBtn('mdi:home-outline',     () => this._send(c.home),   'Home');
 
-    // Row 3 — Back / Down / Home
-    const botRow = document.createElement('div');
-    botRow.className = 'btn-row dpad-down-row';
-    botRow.appendChild(iconBtn('mdi:arrow-left',      () => this._send(c.back), 'Back', 'dpad-dir'));
-    botRow.appendChild(iconBtn('mdi:arrow-down-bold', () => this._send(c.down), 'Down', 'dpad-dir'));
-    botRow.appendChild(iconBtn('mdi:home-outline',    () => this._send(c.home), 'Home', 'dpad-dir'));
+    grid.appendChild(empty1);
+    grid.appendChild(upBtn);
+    grid.appendChild(empty2);
+    grid.appendChild(leftBtn);
+    grid.appendChild(selBtn);
+    grid.appendChild(rightBtn);
+    grid.appendChild(backBtn);
+    grid.appendChild(downBtn);
+    grid.appendChild(homeBtn);
 
-    wrap.appendChild(upRow);
-    wrap.appendChild(midRow);
-    wrap.appendChild(botRow);
+    wrap.appendChild(grid);
     return wrap;
   }
 
