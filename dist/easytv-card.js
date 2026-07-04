@@ -1,4 +1,4 @@
-// EasyTV Card v0.1.1
+// EasyTV Card v0.1.2
 // https://github.com/LayzeeAutomation/EasyTV
 
 const TV_PRESETS = {
@@ -88,8 +88,12 @@ class EasyTVCard extends HTMLElement {
   setConfig(config){
     if(!config.remote_entity)throw new Error('EasyTV: remote_entity is required');
     this._config={
-      tv_preset:'roku',expand_mode:'popup',show_name:true,glassmorphism:true,
-      sections:{...DEFAULT_SECTIONS},...config,
+      tv_preset:'roku',
+      expand_mode:'inline',
+      show_name:true,
+      glassmorphism:true,
+      sections:{...DEFAULT_SECTIONS},
+      ...config,
       sections:{...DEFAULT_SECTIONS,...(config.sections||{})},
     };
     this._render();
@@ -98,7 +102,7 @@ class EasyTVCard extends HTMLElement {
   static getConfigElement(){return document.createElement('easytv-card-editor');}
 
   static getStubConfig(){
-    return {name:'My TV',remote_entity:'remote.my_tv',tv_preset:'roku',expand_mode:'popup',sections:{...DEFAULT_SECTIONS}};
+    return {name:'My TV',remote_entity:'remote.my_tv',tv_preset:'roku',expand_mode:'inline',sections:{...DEFAULT_SECTIONS}};
   }
 
   get _commands(){
@@ -113,10 +117,15 @@ class EasyTVCard extends HTMLElement {
 
   _toggleExpanded(){
     const{expand_mode,popup_hash}=this._config;
-    if(expand_mode==='popup'&&popup_hash){
+    // If popup mode AND a hash is set, navigate to the popup
+    if(expand_mode==='popup'&&popup_hash&&popup_hash.trim()!==''){
       history.pushState(null,'',popup_hash);
       window.dispatchEvent(new HashChangeEvent('hashchange'));
-    }else{this._expanded=!this._expanded;this._render();}
+    } else {
+      // Always fall back to inline expand if popup is misconfigured or mode is inline
+      this._expanded=!this._expanded;
+      this._render();
+    }
   }
 
   _dpad(){
@@ -214,11 +223,11 @@ class EasyTVCard extends HTMLElement {
     const root=this.shadowRoot;root.innerHTML='';
     const style=document.createElement('style');style.textContent=CARD_STYLES;root.appendChild(style);
     const card=document.createElement('ha-card');
-    card.appendChild((this._expanded&&this._config.expand_mode==='inline')?this._expandedView():this._compactView());
+    card.appendChild((this._expanded)?this._expandedView():this._compactView());
     root.appendChild(card);
   }
 
-  getCardSize(){return this._config?.compact_rows||2;}
+  getCardSize(){return this._expanded?6:(this._config?.compact_rows||2);}
 }
 
 class EasyTVCardEditor extends HTMLElement {
@@ -257,8 +266,8 @@ class EasyTVCardEditor extends HTMLElement {
         </ha-select>
         <h3>Behaviour</h3>
         <ha-select label="Expand Mode" data-key="expand_mode">
-          <mwc-list-item value="popup">Popup (Bubble Card)</mwc-list-item>
           <mwc-list-item value="inline">Inline Expand</mwc-list-item>
+          <mwc-list-item value="popup">Popup (Bubble Card)</mwc-list-item>
         </ha-select>
         <ha-textfield label="Popup Hash (e.g. #MyTV-PopUp)" value="${c.popup_hash||''}" data-key="popup_hash"></ha-textfield>
         <h3>Sections</h3>
