@@ -1,7 +1,7 @@
-// EasyTV Card v0.3.2
+// EasyTV Card v0.3.3
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.3.2';
+const CARD_VERSION = '0.3.3';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -27,8 +27,6 @@ const APP_SHORTCUTS = [
   { name:'Twitch', cmd:'Twitch', color:'#9146FF', icon:'mdi:twitch' },
 ];
 
-// Overlay theme presets — applied as a blur fallback when the HA theme
-// doesn't supply a solid background color for the overlay.
 const OVERLAY_THEMES = {
   dark: {
     background: 'rgba(10, 10, 18, 0.88)',
@@ -41,7 +39,7 @@ const OVERLAY_THEMES = {
     textColor: '#ffffff',
     mutedColor: 'rgba(255, 255, 255, 0.55)',
     headerBorder: 'rgba(255, 255, 255, 0.10)',
-    dropdownArrow: 'white',
+    dropdownArrow: 'ffffff',
   },
   light: {
     background: 'rgba(240, 240, 245, 0.88)',
@@ -54,7 +52,7 @@ const OVERLAY_THEMES = {
     textColor: '#111111',
     mutedColor: 'rgba(0, 0, 0, 0.50)',
     headerBorder: 'rgba(0, 0, 0, 0.08)',
-    dropdownArrow: '000000',
+    dropdownArrow: '111111',
   },
 };
 
@@ -262,10 +260,6 @@ class EasyTVCard extends HTMLElement {
     overlay.style.webkitBackdropFilter = t.backdropFilter;
     overlay.style.color = t.textColor;
 
-    // Header border
-    const headerBorderStyle = `1px solid ${t.headerBorder}`;
-
-    // Inject per-instance dynamic styles scoped to this overlay instance
     const dynId = 'easytv-overlay-theme-dynamic';
     let dynStyle = document.getElementById(dynId);
     if (!dynStyle) {
@@ -275,7 +269,7 @@ class EasyTVCard extends HTMLElement {
     }
     dynStyle.textContent = `
       #easytv-overlay .overlay-header {
-        border-bottom: ${headerBorderStyle};
+        border-bottom: 1px solid ${t.headerBorder};
         color: ${t.textColor};
       }
       #easytv-overlay .overlay-header ha-icon { color: var(--primary-color, #1976d2); }
@@ -498,13 +492,11 @@ class EasyTVCard extends HTMLElement {
     const { name, icon: ico, sections } = this._config;
     const overlay = document.createElement('div');
     overlay.id = 'easytv-overlay';
-
-    // Apply blur/semi-transparent theme to overlay
     this._applyOverlayTheme(overlay);
 
     const header = document.createElement('div'); header.className = 'overlay-header';
     header.appendChild(mkIcon(ico || 'mdi:television'));
-    const title = document.createElement('span'); title.className = 'overlay-title'; title.textContent = name || 'TV';
+    const title = document.createElement('span'); title.className = 'overlay-title'; title.textContent = name || 'My TV';
     header.appendChild(title);
     const closeBtn = document.createElement('button'); closeBtn.className = 'close-btn';
     closeBtn.appendChild(mkIcon('mdi:close'));
@@ -541,7 +533,7 @@ class EasyTVCard extends HTMLElement {
     const left = document.createElement('div'); left.className = 'compact-left';
     const tvIco = mkIcon(ico || 'mdi:television'); tvIco.className = 'tv-icon'; left.appendChild(tvIco);
     if (show_name !== false) {
-      const s = document.createElement('span'); s.className = 'tv-name'; s.textContent = name || 'TV'; left.appendChild(s);
+      const s = document.createElement('span'); s.className = 'tv-name'; s.textContent = name || 'My TV'; left.appendChild(s);
     }
     const actions = document.createElement('div'); actions.className = 'compact-actions';
     if (sections.volume) actions.appendChild(iconBtn('mdi:volume-minus', () => this._send(c.volume_down), 'Vol -', 'compact-action'));
@@ -576,66 +568,100 @@ class EasyTVCardEditor extends HTMLElement {
   _fire(config) { this.dispatchEvent(new CustomEvent('config-changed', { detail: { config }, bubbles: true, composed: true })); }
   _set(key, value) { this._fire({ ...this._config, [key]: value }); }
   _setSection(key, value) { this._fire({ ...this._config, sections: { ...this._config.sections, [key]: value } }); }
+
   _render() {
     if (!this._config) return;
     const c = this._config; const s = c.sections || {};
     const root = this.shadowRoot;
+
     root.innerHTML = `
       <style>${EDITOR_STYLES}</style>
       <div class="editor">
         <h3>General</h3>
-        <ha-textfield label="Name" value="${c.name||''}" data-key="name"></ha-textfield>
-        <ha-textfield label="Icon (e.g. mdi:television)" value="${c.icon||''}" data-key="icon"></ha-textfield>
+        <ha-textfield id="etv-name" label="Card Title (e.g. My TV)"></ha-textfield>
+        <ha-textfield id="etv-icon" label="Icon (e.g. mdi:television)"></ha-textfield>
         <h3>Entities</h3>
-        <ha-entity-picker label="Remote Entity (required)" data-key="remote_entity"></ha-entity-picker>
-        <ha-entity-picker label="App Select Entity (Roku)" data-key="app_select_entity"></ha-entity-picker>
+        <ha-entity-picker id="etv-remote" label="Remote Entity (required)"></ha-entity-picker>
+        <ha-entity-picker id="etv-appselect" label="App Select Entity (Roku)"></ha-entity-picker>
         <h3>TV Preset</h3>
-        <ha-select label="TV Preset" data-key="tv_preset">
+        <ha-select id="etv-preset" label="TV Preset">
           <mwc-list-item value="roku">Roku</mwc-list-item>
           <mwc-list-item value="google_tv">Google TV</mwc-list-item>
           <mwc-list-item value="samsung">Samsung</mwc-list-item>
           <mwc-list-item value="generic">Generic</mwc-list-item>
         </ha-select>
         <h3>Behaviour</h3>
-        <ha-select label="Expand Mode" data-key="expand_mode">
+        <ha-select id="etv-expandmode" label="Expand Mode">
           <mwc-list-item value="inline">Inline Expand</mwc-list-item>
           <mwc-list-item value="popup">Popup (Bubble Card)</mwc-list-item>
         </ha-select>
-        <ha-textfield label="Popup Hash (e.g. #MyTV-PopUp)" value="${c.popup_hash||''}" data-key="popup_hash"></ha-textfield>
+        <ha-textfield id="etv-popuphash" label="Popup Hash (e.g. #MyTV-PopUp)"></ha-textfield>
         <h3>Sections</h3>
-        <ha-formfield label="Controls (Power/Source/Menu)"><ha-switch data-section="utility" ${s.utility!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-formfield label="D-Pad Navigation"><ha-switch data-section="dpad" ${s.dpad!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-formfield label="Playback Controls"><ha-switch data-section="playback" ${s.playback!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-formfield label="Volume Controls"><ha-switch data-section="volume" ${s.volume!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-formfield label="App Shortcuts Grid"><ha-switch data-section="app_shortcuts" ${s.app_shortcuts!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-formfield label="App Selector Dropdown (Roku)"><ha-switch data-section="app_selector" ${s.app_selector!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-formfield label="Number Pad (0-9)"><ha-switch data-section="numpad" ${s.numpad?'checked':''}></ha-switch></ha-formfield>
+        <ha-formfield label="Controls (Power/Source/Menu)"><ha-switch id="etv-s-utility" ${s.utility!==false?'checked':''}></ha-switch></ha-formfield>
+        <ha-formfield label="D-Pad Navigation"><ha-switch id="etv-s-dpad" ${s.dpad!==false?'checked':''}></ha-switch></ha-formfield>
+        <ha-formfield label="Playback Controls"><ha-switch id="etv-s-playback" ${s.playback!==false?'checked':''}></ha-switch></ha-formfield>
+        <ha-formfield label="Volume Controls"><ha-switch id="etv-s-volume" ${s.volume!==false?'checked':''}></ha-switch></ha-formfield>
+        <ha-formfield label="App Shortcuts Grid"><ha-switch id="etv-s-appshortcuts" ${s.app_shortcuts!==false?'checked':''}></ha-switch></ha-formfield>
+        <ha-formfield label="App Selector Dropdown (Roku)"><ha-switch id="etv-s-appselector" ${s.app_selector!==false?'checked':''}></ha-switch></ha-formfield>
+        <ha-formfield label="Number Pad (0-9)"><ha-switch id="etv-s-numpad" ${s.numpad?'checked':''}></ha-switch></ha-formfield>
         <h3>Appearance</h3>
-        <ha-formfield label="Show Name"><ha-switch data-key-bool="show_name" ${c.show_name!==false?'checked':''}></ha-switch></ha-formfield>
-        <ha-select label="Overlay Theme" data-key="overlay_theme">
+        <ha-formfield label="Show Name"><ha-switch id="etv-showname" ${c.show_name!==false?'checked':''}></ha-switch></ha-formfield>
+        <ha-select id="etv-overlaytheme" label="Overlay Theme">
           <mwc-list-item value="dark">Dark (blur)</mwc-list-item>
           <mwc-list-item value="light">Light (blur)</mwc-list-item>
         </ha-select>
       </div>
     `;
-    root.querySelectorAll('ha-entity-picker').forEach(el => {
-      el.hass = this._hass; el.value = c[el.dataset.key] || '';
-      el.addEventListener('value-changed', (e) => this._set(el.dataset.key, e.detail.value));
-    });
-    root.querySelectorAll('ha-textfield').forEach(el => {
-      el.addEventListener('change', (e) => this._set(e.target.dataset.key, e.target.value));
-    });
-    root.querySelectorAll('ha-select').forEach(el => {
-      el.value = c[el.dataset.key] || '';
-      el.addEventListener('selected', () => { if (el.dataset.key) this._set(el.dataset.key, el.value); });
-      el.addEventListener('closed', (e) => e.stopPropagation());
-    });
-    root.querySelectorAll('ha-switch[data-section]').forEach(el => {
-      el.addEventListener('change', () => this._setSection(el.dataset.section, el.checked));
-    });
-    root.querySelectorAll('ha-switch[data-key-bool]').forEach(el => {
-      el.addEventListener('change', () => this._set(el.dataset.keyBool, el.checked));
-    });
+
+    // Set text field values via JS property (not HTML attribute) so HA web components pick them up
+    root.querySelector('#etv-name').value = c.name || '';
+    root.querySelector('#etv-icon').value = c.icon || '';
+    root.querySelector('#etv-popuphash').value = c.popup_hash || '';
+
+    // Entity pickers need hass + value
+    const remotePicker = root.querySelector('#etv-remote');
+    remotePicker.hass = this._hass;
+    remotePicker.value = c.remote_entity || '';
+
+    const appPicker = root.querySelector('#etv-appselect');
+    appPicker.hass = this._hass;
+    appPicker.value = c.app_select_entity || '';
+
+    // ha-select: set value after a microtask so the component has upgraded
+    setTimeout(() => {
+      root.querySelector('#etv-preset').value = c.tv_preset || 'roku';
+      root.querySelector('#etv-expandmode').value = c.expand_mode || 'inline';
+      root.querySelector('#etv-overlaytheme').value = c.overlay_theme || 'dark';
+    }, 0);
+
+    // Text field listeners
+    root.querySelector('#etv-name').addEventListener('change', e => this._set('name', e.target.value));
+    root.querySelector('#etv-icon').addEventListener('change', e => this._set('icon', e.target.value));
+    root.querySelector('#etv-popuphash').addEventListener('change', e => this._set('popup_hash', e.target.value));
+
+    // Entity picker listeners
+    remotePicker.addEventListener('value-changed', e => this._set('remote_entity', e.detail.value));
+    appPicker.addEventListener('value-changed', e => this._set('app_select_entity', e.detail.value));
+
+    // ha-select listeners
+    root.querySelector('#etv-preset').addEventListener('selected', e => { e.stopPropagation(); this._set('tv_preset', root.querySelector('#etv-preset').value); });
+    root.querySelector('#etv-preset').addEventListener('closed', e => e.stopPropagation());
+    root.querySelector('#etv-expandmode').addEventListener('selected', e => { e.stopPropagation(); this._set('expand_mode', root.querySelector('#etv-expandmode').value); });
+    root.querySelector('#etv-expandmode').addEventListener('closed', e => e.stopPropagation());
+    root.querySelector('#etv-overlaytheme').addEventListener('selected', e => { e.stopPropagation(); this._set('overlay_theme', root.querySelector('#etv-overlaytheme').value); });
+    root.querySelector('#etv-overlaytheme').addEventListener('closed', e => e.stopPropagation());
+
+    // Switch listeners — sections
+    root.querySelector('#etv-s-utility').addEventListener('change', e => this._setSection('utility', e.target.checked));
+    root.querySelector('#etv-s-dpad').addEventListener('change', e => this._setSection('dpad', e.target.checked));
+    root.querySelector('#etv-s-playback').addEventListener('change', e => this._setSection('playback', e.target.checked));
+    root.querySelector('#etv-s-volume').addEventListener('change', e => this._setSection('volume', e.target.checked));
+    root.querySelector('#etv-s-appshortcuts').addEventListener('change', e => this._setSection('app_shortcuts', e.target.checked));
+    root.querySelector('#etv-s-appselector').addEventListener('change', e => this._setSection('app_selector', e.target.checked));
+    root.querySelector('#etv-s-numpad').addEventListener('change', e => this._setSection('numpad', e.target.checked));
+
+    // Switch listeners — booleans
+    root.querySelector('#etv-showname').addEventListener('change', e => this._set('show_name', e.target.checked));
   }
 }
 
