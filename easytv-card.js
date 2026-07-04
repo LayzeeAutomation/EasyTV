@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.7
+// EasyTV Card v0.4.8
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.7';
+const CARD_VERSION = '0.4.8';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -215,10 +215,9 @@ const OVERLAY_STYLES = `
   #easytv-overlay .power-only-row .icon-btn { height: 56px; }
 
   /* ── D-pad ──
-     Up row: single button centred, fixed 56×56 square (NOT flex:1 — that would
-     stretch it full-width when it is the only child).
-     Center & bottom rows: dpad-dir buttons share remaining space equally (flex:1)
-     around the fixed select circle.                                            */
+     Up row: single button centred, fixed 56×56 square.
+     Center & bottom rows: dpad-dir buttons share remaining space (flex:1)
+     around the fixed select circle.                                        */
   #easytv-overlay .dpad-up-row { justify-content: center; }
   #easytv-overlay .dpad-up-row .icon-btn.dpad-dir {
     flex: 0 0 auto !important;
@@ -277,14 +276,6 @@ const OVERLAY_STYLES = `
     background-repeat: no-repeat; background-position: right 16px center; cursor: pointer;
   }
   #easytv-overlay .app-select-native:focus { outline: none; }
-
-  /* Only collapse to full-width on very small screens (< 480px).
-     This keeps ¼ + ¾ and ½ + ½ pairs intact on normal phone widths. */
-  @media (max-width: 480px) {
-    #easytv-overlay .overlay-section.width-three-quarter,
-    #easytv-overlay .overlay-section.width-half,
-    #easytv-overlay .overlay-section.width-quarter { grid-column: span 4; }
-  }
 `;
 
 const EDITOR_STYLES = `
