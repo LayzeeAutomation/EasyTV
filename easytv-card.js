@@ -1,7 +1,7 @@
-// EasyTV Card v0.6.2
+// EasyTV Card v0.6.3
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.6.2';
+const CARD_VERSION = '0.6.3';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -145,7 +145,6 @@ const OVERLAY_STYLES = `
   }
   @keyframes etvFadeIn { from { opacity:0; transform:translateY(20px) translateZ(0); } to { opacity:1; transform:translateY(0) translateZ(0); } }
 
-  /* Header */
   #easytv-overlay .overlay-header {
     display: flex; align-items: center; gap: 12px; padding: 18px 20px 12px; flex-shrink: 0;
   }
@@ -157,7 +156,6 @@ const OVERLAY_STYLES = `
   }
   #easytv-overlay .close-btn ha-icon { --mdc-icon-size: 20px; }
 
-  /* Now Playing Pill */
   #easytv-overlay .now-playing-pill {
     display: flex; align-items: center; gap: 10px;
     margin: 0 12px 4px; padding: 10px 14px;
@@ -178,7 +176,6 @@ const OVERLAY_STYLES = `
   }
   #easytv-overlay .np-progress-bar { height: 100%; border-radius: 2px; transition: width 1s linear; }
 
-  /* Body grid */
   #easytv-overlay .overlay-body {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--etv-gap, 8px);
     padding: 4px 12px 32px; flex: 1; width: 100%; box-sizing: border-box; align-items: start;
@@ -207,7 +204,6 @@ const OVERLAY_STYLES = `
     border-radius: var(--easytv-overlay-btn-radius) !important; width: auto !important;
   }
 
-  /* Volume slider */
   #easytv-overlay .vol-row {
     display: flex; align-items: center; gap: 10px; width: 100%; padding: 4px 0;
   }
@@ -232,7 +228,6 @@ const OVERLAY_STYLES = `
   }
   #easytv-overlay .vol-pct-label { font-size: 11px; text-align: right; }
 
-  /* SVG D-Pad */
   #easytv-overlay .svg-dpad-wrap { position: relative; width: 100%; padding-bottom: 100%; }
   #easytv-overlay .svg-dpad { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: visible; }
   #easytv-overlay .dpad-petal {
@@ -633,12 +628,9 @@ class EasyTVCard extends HTMLElement {
     `;
 
     const showHeader = cfg.show_header !== false;
-
-    // Now playing pill
     const mpState = this._getMediaPlayerState();
     const nowPlayingHTML = this._buildNowPlayingPill(mpState, theme);
 
-    // Header
     const headerHTML = showHeader ? `
       <div class="overlay-header" style="border-bottom:1px solid ${theme.headerBorder}; color:${theme.textColor};">
         <ha-icon icon="mdi:television" style="color:${theme.textColor};"></ha-icon>
@@ -646,7 +638,6 @@ class EasyTVCard extends HTMLElement {
         <div class="close-btn" id="etv-close-btn"><ha-icon icon="mdi:close" style="color:${theme.textColor};"></ha-icon></div>
       </div>` : '';
 
-    // Sections
     const defaultSections = LEGACY_DEFAULT_SECTIONS;
     const rawSections = cfg.sections;
     let sections;
@@ -695,16 +686,12 @@ class EasyTVCard extends HTMLElement {
       if (action === 'power') { sendCmd(hass, eid, cmds.power || 'power'); return; }
       if (action === 'source') {
         const sel = overlay.querySelector('#etv-app-select');
-        if (sel && sel.value) {
-          hass.callService('remote', 'turn_on', { entity_id: eid, activity: sel.value });
-        }
+        if (sel && sel.value) hass.callService('remote', 'turn_on', { entity_id: eid, activity: sel.value });
         return;
       }
       if (action === 'source-change') {
         const sel = e.target.closest('select');
-        if (sel && sel.value) {
-          hass.callService('remote', 'turn_on', { entity_id: eid, activity: sel.value });
-        }
+        if (sel && sel.value) hass.callService('remote', 'turn_on', { entity_id: eid, activity: sel.value });
         return;
       }
       if (action === 'app-shortcut') {
@@ -722,9 +709,7 @@ class EasyTVCard extends HTMLElement {
 
     overlay.addEventListener('change', e => {
       const sel = e.target.closest('select[data-action="source-change"]');
-      if (sel) {
-        hass.callService('remote', 'turn_on', { entity_id: entityId, activity: sel.value });
-      }
+      if (sel) hass.callService('remote', 'turn_on', { entity_id: entityId, activity: sel.value });
     });
 
     overlay.addEventListener('input', e => {
@@ -732,9 +717,7 @@ class EasyTVCard extends HTMLElement {
       if (slider) {
         const val = parseFloat(slider.value);
         const mpId = cfg.media_player_entity;
-        if (mpId && hass) {
-          hass.callService('media_player', 'volume_set', { entity_id: mpId, volume_level: val / 100 });
-        }
+        if (mpId && hass) hass.callService('media_player', 'volume_set', { entity_id: mpId, volume_level: val / 100 });
         slider.style.setProperty('--vol-pct', `${val}%`);
         const label = slider.closest('.vol-slider-wrap')?.querySelector('.vol-pct-label');
         if (label) label.textContent = `${Math.round(val)}%`;
@@ -773,25 +756,19 @@ class EasyTVCard extends HTMLElement {
     if (!this._overlayEl || !this._overlayOpen) return;
     const mpState = this._getMediaPlayerState();
     const theme = getTheme(this._config);
-
-    // Update now playing pill
     const existing = this._overlayEl.querySelector('.now-playing-pill');
     const newPillHTML = this._buildNowPlayingPill(mpState, theme);
     if (newPillHTML) {
       const tmp = document.createElement('div');
       tmp.innerHTML = newPillHTML;
       const newPill = tmp.firstElementChild;
-      if (existing) {
-        existing.replaceWith(newPill);
-      } else {
+      if (existing) { existing.replaceWith(newPill); }
+      else {
         const body = this._overlayEl.querySelector('.overlay-body');
         if (body) this._overlayEl.insertBefore(newPill, body);
       }
-    } else if (existing) {
-      existing.remove();
-    }
+    } else if (existing) { existing.remove(); }
 
-    // Update volume slider
     if (mpState) {
       const vol = mpState.attributes.volume_level;
       if (vol !== undefined) {
@@ -817,418 +794,4 @@ class EasyTVCard extends HTMLElement {
     const key = sectionCfg.key;
     const width = sectionCfg.width || 'full';
     const showLabel = cfg.show_section_labels !== false;
-    const label = SECTION_LABELS[key] || key;
-    const btnStyle = `background:${theme.buttonBackground};border-color:${theme.borderColor};color:${theme.textColor};`;
-    const sectionStyle = `background:${theme.sectionBackground};`;
-    const labelStyle = `color:${theme.mutedColor};`;
-    const labelHTML = `<div class="section-label${showLabel ? '' : ' hidden'}" style="${labelStyle}">${label}</div>`;
-
-    let inner = '';
-
-    if (key === 'dpad') {
-      inner = buildSvgDpad(cmds, hass, entityId);
-      const showBack = cfg.show_back_home !== false;
-      if (showBack) {
-        inner += `<div class="dpad-aux-row">
-          <button class="icon-btn" data-action="cmd" data-cmd="${cmds.back}" data-entity="${entityId}" title="Back" style="${btnStyle}"><ha-icon icon="mdi:arrow-left"></ha-icon></button>
-          <button class="icon-btn" data-action="cmd" data-cmd="${cmds.home}" data-entity="${entityId}" title="Home" style="${btnStyle}"><ha-icon icon="mdi:home-outline"></ha-icon></button>
-        </div>`;
-      }
-    } else if (key === 'playback') {
-      const btns = [
-        { cmd: cmds.reverse,  icon: 'mdi:skip-previous' },
-        { cmd: cmds.reverse,  icon: 'mdi:rewind' },
-        { cmd: cmds.play,     icon: 'mdi:play-pause' },
-        { cmd: cmds.forward,  icon: 'mdi:fast-forward' },
-        { cmd: cmds.forward,  icon: 'mdi:skip-next' },
-      ];
-      inner = `<div class="btn-row">${btns.map(b =>
-        `<button class="icon-btn" data-action="cmd" data-cmd="${b.cmd}" data-entity="${entityId}" style="${btnStyle}"><ha-icon icon="${b.icon}"></ha-icon></button>`
-      ).join('')}</div>`;
-    } else if (key === 'volume') {
-      const volLevel = mpState?.attributes?.volume_level;
-      const volPct = volLevel !== undefined ? Math.round(volLevel * 100) : 50;
-      if (cfg.media_player_entity && mpState) {
-        inner = `
-          <div class="vol-row">
-            <button class="icon-btn" data-action="mute" data-entity="${entityId}" title="Mute" style="${btnStyle}"><ha-icon icon="mdi:volume-off"></ha-icon></button>
-            <div class="vol-slider-wrap">
-              <input type="range" class="vol-slider" min="0" max="100" value="${volPct}" style="--vol-pct:${volPct}%;">
-              <div class="vol-pct-label" style="color:${theme.mutedColor};">${volPct}%</div>
-            </div>
-            <button class="icon-btn" data-action="cmd" data-cmd="${cmds.volume_up}" data-entity="${entityId}" title="Vol Up" style="${btnStyle}"><ha-icon icon="mdi:volume-high"></ha-icon></button>
-          </div>`;
-      } else {
-        inner = `<div class="btn-row">
-          <button class="icon-btn" data-action="cmd" data-cmd="${cmds.volume_mute}" data-entity="${entityId}" title="Mute" style="${btnStyle}"><ha-icon icon="mdi:volume-off"></ha-icon></button>
-          <button class="icon-btn" data-action="cmd" data-cmd="${cmds.volume_down}" data-entity="${entityId}" title="Vol Down" style="${btnStyle}"><ha-icon icon="mdi:volume-minus"></ha-icon></button>
-          <button class="icon-btn" data-action="cmd" data-cmd="${cmds.volume_up}" data-entity="${entityId}" title="Vol Up" style="${btnStyle}"><ha-icon icon="mdi:volume-high"></ha-icon></button>
-        </div>`;
-      }
-    } else if (key === 'power') {
-      const hasPower = cmds.power !== undefined;
-      const hasSource = cmds.source !== undefined;
-      if (hasPower && hasSource) {
-        inner = `<div class="btn-row">
-          <button class="icon-btn power-only-row" data-action="power" data-entity="${entityId}" title="Power" style="${btnStyle}"><ha-icon icon="mdi:power"></ha-icon></button>
-          <button class="icon-btn power-only-row" data-action="source" data-entity="${entityId}" title="Source" style="${btnStyle}"><ha-icon icon="mdi:import"></ha-icon></button>
-        </div>`;
-      } else {
-        inner = `<div class="btn-row power-only-row">
-          <button class="icon-btn" data-action="power" data-entity="${entityId}" title="Power" style="${btnStyle}"><ha-icon icon="mdi:power"></ha-icon></button>
-        </div>`;
-      }
-    } else if (key === 'utility') {
-      inner = `<div class="btn-row">
-        <button class="icon-btn" data-action="cmd" data-cmd="${cmds.back}" data-entity="${entityId}" title="Back" style="${btnStyle}"><ha-icon icon="mdi:arrow-left"></ha-icon></button>
-        <button class="icon-btn" data-action="cmd" data-cmd="${cmds.home}" data-entity="${entityId}" title="Home" style="${btnStyle}"><ha-icon icon="mdi:home-outline"></ha-icon></button>
-        <button class="icon-btn" data-action="cmd" data-cmd="${cmds.info || 'info'}" data-entity="${entityId}" title="Info" style="${btnStyle}"><ha-icon icon="mdi:information-outline"></ha-icon></button>
-        <button class="icon-btn" data-action="cmd" data-cmd="${cmds.source || 'source'}" data-entity="${entityId}" title="Source/Input" style="${btnStyle}"><ha-icon icon="mdi:import"></ha-icon></button>
-      </div>`;
-    } else if (key === 'app_selector') {
-      const stateObj = hass?.states[entityId];
-      const activities = stateObj?.attributes?.activity_list || [];
-      const current = stateObj?.attributes?.current_activity || '';
-      const appOpts = cfg.apps?.length ? cfg.apps : activities;
-      if (appOpts.length) {
-        const dropdownArrow = theme.dropdownArrow || 'ffffff';
-        inner = `<select class="app-select-native" data-action="source-change"
-          style="background-color:${theme.buttonBackground};color:${theme.textColor};border-color:${theme.borderColor};
-          background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%228%22 viewBox=%220 0 12 8%22%3E%3Cpath fill=%22%23${dropdownArrow}%22 d=%22M6 8L0 0h12z%22/%3E%3C/svg%3E');">
-          ${appOpts.map(a => `<option value="${a}"${a===current?' selected':''}>${a}</option>`).join('')}
-        </select>`;
-      } else { inner = ''; }
-    } else if (key === 'app_shortcuts') {
-      const shortcuts = cfg.app_shortcuts || APP_SHORTCUTS;
-      inner = `<div class="app-grid">${shortcuts.map(app =>
-        `<div class="app-btn" data-action="app-shortcut" data-cmd="${app.cmd}" style="color:${app.color || theme.textColor};background:${theme.buttonBackground};">
-          <ha-icon icon="${app.icon}" style="color:${app.color || theme.textColor};"></ha-icon>
-          <span style="color:${theme.textColor};">${app.name}</span>
-        </div>`
-      ).join('')}</div>`;
-    } else if (key === 'numpad') {
-      const nums = ['1','2','3','4','5','6','7','8','9','','0',''];
-      inner = `<div class="numpad-grid">${nums.map(n =>
-        n ? `<button class="icon-btn" data-action="numpad" data-num="${n}" style="${btnStyle}">${n}</button>`
-          : `<div></div>`
-      ).join('')}</div>`;
-    }
-
-    if (!inner) return '';
-    return `
-      <div class="overlay-section width-${width}">
-        <div class="etv-section" style="${sectionStyle}">
-          ${labelHTML}
-          ${inner}
-        </div>
-      </div>`;
-  }
-
-  getCardSize() { return 1; }
-}
-
-// ─── Editor ───────────────────────────────────────────────────────────────────
-
-class EasyTVCardEditor extends HTMLElement {
-  constructor() { super(); this.attachShadow({ mode: 'open' }); this._config = {}; this._activeTab = 'basic'; }
-
-  set hass(hass) { this._hass = hass; }
-
-  setConfig(config) {
-    this._config = { ...config };
-    this._render();
-  }
-
-  _render() {
-    const cfg = this._config;
-    const sr = this.shadowRoot;
-    sr.innerHTML = '';
-    const style = document.createElement('style');
-    style.textContent = EDITOR_STYLES;
-    sr.appendChild(style);
-
-    const editor = document.createElement('div');
-    editor.className = 'editor';
-
-    const tabs = ['basic', 'sections', 'appearance', 'advanced'];
-    const tabLabels = { basic: 'Basic', sections: 'Sections', appearance: 'Style', advanced: 'Advanced' };
-
-    const sectionsArr = this._getSectionsArray();
-    const qaKeys = cfg.quick_actions || (cfg.card_type === 'double' ? DEFAULT_QUICK_DOUBLE : DEFAULT_QUICK_SINGLE);
-
-    editor.innerHTML = `
-      <div class="tab-bar">
-        ${tabs.map(t => `<button class="tab-btn${t===this._activeTab?' active':''}" data-tab="${t}">${tabLabels[t]}</button>`).join('')}
-      </div>
-
-      <!-- Basic -->
-      <div class="tab-pane${this._activeTab==='basic'?' active':''}" data-pane="basic">
-        <div class="editor-panel">
-          <div class="editor-panel-header">
-            <div class="editor-panel-title">Remote Entity</div>
-          </div>
-          <div class="field-wrap">
-            <label>Remote entity (required)</label>
-            <input class="etv-input" data-key="entity" value="${cfg.entity||''}" placeholder="remote.bedroom_tv">
-          </div>
-          <div class="field-wrap">
-            <label>Display name (optional)</label>
-            <input class="etv-input" data-key="name" value="${cfg.name||''}" placeholder="Bedroom TV">
-          </div>
-          <div class="field-wrap">
-            <label>TV preset</label>
-            <select class="etv-select" data-key="tv_type">
-              ${['google_tv','roku','samsung','generic'].map(t => `<option value="${t}"${(cfg.tv_type||'google_tv')===t?' selected':''}>${t.replace('_',' ').replace(/\b\w/g,c=>c.toUpperCase())}</option>`).join('')}
-            </select>
-          </div>
-          <div class="field-wrap">
-            <label>Card style</label>
-            <select class="etv-select" data-key="card_type">
-              <option value="single"${(cfg.card_type||'single')==='single'?' selected':''}>Single row</option>
-              <option value="double"${cfg.card_type==='double'?' selected':''}>Double row</option>
-            </select>
-          </div>
-        </div>
-        <div class="editor-panel">
-          <div class="editor-panel-header">
-            <div class="editor-panel-title">Media Player (optional)</div>
-            <div class="editor-panel-desc">Used for live volume slider and now-playing pill.</div>
-          </div>
-          <div class="field-wrap">
-            <label>Media player entity</label>
-            <input class="etv-input" data-key="media_player_entity" value="${cfg.media_player_entity||''}" placeholder="media_player.bedroom_tv">
-          </div>
-        </div>
-      </div>
-
-      <!-- Sections -->
-      <div class="tab-pane${this._activeTab==='sections'?' active':''}" data-pane="sections">
-        <div class="editor-panel">
-          <div class="editor-panel-header">
-            <div class="editor-panel-title">Overlay Sections</div>
-            <div class="editor-panel-desc">Toggle and reorder sections shown in the overlay.</div>
-          </div>
-          <div class="section-list" id="section-list">
-            ${sectionsArr.map((s,i) => `
-              <div class="section-item${s.enabled===false?' disabled':''}" data-idx="${i}">
-                <div class="section-row1">
-                  <button class="section-handle" title="Drag">⠿</button>
-                  <span class="section-name">${SECTION_LABELS[s.key]||s.key}</span>
-                  <button class="section-move" data-idx="${i}" data-dir="up" title="Move up">↑</button>
-                  <button class="section-move" data-idx="${i}" data-dir="down" title="Move down">↓</button>
-                  <ha-switch ?checked="${s.enabled!==false}" data-idx="${i}" data-field="enabled"></ha-switch>
-                </div>
-                <div class="section-row2${s._open?' open':''}">
-                  <select class="section-width" data-idx="${i}" data-field="width">
-                    ${VALID_WIDTHS.map(w => `<option value="${w}"${(s.width||'full')===w?' selected':''}>${w.charAt(0).toUpperCase()+w.slice(1)}</option>`).join('')}
-                  </select>
-                </div>
-              </div>`).join('')}
-          </div>
-        </div>
-        <div class="editor-panel">
-          <div class="editor-panel-header">
-            <div class="editor-panel-title">Quick Actions (card buttons)</div>
-          </div>
-          <div class="qa-list" id="qa-list">
-            ${qaKeys.map((qa,i) => `
-              <div class="qa-item" data-idx="${i}">
-                <select data-idx="${i}">
-                  ${Object.keys(QUICK_ACTION_DEFS).map(k => `<option value="${k}"${k===qa?' selected':''}>${QUICK_ACTION_DEFS[k].title}</option>`).join('')}
-                </select>
-                <button class="qa-remove" data-idx="${i}">×</button>
-              </div>`).join('')}
-          </div>
-          <button class="add-btn" id="qa-add-btn">+ Add button</button>
-        </div>
-      </div>
-
-      <!-- Appearance -->
-      <div class="tab-pane${this._activeTab==='appearance'?' active':''}" data-pane="appearance">
-        <div class="editor-panel">
-          <div class="editor-panel-header"><div class="editor-panel-title">Overlay Theme</div></div>
-          <div class="field-wrap">
-            <label>Theme</label>
-            <select class="etv-select" data-key="overlay_theme">
-              <option value="dark"${(cfg.overlay_theme||'dark')==='dark'?' selected':''}>Dark</option>
-              <option value="light"${cfg.overlay_theme==='light'?' selected':''}>Light</option>
-            </select>
-          </div>
-          <div class="field-wrap">
-            <label>Section gap</label>
-            <select class="etv-select" data-key="gap">
-              ${GAP_OPTIONS.map(([v,l]) => `<option value="${v}"${String(cfg.gap||DEFAULT_GAP)===v?' selected':''}>${l}</option>`).join('')}
-            </select>
-          </div>
-          <div class="row"><label>Show overlay header</label><ha-switch data-key="show_header" ?checked="${cfg.show_header!==false}"></ha-switch></div>
-          <div class="row"><label>Show section labels</label><ha-switch data-key="show_section_labels" ?checked="${cfg.show_section_labels!==false}"></ha-switch></div>
-          <div class="row"><label>Show Back/Home under d-pad</label><ha-switch data-key="show_back_home" ?checked="${cfg.show_back_home!==false}"></ha-switch></div>
-        </div>
-        <div class="editor-panel">
-          <div class="editor-panel-header"><div class="editor-panel-title">Card Appearance</div></div>
-          <div class="row"><label>No background</label><ha-switch data-key="no_background" ?checked="${!!cfg.no_background}"></ha-switch></div>
-          <div class="row"><label>No button background</label><ha-switch data-key="no_button_background" ?checked="${!!cfg.no_button_background}"></ha-switch></div>
-          <div class="row"><label>No button border</label><ha-switch data-key="no_button_border" ?checked="${!!cfg.no_button_border}"></ha-switch></div>
-        </div>
-      </div>
-
-      <!-- Advanced -->
-      <div class="tab-pane${this._activeTab==='advanced'?' active':''}" data-pane="advanced">
-        <div class="editor-panel">
-          <div class="editor-panel-header">
-            <div class="editor-panel-title">Custom Commands</div>
-            <div class="editor-panel-desc">Override individual remote commands. One per line: key: command</div>
-          </div>
-          <textarea class="etv-textarea" id="commands-yaml" placeholder="up: DPAD_UP&#10;down: DPAD_DOWN">${this._cmdsToYaml(cfg.commands)}</textarea>
-        </div>
-        <div class="editor-panel">
-          <div class="editor-panel-header">
-            <div class="editor-panel-title">App List</div>
-            <div class="editor-panel-desc">Override the app selector dropdown. One per line.</div>
-          </div>
-          <textarea class="etv-textarea" id="apps-yaml" placeholder="Netflix&#10;YouTube&#10;Disney Plus">${(cfg.apps||[]).join('\n')}</textarea>
-        </div>
-        <button class="save-btn" id="save-advanced-btn">Save Advanced</button>
-      </div>
-    `;
-
-    sr.appendChild(editor);
-    this._attachListeners(editor, sectionsArr, qaKeys);
-  }
-
-  _getSectionsArray() {
-    const cfg = this._config;
-    if (Array.isArray(cfg.sections)) return cfg.sections.map(s => ({ ...s }));
-    const raw = cfg.sections;
-    return SECTION_ORDER.map(k => ({
-      key: k,
-      enabled: raw ? raw[k] !== false : LEGACY_DEFAULT_SECTIONS[k] !== false,
-      width: 'full',
-    }));
-  }
-
-  _cmdsToYaml(cmds) {
-    if (!cmds) return '';
-    return Object.entries(cmds).map(([k,v]) => `${k}: ${v}`).join('\n');
-  }
-
-  _yamlToCmds(txt) {
-    if (!txt.trim()) return undefined;
-    const out = {};
-    txt.split('\n').forEach(line => {
-      const m = line.match(/^(\w+):\s*(.+)$/);
-      if (m) out[m[1]] = m[2].trim();
-    });
-    return Object.keys(out).length ? out : undefined;
-  }
-
-  _attachListeners(editor, sectionsArr, qaKeys) {
-    // Tabs
-    editor.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => { this._activeTab = btn.dataset.tab; this._render(); });
-    });
-
-    // Basic inputs
-    editor.querySelectorAll('.etv-input[data-key], .etv-select[data-key]').forEach(el => {
-      el.addEventListener('change', () => {
-        this._config = { ...this._config, [el.dataset.key]: el.value || undefined };
-        this._fireChange();
-      });
-    });
-
-    // Switches
-    editor.querySelectorAll('ha-switch[data-key]').forEach(sw => {
-      sw.addEventListener('change', () => {
-        this._config = { ...this._config, [sw.dataset.key]: sw.checked };
-        this._fireChange();
-      });
-    });
-
-    // Section toggles
-    editor.querySelectorAll('ha-switch[data-field="enabled"]').forEach(sw => {
-      sw.addEventListener('change', () => {
-        const idx = parseInt(sw.dataset.idx);
-        sectionsArr[idx].enabled = sw.checked;
-        this._config = { ...this._config, sections: sectionsArr };
-        this._fireChange(); this._render();
-      });
-    });
-
-    // Section width
-    editor.querySelectorAll('select[data-field="width"]').forEach(sel => {
-      sel.addEventListener('change', () => {
-        const idx = parseInt(sel.dataset.idx);
-        sectionsArr[idx].width = sel.value;
-        this._config = { ...this._config, sections: sectionsArr };
-        this._fireChange();
-      });
-    });
-
-    // Section move
-    editor.querySelectorAll('.section-move').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.idx);
-        const dir = btn.dataset.dir;
-        const swap = dir === 'up' ? idx - 1 : idx + 1;
-        if (swap < 0 || swap >= sectionsArr.length) return;
-        [sectionsArr[idx], sectionsArr[swap]] = [sectionsArr[swap], sectionsArr[idx]];
-        this._config = { ...this._config, sections: sectionsArr };
-        this._fireChange(); this._render();
-      });
-    });
-
-    // QA list
-    const qaList = editor.querySelector('#qa-list');
-    if (qaList) {
-      qaList.querySelectorAll('select').forEach(sel => {
-        sel.addEventListener('change', () => {
-          const idx = parseInt(sel.dataset.idx);
-          qaKeys[idx] = sel.value;
-          this._config = { ...this._config, quick_actions: [...qaKeys] };
-          this._fireChange();
-        });
-      });
-      qaList.querySelectorAll('.qa-remove').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = parseInt(btn.dataset.idx);
-          qaKeys.splice(idx, 1);
-          this._config = { ...this._config, quick_actions: [...qaKeys] };
-          this._fireChange(); this._render();
-        });
-      });
-    }
-    const qaAdd = editor.querySelector('#qa-add-btn');
-    if (qaAdd) {
-      qaAdd.addEventListener('click', () => {
-        qaKeys.push('play_pause');
-        this._config = { ...this._config, quick_actions: [...qaKeys] };
-        this._fireChange(); this._render();
-      });
-    }
-
-    // Advanced save
-    const saveAdv = editor.querySelector('#save-advanced-btn');
-    if (saveAdv) {
-      saveAdv.addEventListener('click', () => {
-        const cmdsTxt = editor.querySelector('#commands-yaml')?.value || '';
-        const appsTxt = editor.querySelector('#apps-yaml')?.value || '';
-        const cmds = this._yamlToCmds(cmdsTxt);
-        const apps = appsTxt.trim() ? appsTxt.split('\n').map(l=>l.trim()).filter(Boolean) : undefined;
-        this._config = { ...this._config, commands: cmds, apps };
-        this._fireChange();
-      });
-    }
-  }
-
-  _fireChange() {
-    this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: this._config }, bubbles: true, composed: true }));
-  }
-}
-
-customElements.define('easytv-card', EasyTVCard);
-customElements.define('easytv-card-editor', EasyTVCardEditor);
-
-window.customCards = window.customCards || [];
-window.customCards.push({ type: 'easytv-card', name: 'EasyTV Card', description: 'Sleek TV remote overlay card', preview: false });
-
-console.info('%c EasyTV Card v0.6.2 ', 'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;');
+    const label = SECTION_LABELS[key] || key
