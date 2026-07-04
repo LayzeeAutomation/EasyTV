@@ -1,7 +1,7 @@
-// EasyTV Card v0.4.9
+// EasyTV Card v0.4.10
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.4.9';
+const CARD_VERSION = '0.4.10';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -35,7 +35,7 @@ const GAP_OPTIONS = [
 const DEFAULT_GAP = '8';
 
 const QUICK_ACTION_DEFS = {
-  volume_down:  { icon: 'mdi:volume-minus', title: 'Vol −', cmd: (c) => c.volume_down },
+  volume_down:  { icon: 'mdi:volume-minus', title: 'Vol \u2212', cmd: (c) => c.volume_down },
   volume_up:    { icon: 'mdi:volume-plus',  title: 'Vol +', cmd: (c) => c.volume_up },
   volume_mute:  { icon: 'mdi:volume-off',   title: 'Mute',  cmd: (c) => c.volume_mute },
   play_pause:   { icon: 'mdi:play-pause',   title: 'Play/Pause', cmd: (c) => c.play },
@@ -187,14 +187,14 @@ const OVERLAY_STYLES = `
   }
   #easytv-overlay .close-btn ha-icon { --mdc-icon-size: 20px; }
 
-  /* ── 4-column grid body ── */
+  /* \u2500\u2500 4-column grid body \u2500\u2500 */
   #easytv-overlay .overlay-body {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: var(--etv-gap, 8px);
     padding: 8px 12px 48px;
     flex: 1; width: 100%; box-sizing: border-box;
-    align-items: stretch;
+    align-items: start;
   }
   #easytv-overlay .overlay-section { min-width: 0; box-sizing: border-box; }
   #easytv-overlay .overlay-section.width-full          { grid-column: span 4; }
@@ -205,14 +205,13 @@ const OVERLAY_STYLES = `
   #easytv-overlay .etv-section {
     display: flex; flex-direction: column; gap: 6px;
     border-radius: 16px; padding: 12px; width: 100%; box-sizing: border-box;
-    height: 100%;
   }
   #easytv-overlay .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; padding: 0 2px 4px; }
 
-  /* ── Generic btn-row ── */
+  /* \u2500\u2500 Generic btn-row \u2500\u2500 */
   #easytv-overlay .btn-row { display: flex; align-items: center; gap: 8px; width: 100%; }
-  #easytv-overlay .btn-row .icon-btn { flex: 1; border-radius: 14px; height: 56px; width: auto; }
-  #easytv-overlay .btn-row .icon-btn ha-icon { --mdc-icon-size: 26px; }
+  #easytv-overlay .btn-row .icon-btn { flex: 1; border-radius: 14px; height: 52px; width: auto; }
+  #easytv-overlay .btn-row .icon-btn ha-icon { --mdc-icon-size: 24px; }
 
   /* Power button fills its quarter-section height to match the app dropdown */
   #easytv-overlay .power-only-row { flex: 1; }
@@ -224,36 +223,31 @@ const OVERLAY_STYLES = `
     width: auto !important;
   }
 
-  /* ── D-pad 3×3 grid ──
-     9 equal cells. Buttons placed by grid-area:
-       row1: _ up _
-       row2: left select right
-       row3: back down home
-     The .dpad-empty spacer fills corners.                          */
+  /* \u2500\u2500 D-pad 3\u00d73 grid \u2500\u2500
+     Fixed 52px rows — same height as all other button rows.
+     No aspect-ratio so it doesn't blow up to screen width.
+       row1: empty  up     empty
+       row2: left   select right
+       row3: back   down   home                                   */
   #easytv-overlay .dpad-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 52px);
     gap: 6px;
     width: 100%;
-    /* square aspect: each cell = 1/3 of container width */
-    aspect-ratio: 1;
   }
   #easytv-overlay .dpad-grid .icon-btn {
     width: 100% !important;
     height: 100% !important;
     border-radius: 14px !important;
-    border-radius: 14px !important;
     flex: none !important;
     padding: 0 !important;
   }
-  #easytv-overlay .dpad-grid .icon-btn ha-icon { --mdc-icon-size: 26px; }
-  /* Select button same shape as others, accent border only */
+  #easytv-overlay .dpad-grid .icon-btn ha-icon { --mdc-icon-size: 24px; }
   #easytv-overlay .dpad-grid .icon-btn.select-btn {
     border-radius: 50% !important;
   }
   #easytv-overlay .dpad-grid .dpad-empty {
-    /* invisible spacer occupying corner cells */
     background: transparent;
     border: none;
     pointer-events: none;
@@ -261,11 +255,11 @@ const OVERLAY_STYLES = `
 
   /* Base overlay icon-btn */
   #easytv-overlay .icon-btn {
-    cursor:pointer; border-radius: 50%; width:62px; height:62px;
+    cursor:pointer; border-radius: 14px; width:52px; height:52px;
     display:flex; align-items:center; justify-content:center;
     transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color:transparent; padding:0;
   }
-  #easytv-overlay .icon-btn ha-icon { --mdc-icon-size: 26px; }
+  #easytv-overlay .icon-btn ha-icon { --mdc-icon-size: 24px; }
 
   #easytv-overlay .numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
   #easytv-overlay .numpad-grid .icon-btn { border-radius: 14px; width: auto; height: 52px; font-size: 18px; font-weight: 600; }
@@ -720,11 +714,6 @@ class EasyTVCard extends HTMLElement {
     const c = this._commands;
     const wrap = sectionWrap('Navigation');
 
-    // 3x3 CSS grid:
-    //  col:  1      2       3
-    // row1: empty  up     empty
-    // row2: left   select  right
-    // row3: back   down    home
     const grid = document.createElement('div');
     grid.className = 'dpad-grid';
 
@@ -988,7 +977,7 @@ class EasyTVCardEditor extends HTMLElement {
     parent.appendChild(editorH3('Layout'));
     const note = document.createElement('div');
     note.className = 'editor-note';
-    note.textContent = 'Reorder sections and set widths. Use ¼ + ¾ or ½ + ½ pairs to place sections side by side.';
+    note.textContent = 'Reorder sections and set widths. Use \u00bc + \u00be or \u00bd + \u00bd pairs to place sections side by side.';
     parent.appendChild(note);
     const list = document.createElement('div');
     list.className = 'section-list';
@@ -997,7 +986,7 @@ class EasyTVCardEditor extends HTMLElement {
       item.className = 'section-item';
       const handle = document.createElement('button');
       handle.className = 'section-handle';
-      handle.textContent = '⠿';
+      handle.textContent = '\u283f';
       handle.title = 'Drag handle';
       const name = document.createElement('div');
       name.className = 'section-name';
@@ -1005,7 +994,7 @@ class EasyTVCardEditor extends HTMLElement {
       const sw = editorSwitch(section.enabled !== false);
       sw.addEventListener('change', e => this._updateSection(index, { enabled: e.target.checked }));
       const width = editorSelect(
-        [['full','Full'],['three-quarter','¾'],['half','½'],['quarter','¼']],
+        [['full','Full'],['three-quarter','\u00be'],['half','\u00bd'],['quarter','\u00bc']],
         normalizeWidth(section.width),
         'etv-select section-width'
       );
@@ -1013,10 +1002,10 @@ class EasyTVCardEditor extends HTMLElement {
       const moves = document.createElement('div');
       moves.style.cssText = 'display:flex;gap:4px;';
       const up = document.createElement('button');
-      up.className = 'section-move'; up.textContent = '↑';
+      up.className = 'section-move'; up.textContent = '\u2191';
       up.addEventListener('click', () => this._moveSection(index, -1));
       const dn = document.createElement('button');
-      dn.className = 'section-move'; dn.textContent = '↓';
+      dn.className = 'section-move'; dn.textContent = '\u2193';
       dn.addEventListener('click', () => this._moveSection(index, 1));
       moves.appendChild(up); moves.appendChild(dn);
       item.appendChild(handle); item.appendChild(name); item.appendChild(sw); item.appendChild(width); item.appendChild(moves);
@@ -1042,19 +1031,19 @@ class EasyTVCardEditor extends HTMLElement {
       const item = document.createElement('div');
       item.className = 'qa-item';
       const handle = document.createElement('button');
-      handle.className = 'section-handle'; handle.textContent = '⠿';
+      handle.className = 'section-handle'; handle.textContent = '\u283f';
       const name = document.createElement('div');
       name.className = 'section-name'; name.textContent = def.title;
       const moves = document.createElement('div');
       moves.style.cssText = 'display:flex;gap:4px;';
       const up = document.createElement('button');
-      up.className = 'section-move'; up.textContent = '↑';
+      up.className = 'section-move'; up.textContent = '\u2191';
       up.addEventListener('click', () => this._moveQA(index, -1));
       const dn = document.createElement('button');
-      dn.className = 'section-move'; dn.textContent = '↓';
+      dn.className = 'section-move'; dn.textContent = '\u2193';
       dn.addEventListener('click', () => this._moveQA(index, 1));
       const rm = document.createElement('button');
-      rm.className = 'section-move'; rm.textContent = '✕'; rm.style.color = '#e74c3c';
+      rm.className = 'section-move'; rm.textContent = '\u2715'; rm.style.color = '#e74c3c';
       rm.addEventListener('click', () => this._removeQA(index));
       moves.appendChild(up); moves.appendChild(dn); moves.appendChild(rm);
       item.appendChild(handle); item.appendChild(name); item.appendChild(moves);
@@ -1062,7 +1051,7 @@ class EasyTVCardEditor extends HTMLElement {
     });
     parent.appendChild(list);
     if (qa.length < limit) {
-      const addSel = editorSelect([['', '— Add action —'], ...Object.entries(QUICK_ACTION_DEFS).map(([k, v]) => [k, v.title])], '', 'etv-select');
+      const addSel = editorSelect([['', '\u2014 Add action \u2014'], ...Object.entries(QUICK_ACTION_DEFS).map(([k, v]) => [k, v.title])], '', 'etv-select');
       addSel.addEventListener('change', e => { if (e.target.value) { this._addQA(e.target.value); e.target.value = ''; } });
       parent.appendChild(addSel);
     }
@@ -1079,7 +1068,7 @@ class EasyTVCardEditor extends HTMLElement {
     const editor = document.createElement('div');
     editor.className = 'editor';
 
-    // ── Global Settings ──
+    // \u2500\u2500 Global Settings \u2500\u2500
     const globalPanel = editorPanel('Global Settings', 'Core entities and command mapping shared by both the small card and the pop-out remote.');
     globalPanel.appendChild(editorH3('Identity'));
     const nameEl = editorInput(c.name, 'e.g. My TV');
@@ -1120,7 +1109,7 @@ class EasyTVCardEditor extends HTMLElement {
     globalPanel.appendChild(editorField('card_mod CSS', cssEl));
     editor.appendChild(globalPanel);
 
-    // ── Card Settings ──
+    // \u2500\u2500 Card Settings \u2500\u2500
     const cardPanel = editorPanel('Card Settings', 'Controls the small always-visible card.');
     cardPanel.appendChild(editorH3('Appearance'));
     const modeEl = editorSelect([['single','Single row'],['double','Double row']], c.compact_mode || 'single');
@@ -1138,7 +1127,7 @@ class EasyTVCardEditor extends HTMLElement {
     this._renderQAEditor(cardPanel);
     editor.appendChild(cardPanel);
 
-    // ── Pop Out Settings ──
+    // \u2500\u2500 Pop Out Settings \u2500\u2500
     const popoutPanel = editorPanel('Pop Out Settings', 'Controls the fullscreen remote overlay.');
     popoutPanel.appendChild(editorH3('Appearance'));
     const themeEl = editorSelect([['dark','Dark (blur)'],['light','Light (blur)']], c.overlay_theme || 'dark');
