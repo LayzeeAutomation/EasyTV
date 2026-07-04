@@ -1,0 +1,34 @@
+{
+  "name": "easytv-card",
+  "version": "0.1.0",
+  "description": "A custom Home Assistant Lovelace card for TV remote control with visual editor and multi-TV preset support",
+  "main": "dist/easytv-card.js",
+  "scripts": {
+    "build": "rollup -c rollup.config.js",
+    "dev": "rollup -c rollup.config.js --watch",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "home-assistant",
+    "lovelace",
+    "custom-card",
+    "tv-remote",
+    "hacs"
+  ],
+  "author": "LayzeeAutomation",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "rollup": "^3.0.0",
+    "tslib": "^2.6.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "lit": "^3.0.0"
+  }
+}
