@@ -1,7 +1,7 @@
-// EasyTV Card v0.6.3
+// EasyTV Card v0.6.4
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.6.3';
+const CARD_VERSION = '0.6.4';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -1186,4 +1186,4 @@ customElements.define('easytv-card-editor', EasyTVCardEditor);
 window.customCards = window.customCards || [];
 window.customCards.push({ type: 'easytv-card', name: 'EasyTV Card', description: 'Sleek TV remote overlay card', preview: false });
 
-console.info('%c EasyTV Card v0.6.3 ', 'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;');
+console.info('%c EasyTV Card v0.6.4 ', 'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;');
