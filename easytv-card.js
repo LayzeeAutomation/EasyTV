@@ -1,7 +1,7 @@
-// EasyTV Card v0.5.0
+// EasyTV Card v0.5.1
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.5.0';
+const CARD_VERSION = '0.5.1';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -93,41 +93,6 @@ const OVERLAY_THEMES = {
     dropdownArrow: '111111',
   },
 };
-
-/*
- * =============================================================
- * CSS CUSTOM PROPERTIES — full reference for card_mod users
- * =============================================================
- *
- * COMPACT CARD (set on ha-card via card_mod .: block)
- * --easytv-card-background        card fill         → var(--ha-card-background)
- * --easytv-card-border-radius     card corners      → var(--ha-card-border-radius, 16px)
- * --easytv-card-border            card border       → 1px solid var(--divider-color)
- * --easytv-card-box-shadow        card shadow       → var(--ha-card-box-shadow, none)
- * --easytv-card-backdrop-filter   card blur         → none
- *
- * COMPACT BUTTONS (set on ha-card, cascade into shadow DOM)
- * --easytv-button-background      btn fill          → var(--secondary-background-color)
- * --easytv-button-border-radius   btn corners       → 50% (circular)
- * --easytv-button-border          btn border        → 1px solid var(--divider-color)
- *
- * TEXT & ACCENT
- * --easytv-text-color             primary text      → var(--primary-text-color)
- * --easytv-muted-color            secondary text    → var(--secondary-text-color)
- * --easytv-accent-color           icon/accent       → var(--primary-color)
- *
- * OVERLAY (set on #easytv-overlay via card_mod or global CSS)
- * --easytv-overlay-background     overlay fill      → set by theme in JS
- * --easytv-overlay-backdrop       overlay blur      → set by theme in JS
- * --easytv-overlay-section-bg     section fill      → set by theme in JS
- * --easytv-overlay-section-radius section corners   → 16px
- * --easytv-overlay-btn-background button fill       → set by theme in JS
- * --easytv-overlay-btn-radius     button corners    → 14px
- * --easytv-overlay-text-color     text colour       → set by theme in JS
- * --easytv-overlay-muted-color    muted text        → set by theme in JS
- * --easytv-overlay-border-color   borders           → set by theme in JS
- * =============================================================
- */
 
 const CARD_STYLES = `
   :host {
@@ -272,7 +237,7 @@ const OVERLAY_STYLES = `
     border-radius: var(--easytv-overlay-btn-radius) !important; width: auto !important;
   }
 
-  /* ── SVG D-Pad ── */
+  /* SVG D-Pad */
   #easytv-overlay .svg-dpad-wrap {
     position: relative;
     width: 100%;
@@ -306,12 +271,26 @@ const OVERLAY_STYLES = `
     fill: color-mix(in srgb, var(--primary-color, #1976d2) 45%, rgba(255,255,255,0.10));
     transform: scale(0.91);
   }
-  #easytv-overlay .dpad-icon-fo { pointer-events: none; overflow: visible; }
-  #easytv-overlay .dpad-icon-fo ha-icon {
-    --mdc-icon-size: 22px;
-    color: var(--easytv-overlay-text-color, #fff);
-    display: flex; align-items: center; justify-content: center;
-    width: 100%; height: 100%;
+  #easytv-overlay .dpad-arrow {
+    pointer-events: none;
+    font-size: 11px;
+    font-weight: 700;
+    fill: var(--easytv-overlay-text-color, #fff);
+    text-anchor: middle;
+    dominant-baseline: central;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #easytv-overlay .dpad-select-label {
+    pointer-events: none;
+    font-size: 9px;
+    font-weight: 700;
+    fill: var(--easytv-overlay-text-color, #fff);
+    text-anchor: middle;
+    dominant-baseline: central;
+    user-select: none;
+    -webkit-user-select: none;
+    letter-spacing: 0.04em;
   }
   #easytv-overlay .dpad-aux-row {
     display: flex; gap: 8px; margin-top: 8px;
@@ -632,7 +611,8 @@ class EasyTVCard extends HTMLElement {
       #easytv-overlay .dpad-select-circle:active {
         fill: color-mix(in srgb, var(--primary-color, #1976d2) 45%, ${t.buttonBackground});
       }
-      #easytv-overlay .dpad-icon-fo ha-icon { color: ${t.textColor}; }
+      #easytv-overlay .dpad-arrow { fill: ${t.textColor}; }
+      #easytv-overlay .dpad-select-label { fill: ${t.textColor}; }
     `;
   }
 
@@ -787,18 +767,31 @@ class EasyTVCard extends HTMLElement {
       ].join(' ');
     }
 
-    const petals = [
-      { label: 'Up',    cmd: c.up,    icon: 'mdi:arrow-up-bold',    a1: 319, a2:  41, iconAng: 0   },
-      { label: 'Right', cmd: c.right, icon: 'mdi:arrow-right-bold', a1:  49, a2: 131, iconAng: 90  },
-      { label: 'Down',  cmd: c.down,  icon: 'mdi:arrow-down-bold',  a1: 139, a2: 221, iconAng: 180 },
-      { label: 'Left',  cmd: c.left,  icon: 'mdi:arrow-left-bold',  a1: 229, a2: 311, iconAng: 270 },
-    ];
+    // Pure SVG triangle arrow paths — no foreignObject, works on iOS Safari
+    function arrowPath(dir) {
+      // Small triangle pointing in dir, centred at 0,0 — scaled/positioned via transform
+      const s = 3.5;
+      switch(dir) {
+        case 'up':    return `M 0 ${-s} L ${s} ${s} L ${-s} ${s} Z`;
+        case 'down':  return `M 0 ${s} L ${s} ${-s} L ${-s} ${-s} Z`;
+        case 'left':  return `M ${-s} 0 L ${s} ${-s} L ${s} ${s} Z`;
+        case 'right': return `M ${s} 0 L ${-s} ${-s} L ${-s} ${s} Z`;
+        default: return '';
+      }
+    }
 
     const OUTER_R = 48;
     const INNER_R = 20;
     const ICON_R  = 35;
 
-    petals.forEach(({ label, cmd, icon, a1, a2, iconAng }) => {
+    const petals = [
+      { label: 'Up',    cmd: c.up,    dir: 'up',    a1: 319, a2:  41, iconAng: 0   },
+      { label: 'Right', cmd: c.right, dir: 'right', a1:  49, a2: 131, iconAng: 90  },
+      { label: 'Down',  cmd: c.down,  dir: 'down',  a1: 139, a2: 221, iconAng: 180 },
+      { label: 'Left',  cmd: c.left,  dir: 'left',  a1: 229, a2: 311, iconAng: 270 },
+    ];
+
+    petals.forEach(({ label, cmd, dir, a1, a2, iconAng }) => {
       const path = document.createElementNS(NS, 'path');
       path.setAttribute('d', petalPath(a1, a2, OUTER_R, INNER_R));
       path.classList.add('dpad-petal');
@@ -807,20 +800,17 @@ class EasyTVCard extends HTMLElement {
       path.addEventListener('click', (e) => { e.stopPropagation(); this._send(cmd); });
       svg.appendChild(path);
 
+      // Pure SVG triangle arrow
       const [iconX, iconY] = pt(iconAng, ICON_R);
-      const SIZE = 16;
-      const fo = document.createElementNS(NS, 'foreignObject');
-      fo.setAttribute('x', iconX - SIZE / 2);
-      fo.setAttribute('y', iconY - SIZE / 2);
-      fo.setAttribute('width', SIZE);
-      fo.setAttribute('height', SIZE);
-      fo.classList.add('dpad-icon-fo');
-      const iconEl = document.createElement('ha-icon');
-      iconEl.setAttribute('icon', icon);
-      fo.appendChild(iconEl);
-      svg.appendChild(fo);
+      const arrow = document.createElementNS(NS, 'path');
+      arrow.setAttribute('d', arrowPath(dir));
+      arrow.setAttribute('transform', `translate(${iconX}, ${iconY})`);
+      arrow.classList.add('dpad-arrow');
+      arrow.style.pointerEvents = 'none';
+      svg.appendChild(arrow);
     });
 
+    // Select circle
     const selectCircle = document.createElementNS(NS, 'circle');
     selectCircle.setAttribute('cx', '50');
     selectCircle.setAttribute('cy', '50');
@@ -831,16 +821,14 @@ class EasyTVCard extends HTMLElement {
     selectCircle.addEventListener('click', (e) => { e.stopPropagation(); this._send(c.select); });
     svg.appendChild(selectCircle);
 
-    const selectFO = document.createElementNS(NS, 'foreignObject');
-    selectFO.setAttribute('x', '38');
-    selectFO.setAttribute('y', '38');
-    selectFO.setAttribute('width', '24');
-    selectFO.setAttribute('height', '24');
-    selectFO.classList.add('dpad-icon-fo');
-    const selectIcon = document.createElement('ha-icon');
-    selectIcon.setAttribute('icon', 'mdi:keyboard-return');
-    selectFO.appendChild(selectIcon);
-    svg.appendChild(selectFO);
+    // "OK" text label in centre — pure SVG text, no foreignObject
+    const okLabel = document.createElementNS(NS, 'text');
+    okLabel.setAttribute('x', '50');
+    okLabel.setAttribute('y', '50');
+    okLabel.classList.add('dpad-select-label');
+    okLabel.textContent = 'OK';
+    okLabel.style.pointerEvents = 'none';
+    svg.appendChild(okLabel);
 
     outerWrap.appendChild(svg);
     wrap.appendChild(outerWrap);
