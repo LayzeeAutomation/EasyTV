@@ -1,21 +1,48 @@
-name: Attach release asset
+name: Auto Release on Version Bump
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+    paths:
+      - 'easytv-card.js'
 
 jobs:
-  attach:
+  release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.release.tag_name }}
 
-      - name: Upload easytv-card.js to release
+      - name: Extract version from easytv-card.js
+        id: get_version
+        run: |
+          VERSION=$(grep -oP "(?<=CARD_VERSION = ')[^']+" easytv-card.js)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if tag already exists
+        id: check_tag
+        run: |
+          if git ls-remote --tags origin "refs/tags/v${{ steps.get_version.outputs.version }}" | grep -q "refs/tags"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create tag and GitHub release
+        if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          name: ${{ steps.get_version.outputs.tag }}
+          body: |
+            Auto-released from version bump in `easytv-card.js`.
+
+            See [CHANGELOG](https://github.com/LayzeeAutomation/EasyTV/blob/main/CHANGELOG.md) for details.
           files: easytv-card.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
