@@ -1,7 +1,7 @@
-// EasyTV Card v0.9.1
+// EasyTV Card v0.9.2
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.9.1';
+const CARD_VERSION = '0.9.2';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -170,11 +170,8 @@ const OVERLAY_STYLES = `
     padding: 20px 20px 32px; gap: 20px;
   }
 
-  /* ── Power row (power only, left-aligned) ── */
-  .power-row {
-    display: flex; align-items: center;
-    width: 100%;
-  }
+  /* ── Power row ── */
+  .power-row { display: flex; align-items: center; width: 100%; }
   .power-btn {
     width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
@@ -191,16 +188,10 @@ const OVERLAY_STYLES = `
   .dpad-scene {
     position: relative;
     width: min(300px, calc(100vw - 40px));
-    padding: 24px;
-    box-sizing: border-box;
-    flex-shrink: 0;
+    padding: 24px; box-sizing: border-box; flex-shrink: 0;
   }
   .dpad-scene.numpad-mode { padding: 0; }
-  .dpad-wrap {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1;
-  }
+  .dpad-wrap { position: relative; width: 100%; aspect-ratio: 1; }
   .dpad-wrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
   .dpad-petal {
     fill: var(--etv-btn-bg); stroke: var(--etv-border); stroke-width: 1;
@@ -219,20 +210,15 @@ const OVERLAY_STYLES = `
 
   /* ── Number pad ── */
   .numpad-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    width: 100%;
-    box-sizing: border-box;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px; width: 100%; box-sizing: border-box;
   }
   .num-btn {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
     border-radius: 14px; cursor: pointer; color: var(--etv-text);
     transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-    aspect-ratio: 1;
-    user-select: none;
+    -webkit-tap-highlight-color: transparent; aspect-ratio: 1; user-select: none;
   }
   .num-btn:hover  { background: var(--etv-btn-hover); }
   .num-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
@@ -243,23 +229,20 @@ const OVERLAY_STYLES = `
     background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
     border-radius: 50%; cursor: pointer; color: var(--etv-text);
     transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-    aspect-ratio: 1; user-select: none;
+    -webkit-tap-highlight-color: transparent; aspect-ratio: 1; user-select: none;
   }
   .num-back:hover  { background: var(--etv-btn-hover); }
   .num-back:active { background: var(--etv-btn-active); transform: scale(0.93); }
   .num-back ha-icon { --mdc-icon-size: 22px; }
   .num-spacer { aspect-ratio: 1; }
 
-  /* ── Corner circular buttons ── */
+  /* ── Corner buttons ── */
   .corner-btn {
-    position: absolute;
-    width: 48px; height: 48px; border-radius: 50%;
+    position: absolute; width: 48px; height: 48px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
     cursor: pointer; color: var(--etv-text);
-    transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent;
   }
   .corner-btn:hover  { background: var(--etv-btn-hover); }
   .corner-btn ha-icon { --mdc-icon-size: 22px; }
@@ -272,6 +255,7 @@ const OVERLAY_STYLES = `
   .corner-home { bottom: 24px; right: 24px; transform: translate(50%, 50%); }
   .corner-home:active { background: var(--etv-btn-active); transform: translate(50%, 50%) scale(0.92); }
 
+  /* ── Playback row ── */
   .playback-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
   .pb-btn {
     display: flex; align-items: center; justify-content: center;
@@ -287,9 +271,10 @@ const OVERLAY_STYLES = `
   /* ── Pill row ── */
   .pill-row {
     display: flex; gap: 16px; justify-content: center;
-    align-items: stretch; width: 100%;
+    align-items: center; width: 100%;
   }
-  /* Side pills (vol / ch) — narrower */
+
+  /* Side pills (vol / ch) */
   .pill-wrap {
     display: flex; flex-direction: column;
     flex: 1; max-width: 60px;
@@ -298,11 +283,9 @@ const OVERLAY_STYLES = `
   }
   .pill-half {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px; padding: 18px 0;
+    gap: 4px; padding: 18px 0; flex: 1;
     cursor: pointer; color: var(--etv-text);
-    transition: background 0.15s;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none; flex: 1;
+    transition: background 0.15s; -webkit-tap-highlight-color: transparent; user-select: none;
   }
   .pill-half:hover  { background: var(--etv-btn-hover); }
   .pill-half:active { background: var(--etv-btn-active); }
@@ -310,25 +293,26 @@ const OVERLAY_STYLES = `
   .pill-half span { font-size: 10px; color: var(--etv-muted); letter-spacing: 0.03em; }
   .pill-divider { height: 1px; background: var(--etv-border); margin: 0 10px; flex-shrink: 0; }
 
-  /* Centre pill — mute (top) + source (bottom), wider */
-  .pill-centre {
+  /* Centre column: two independent circles with a gap between */
+  .centre-stack {
     display: flex; flex-direction: column;
-    flex: 1; max-width: 80px;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    border-radius: 32px; overflow: hidden;
+    align-items: center; justify-content: center;
+    gap: 10px; flex: 1; max-width: 80px;
   }
-  .pill-centre-half {
+  .centre-circle {
+    width: 100%; aspect-ratio: 1;
+    border-radius: 50%;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px; padding: 18px 0;
+    gap: 4px;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
     cursor: pointer; color: var(--etv-text);
-    transition: background 0.15s;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none; flex: 1;
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent; user-select: none;
   }
-  .pill-centre-half:hover  { background: var(--etv-btn-hover); }
-  .pill-centre-half:active { background: var(--etv-btn-active); }
-  .pill-centre-half ha-icon { --mdc-icon-size: 26px; }
-  .pill-centre-half span { font-size: 10px; color: var(--etv-muted); letter-spacing: 0.03em; }
+  .centre-circle:hover  { background: var(--etv-btn-hover); }
+  .centre-circle:active { background: var(--etv-btn-active); transform: scale(0.93); }
+  .centre-circle ha-icon { --mdc-icon-size: 24px; }
+  .centre-circle span { font-size: 9px; color: var(--etv-muted); letter-spacing: 0.04em; }
 
   /* Utility */
   .etv-hidden { visibility: hidden; pointer-events: none; height: 0 !important; overflow: hidden; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
@@ -510,16 +494,14 @@ class EasyTVOverlayEl extends HTMLElement {
     body.className = 'overlay-body';
     sr.appendChild(body);
 
-    // ── Power row (power button only) ──
+    // ── Power row ──
     const powerRow = document.createElement('div');
     powerRow.className = 'power-row';
-
     const powerBtn = document.createElement('div');
     powerBtn.className = 'power-btn';
     powerBtn.innerHTML = `<ha-icon icon="mdi:power"></ha-icon>`;
     powerBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.power));
     powerRow.appendChild(powerBtn);
-
     body.appendChild(powerRow);
 
     // ── Switch logic ──
@@ -548,7 +530,6 @@ class EasyTVOverlayEl extends HTMLElement {
     // ── D-pad scene ──
     const dpadScene = document.createElement('div');
     dpadScene.className = 'dpad-scene';
-
     const dpadWrap = document.createElement('div');
     dpadWrap.className = 'dpad-wrap';
     const navSvg  = buildSvgDpad(cmds, getHass, cfg.entity);
@@ -576,7 +557,6 @@ class EasyTVOverlayEl extends HTMLElement {
       dpadScene.appendChild(btn);
       return btn;
     });
-
     body.appendChild(dpadScene);
 
     // ── Playback row ──
@@ -595,7 +575,7 @@ class EasyTVOverlayEl extends HTMLElement {
     });
     body.appendChild(pbRow);
 
-    // ── Pill row: [vol pill] [mute/source centre pill] [ch pill] ──
+    // ── Pill row: [vol pill] [mute circle + source circle] [ch pill] ──
     const pillRow = document.createElement('div');
     pillRow.className = 'pill-row';
 
@@ -611,17 +591,17 @@ class EasyTVOverlayEl extends HTMLElement {
     volPill.appendChild(volUp); volPill.appendChild(volDiv); volPill.appendChild(volDown);
     pillRow.appendChild(volPill);
 
-    // Centre split pill: Mute (top) / Source (bottom)
-    const centrePill  = document.createElement('div'); centrePill.className  = 'pill-centre';
-    const muteHalf    = document.createElement('div'); muteHalf.className    = 'pill-centre-half';
-    muteHalf.innerHTML = `<ha-icon icon="mdi:volume-off"></ha-icon><span>MUTE</span>`;
-    muteHalf.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_mute));
-    const centreDiv   = document.createElement('div'); centreDiv.className   = 'pill-divider';
-    const sourceHalf  = document.createElement('div'); sourceHalf.className  = 'pill-centre-half';
-    sourceHalf.innerHTML = `<ha-icon icon="mdi:import"></ha-icon><span>SOURCE</span>`;
-    sourceHalf.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.source));
-    centrePill.appendChild(muteHalf); centrePill.appendChild(centreDiv); centrePill.appendChild(sourceHalf);
-    pillRow.appendChild(centrePill);
+    // Centre: two separate circles stacked
+    const centreStack  = document.createElement('div'); centreStack.className  = 'centre-stack';
+    const muteCircle   = document.createElement('div'); muteCircle.className   = 'centre-circle';
+    muteCircle.innerHTML = `<ha-icon icon="mdi:volume-off"></ha-icon><span>MUTE</span>`;
+    muteCircle.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_mute));
+    const sourceCircle = document.createElement('div'); sourceCircle.className = 'centre-circle';
+    sourceCircle.innerHTML = `<ha-icon icon="mdi:import"></ha-icon><span>SOURCE</span>`;
+    sourceCircle.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.source));
+    centreStack.appendChild(muteCircle);
+    centreStack.appendChild(sourceCircle);
+    pillRow.appendChild(centreStack);
 
     // Channel pill
     const chPill  = document.createElement('div'); chPill.className  = 'pill-wrap';
@@ -876,6 +856,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.9.1 ',
+  '%c EasyTV Card v0.9.2 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
