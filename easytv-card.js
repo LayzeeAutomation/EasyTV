@@ -1,7 +1,7 @@
-// EasyTV Card v1.0.5
+// EasyTV Card v1.0.6
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '1.0.5';
+const CARD_VERSION = '1.0.6';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -156,16 +156,17 @@ const CARD_STYLES = `
     --easytv-accent:        var(--primary-color, #1976d2);
     --easytv-text:          var(--primary-text-color, #fff);
     --easytv-muted:         var(--secondary-text-color, rgba(255,255,255,0.55));
-    --easytv-bg:            var(--ha-card-background, var(--card-background-color, rgba(28,28,38,0.85)));
+    /* Transparent frosted-glass — no dark fill, blur does the work */
+    --easytv-bg:            rgba(255,255,255,0.04);
     --easytv-border:        var(--divider-color, rgba(255,255,255,0.10));
-    --easytv-radius:        var(--ha-card-border-radius, 18px);
+    /* Larger corner radius */
+    --easytv-radius:        28px;
     --easytv-btn-bg:        rgba(255,255,255,0.07);
     --easytv-btn-hover:     rgba(255,255,255,0.14);
     --easytv-btn-active:    rgba(255,255,255,0.22);
     --easytv-btn-border:    rgba(255,255,255,0.10);
     --easytv-pill-bg:       rgba(255,255,255,0.06);
     --easytv-pill-border:   rgba(255,255,255,0.10);
-    /* light-blue TV icon colour */
     --easytv-tv-icon-color: #7DD3FC;
   }
 
@@ -180,14 +181,13 @@ const CARD_STYLES = `
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* No accent bar — plain border all round */
   .etv-card {
     border-radius: var(--easytv-radius);
     background: var(--easytv-bg);
     border: 1px solid var(--easytv-border);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07);
-    backdrop-filter: blur(20px) saturate(1.3);
-    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.07);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
     color: var(--easytv-text);
     overflow: hidden;
     animation: etvCardIn 0.25s ease both;
@@ -204,17 +204,14 @@ const CARD_STYLES = `
     flex: 1; min-width: 0;
   }
   .tv-icon-wrap { flex-shrink: 0; }
-  /* Smaller, light-blue TV icon — no dot */
   .tv-icon { --mdc-icon-size: 20px; color: var(--easytv-tv-icon-color); display: block; }
   .tv-info { flex: 1; min-width: 0; }
-  /* Slightly smaller title */
   .tv-name {
     font-weight: 600; font-size: 13px; color: var(--easytv-text);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
   }
   .c-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
-  /* connected pill group for quick actions */
   .qa-pill {
     display: flex; align-items: stretch;
     background: var(--easytv-pill-bg);
@@ -233,7 +230,6 @@ const CARD_STYLES = `
   .qa-pill-btn:active { background: var(--easytv-btn-active); transform: scale(0.91); }
   .qa-pill-btn ha-icon { --mdc-icon-size: 18px; }
 
-  /* open-overlay icon button */
   .icon-btn {
     background: var(--easytv-btn-bg); border: 1px solid var(--easytv-btn-border);
     cursor: pointer; color: var(--easytv-text);
@@ -269,7 +265,6 @@ const CARD_STYLES = `
   .d-qa-btn:active { background: var(--easytv-btn-active); transform: scale(0.93); }
   .d-qa-btn ha-icon { --mdc-icon-size: 20px; }
 
-  /* no-background / no-border overrides */
   .no-btn-bg  .qa-pill-btn, .no-btn-bg  .d-qa-btn, .no-btn-bg  .icon-btn { background: transparent !important; }
   .no-btn-border .qa-pill-btn, .no-btn-border .d-qa-btn, .no-btn-border .icon-btn,
   .no-btn-border .qa-pill { border-color: transparent !important; }
@@ -880,7 +875,6 @@ class EasyTVCard extends HTMLElement {
           : '';
       }).join('');
 
-      // No compact app row — removed per v1.0.5
       card.innerHTML = `
         <div class="etv-card compact-double ${extraCls}">
           <div class="d-top">
@@ -1035,6 +1029,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v1.0.5 ',
+  '%c EasyTV Card v1.0.6 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
