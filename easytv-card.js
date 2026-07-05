@@ -1,7 +1,7 @@
-// EasyTV Card v1.0.10
+// EasyTV Card v1.0.11
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '1.0.10';
+const CARD_VERSION = '1.0.11';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -503,22 +503,63 @@ const OVERLAY_STYLES = `
 // ── Editor Styles ─────────────────────────────────────────────────────────────
 
 const EDITOR_STYLES = `
-  .editor { display: flex; flex-direction: column; gap: 16px; padding: 16px; font-family: var(--paper-font-body1_-_font-family, sans-serif); }
-  .editor-panel {
-    display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 14px;
-    background: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.03)));
-    border: 1px solid var(--divider-color, rgba(255,255,255,0.12));
+  * { box-sizing: border-box; }
+  :host { display: block; font-family: var(--paper-font-body1_-_font-family, sans-serif); }
+
+  /* ── Tab bar ── */
+  .etv-tabs {
+    display: flex; gap: 4px;
+    padding: 12px 16px 0;
+    border-bottom: 1px solid var(--divider-color, rgba(255,255,255,0.1));
+    margin-bottom: 0;
   }
-  .panel-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--primary-color, #1976d2); margin-bottom: 2px; }
-  .field-wrap { display: flex; flex-direction: column; gap: 4px; }
+  .etv-tab {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px 4px 11px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
+    color: var(--secondary-text-color, rgba(255,255,255,0.5));
+    cursor: pointer; border: none; background: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.18s, border-color 0.18s;
+    white-space: nowrap; user-select: none;
+  }
+  .etv-tab ha-icon { --mdc-icon-size: 15px; }
+  .etv-tab.active {
+    color: var(--primary-color, #1976d2);
+    border-bottom-color: var(--primary-color, #1976d2);
+  }
+  .etv-tab:hover:not(.active) { color: var(--primary-text-color, #fff); }
+
+  /* ── Tab panels ── */
+  .etv-panels { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .etv-panel  { display: none; flex-direction: column; gap: 14px; }
+  .etv-panel.active { display: flex; }
+
+  /* ── Section card ── */
+  .etv-section {
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 14px; border-radius: 12px;
+    background: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.03)));
+    border: 1px solid var(--divider-color, rgba(255,255,255,0.1));
+  }
+  .section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--primary-color, #1976d2);
+  }
+
+  /* ── Fields ── */
+  .field-wrap { display: flex; flex-direction: column; gap: 5px; }
   .field-wrap label { font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.6)); padding-left: 2px; }
   ha-entity-picker { width: 100%; display: block; }
+
   .etv-input, .etv-select {
-    width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px;
+    width: 100%; padding: 10px 12px; border-radius: 8px;
     border: 1px solid var(--divider-color, rgba(255,255,255,0.15));
     background: var(--secondary-background-color, #2a2a2a);
     color: var(--primary-text-color, #fff);
-    font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s;
+    font-size: 14px; font-family: inherit; outline: none;
+    transition: border-color 0.15s;
   }
   .etv-input:focus, .etv-select:focus { border-color: var(--primary-color, #1976d2); }
   .etv-select {
@@ -526,9 +567,19 @@ const EDITOR_STYLES = `
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23888' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
   }
-  .row { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px; gap: 12px; }
-  .row label { font-size: 14px; color: var(--primary-text-color, #fff); }
-  .version-badge { font-size: 11px; color: var(--secondary-text-color, rgba(255,255,255,0.5)); text-align: center; padding-top: 4px; }
+
+  /* ── Toggle row ── */
+  .toggle-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 2px; gap: 12px;
+  }
+  .toggle-row label { font-size: 14px; color: var(--primary-text-color, #fff); flex: 1; }
+  .toggle-row .hint { font-size: 11px; color: var(--secondary-text-color, rgba(255,255,255,0.5)); margin-top: 2px; }
+
+  .version-badge {
+    font-size: 11px; color: var(--secondary-text-color, rgba(255,255,255,0.4));
+    text-align: center; padding: 4px 16px 12px;
+  }
 `;
 
 // ── SVG D-pad builder ─────────────────────────────────────────────────────────
@@ -785,14 +836,12 @@ class EasyTVCard extends HTMLElement {
     this._hass = hass;
     if (!this._config) return;
 
-    // Build DOM once on first render, or rebuild if config changed
     const configChanged = this._renderedConfig !== this._config;
     if (!this.shadowRoot.querySelector('.etv-card') || configChanged) {
       this._buildCard();
       return;
     }
 
-    // DOM already exists — only patch the name text if it changed
     const stateObj = hass?.states[this._config.entity];
     const name = this._config.name || stateObj?.attributes?.friendly_name || this._config.entity;
     if (name !== this._renderedName) {
@@ -818,7 +867,6 @@ class EasyTVCard extends HTMLElement {
     const name = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
     const cardType = cfg.card_type || 'single';
 
-    // Clear everything and rebuild from scratch
     sr.innerHTML = '';
 
     const s = document.createElement('style');
@@ -927,27 +975,68 @@ class EasyTVCard extends HTMLElement {
 // ── Editor ────────────────────────────────────────────────────────────────────
 
 class EasyTVCardEditor extends HTMLElement {
-  constructor() { super(); this.attachShadow({ mode: 'open' }); this._config = {}; }
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this._config  = {};
+    this._activeTab = 'global';
+  }
 
   set hass(hass) {
     this._hass = hass;
     this.shadowRoot.querySelectorAll('ha-entity-picker').forEach(p => { p.hass = hass; });
   }
 
-  setConfig(config) { this._config = { ...config }; this._render(); }
+  setConfig(config) {
+    this._config = { ...config };
+    this._render();
+  }
+
+  _switchTab(tab) {
+    this._activeTab = tab;
+    const sr = this.shadowRoot;
+    sr.querySelectorAll('.etv-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    sr.querySelectorAll('.etv-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+  }
 
   _render() {
     const cfg = this._config;
     const sr  = this.shadowRoot;
     sr.innerHTML = '';
+
     const style = document.createElement('style');
     style.textContent = EDITOR_STYLES;
     sr.appendChild(style);
-    const editor = document.createElement('div');
-    editor.className = 'editor';
-    editor.innerHTML = `
-      <div class="editor-panel">
-        <div class="panel-title">Remote Entity</div>
+
+    // ── Tab bar
+    const tabBar = document.createElement('div');
+    tabBar.className = 'etv-tabs';
+    const TABS = [
+      { id: 'global',  label: 'Global',       icon: 'mdi:cog-outline' },
+      { id: 'compact', label: 'Compact Card',  icon: 'mdi:view-headline' },
+      { id: 'overlay', label: 'Overlay',       icon: 'mdi:remote-tv' },
+    ];
+    TABS.forEach(({ id, label, icon }) => {
+      const tab = document.createElement('button');
+      tab.className = 'etv-tab' + (this._activeTab === id ? ' active' : '');
+      tab.dataset.tab = id;
+      tab.innerHTML = `<ha-icon icon="${icon}"></ha-icon>${label}`;
+      tab.addEventListener('click', () => this._switchTab(id));
+      tabBar.appendChild(tab);
+    });
+    sr.appendChild(tabBar);
+
+    // ── Panel container
+    const panels = document.createElement('div');
+    panels.className = 'etv-panels';
+
+    // ════ GLOBAL PANEL ════
+    const globalPanel = document.createElement('div');
+    globalPanel.className = 'etv-panel' + (this._activeTab === 'global' ? ' active' : '');
+    globalPanel.dataset.panel = 'global';
+    globalPanel.innerHTML = `
+      <div class="etv-section">
+        <div class="section-title">Entity</div>
         <div class="field-wrap">
           <label>Remote entity (required)</label>
           <ha-entity-picker data-key="entity" allow-custom-entity></ha-entity-picker>
@@ -957,16 +1046,31 @@ class EasyTVCardEditor extends HTMLElement {
           <input class="etv-input" data-key="name" value="${cfg.name || ''}" placeholder="Living Room TV">
         </div>
       </div>
-      <div class="editor-panel">
-        <div class="panel-title">Card</div>
+      <div class="etv-section">
+        <div class="section-title">TV Preset</div>
         <div class="field-wrap">
-          <label>TV preset</label>
+          <label>TV type</label>
           <select class="etv-select" data-key="tv_type">
             ${['google_tv','roku','samsung','generic'].map(t =>
               `<option value="${t}"${(cfg.tv_type || 'google_tv') === t ? ' selected' : ''}>${t.replace('_',' ').replace(/\b\w/g, c => c.toUpperCase())}</option>`
             ).join('')}
           </select>
         </div>
+        <div class="field-wrap" id="roku-mp-wrap" style="${(cfg.tv_type || 'google_tv') === 'roku' ? '' : 'display:none'}">
+          <label>Roku media player entity</label>
+          <ha-entity-picker data-key="media_player_entity" allow-custom-entity></ha-entity-picker>
+        </div>
+      </div>
+    `;
+    panels.appendChild(globalPanel);
+
+    // ════ COMPACT CARD PANEL ════
+    const compactPanel = document.createElement('div');
+    compactPanel.className = 'etv-panel' + (this._activeTab === 'compact' ? ' active' : '');
+    compactPanel.dataset.panel = 'compact';
+    compactPanel.innerHTML = `
+      <div class="etv-section">
+        <div class="section-title">Layout</div>
         <div class="field-wrap">
           <label>Card style</label>
           <select class="etv-select" data-key="card_type">
@@ -974,43 +1078,84 @@ class EasyTVCardEditor extends HTMLElement {
             <option value="double"${cfg.card_type === 'double' ? ' selected' : ''}>Double row</option>
           </select>
         </div>
-        <div class="row"><label>No button background</label><ha-switch data-key="no_button_background"></ha-switch></div>
-        <div class="row"><label>No button border</label><ha-switch data-key="no_button_border"></ha-switch></div>
       </div>
-      <div class="editor-panel">
-        <div class="panel-title">App Shortcuts (overlay)</div>
-        <div class="row"><label>Show app shortcuts</label><ha-switch data-key="show_apps" data-default="true"></ha-switch></div>
-        <div class="field-wrap">
-          <label>Roku media player entity (Roku only)</label>
-          <ha-entity-picker data-key="media_player_entity" allow-custom-entity></ha-entity-picker>
+      <div class="etv-section">
+        <div class="section-title">Button Style</div>
+        <div class="toggle-row">
+          <label>No button background</label>
+          <ha-switch data-key="no_button_background"></ha-switch>
+        </div>
+        <div class="toggle-row">
+          <label>No button border</label>
+          <ha-switch data-key="no_button_border"></ha-switch>
         </div>
       </div>
-      <div class="version-badge">EasyTV Card v${CARD_VERSION}</div>
     `;
-    sr.appendChild(editor);
-    editor.querySelectorAll('ha-entity-picker[data-key]').forEach(picker => {
+    panels.appendChild(compactPanel);
+
+    // ════ OVERLAY PANEL ════
+    const overlayPanel = document.createElement('div');
+    overlayPanel.className = 'etv-panel' + (this._activeTab === 'overlay' ? ' active' : '');
+    overlayPanel.dataset.panel = 'overlay';
+    overlayPanel.innerHTML = `
+      <div class="etv-section">
+        <div class="section-title">App Shortcuts</div>
+        <div class="toggle-row">
+          <label>Show app shortcuts</label>
+          <ha-switch data-key="show_apps"></ha-switch>
+        </div>
+      </div>
+    `;
+    panels.appendChild(overlayPanel);
+
+    sr.appendChild(panels);
+
+    // Version badge
+    const badge = document.createElement('div');
+    badge.className = 'version-badge';
+    badge.textContent = `EasyTV Card v${CARD_VERSION}`;
+    sr.appendChild(badge);
+
+    // ── Wire up entity pickers
+    sr.querySelectorAll('ha-entity-picker[data-key]').forEach(picker => {
       picker.hass  = this._hass;
       picker.value = cfg[picker.dataset.key] || '';
       picker.addEventListener('value-changed', e => {
         this._config = { ...this._config, [picker.dataset.key]: e.detail.value || undefined };
+        // Show/hide Roku media player field reactively
+        if (picker.dataset.key === 'tv_type') {
+          const wrap = sr.querySelector('#roku-mp-wrap');
+          if (wrap) wrap.style.display = e.detail.value === 'roku' ? '' : 'none';
+        }
         this._fireChange();
       });
     });
-    const switchKeys = {
-      no_button_background: !!cfg.no_button_background,
-      no_button_border:     !!cfg.no_button_border,
-      show_apps:            cfg.show_apps !== false,
+
+    // ── Wire up switches
+    const switchDefaults = {
+      no_button_background: false,
+      no_button_border:     false,
+      show_apps:            true,
     };
-    editor.querySelectorAll('ha-switch[data-key]').forEach(sw => {
-      sw.checked = !!switchKeys[sw.dataset.key];
+    sr.querySelectorAll('ha-switch[data-key]').forEach(sw => {
+      const key = sw.dataset.key;
+      sw.checked = cfg[key] !== undefined ? !!cfg[key] : !!switchDefaults[key];
       sw.addEventListener('change', () => {
-        this._config = { ...this._config, [sw.dataset.key]: sw.checked };
+        this._config = { ...this._config, [key]: sw.checked };
         this._fireChange();
       });
     });
-    editor.querySelectorAll('.etv-input[data-key], .etv-select[data-key]').forEach(el => {
+
+    // ── Wire up text inputs & selects
+    sr.querySelectorAll('.etv-input[data-key], .etv-select[data-key]').forEach(el => {
       el.addEventListener('change', () => {
-        this._config = { ...this._config, [el.dataset.key]: el.value || undefined };
+        const val = el.value || undefined;
+        this._config = { ...this._config, [el.dataset.key]: val };
+        // Show/hide Roku field when tv_type select changes
+        if (el.dataset.key === 'tv_type') {
+          const wrap = sr.querySelector('#roku-mp-wrap');
+          if (wrap) wrap.style.display = el.value === 'roku' ? '' : 'none';
+        }
         this._fireChange();
       });
     });
@@ -1035,6 +1180,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v1.0.10 ',
+  '%c EasyTV Card v1.0.11 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
