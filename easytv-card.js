@@ -1,7 +1,7 @@
-// EasyTV Card v0.7.2
+// EasyTV Card v0.7.3
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.7.2';
+const CARD_VERSION = '0.7.3';
 
 // ─── TV Presets ───────────────────────────────────────────────────────────────
 
@@ -133,9 +133,8 @@ const OVERLAY_STYLES = `
     --etv-btn-hover:    rgba(255,255,255,0.18);
     --etv-btn-active:   rgba(255,255,255,0.26);
     --etv-border:       rgba(255,255,255,0.13);
-    --etv-section-bg:   rgba(255,255,255,0.07);
+    --etv-accent:       #1976d2;
     --etv-radius-btn:   14px;
-    --etv-radius-section: 16px;
   }
   @keyframes etvFadeIn {
     from { opacity: 0; transform: translateY(16px) translateZ(0); }
@@ -193,7 +192,7 @@ const OVERLAY_STYLES = `
   #easytv-overlay .dpad-arrow-icon { fill: rgba(255,255,255,0.7); pointer-events: none; }
   #easytv-overlay .dpad-ok { fill: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
 
-  /* ── Utility row (Back / Home / Info) ── */
+  /* ── Utility row ── */
   #easytv-overlay .util-row {
     display: flex; gap: 12px; justify-content: center; width: 100%;
   }
@@ -223,6 +222,50 @@ const OVERLAY_STYLES = `
   #easytv-overlay .pb-btn:hover  { background: var(--etv-btn-hover); }
   #easytv-overlay .pb-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
   #easytv-overlay .pb-btn ha-icon { --mdc-icon-size: 24px; }
+
+  /* ── Volume bar ── */
+  #easytv-overlay .vol-row {
+    display: flex; align-items: center; gap: 12px; width: 100%;
+  }
+  #easytv-overlay .vol-mute-btn {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    cursor: pointer; color: var(--etv-text); transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #easytv-overlay .vol-mute-btn:hover  { background: var(--etv-btn-hover); }
+  #easytv-overlay .vol-mute-btn:active { background: var(--etv-btn-active); transform: scale(0.92); }
+  #easytv-overlay .vol-mute-btn ha-icon { --mdc-icon-size: 20px; }
+  #easytv-overlay .vol-mute-btn.muted  { color: rgba(255,255,255,0.35); }
+  #easytv-overlay .vol-track {
+    flex: 1; height: 44px; border-radius: 22px;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    position: relative; overflow: hidden; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #easytv-overlay .vol-fill {
+    position: absolute; top: 0; left: 0; height: 100%;
+    background: linear-gradient(90deg, rgba(25,118,210,0.7), rgba(25,118,210,0.45));
+    border-radius: 22px;
+    transition: width 0.25s cubic-bezier(0.25,0.46,0.45,0.94);
+    pointer-events: none;
+  }
+  #easytv-overlay .vol-fill.muted {
+    background: rgba(255,255,255,0.12);
+  }
+  #easytv-overlay .vol-label {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8);
+    pointer-events: none; white-space: nowrap;
+  }
+  #easytv-overlay .vol-icon-left, #easytv-overlay .vol-icon-right {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    color: rgba(255,255,255,0.5); pointer-events: none;
+    --mdc-icon-size: 18px;
+  }
+  #easytv-overlay .vol-icon-left  { left: 10px; }
+  #easytv-overlay .vol-icon-right { right: 10px; }
 `;
 
 // ─── Editor Styles ────────────────────────────────────────────────────────────
@@ -275,16 +318,12 @@ const EDITOR_STYLES = `
 // ─── SVG D-pad builder ────────────────────────────────────────────────────────
 
 function buildSvgDpad(cmds, hass, entityId) {
-  // viewBox 0 0 240 240, centre at 120,120
   const cx = 120, cy = 120;
-  const R  = 112; // outer radius
-  const r  = 40;  // inner (centre button) radius
-  const gapDeg = 5; // gap in degrees between petals
-
+  const R  = 112;
+  const r  = 40;
+  const gapDeg = 5;
   const toRad = d => d * Math.PI / 180;
 
-  // Build a donut-sector path for a 90-degree petal
-  // midAngle: the pointing direction of the petal (0=right, 90=down, 180=left, 270=up)
   function petalPath(midAngle) {
     const half = 45 - gapDeg / 2;
     const a1 = toRad(midAngle - half);
@@ -296,13 +335,11 @@ function buildSvgDpad(cmds, hass, entityId) {
     return `M${x1},${y1} L${x2},${y2} A${R},${R} 0 0,1 ${x3},${y3} L${x4},${y4} A${r},${r} 0 0,0 ${x1},${y1} Z`;
   }
 
-  // Small filled triangle arrow pointing in direction (0=right,90=down,180=left,270=up)
   function arrowPolygon(midAngle, dist) {
     const rad = toRad(midAngle);
     const px = cx + dist * Math.cos(rad);
     const py = cy + dist * Math.sin(rad);
-    const s = 9; // arrow half-size
-    // Three points of triangle: tip pointing outward, base perpendicular
+    const s = 9;
     const tipX = px + s * Math.cos(rad),  tipY = py + s * Math.sin(rad);
     const b1X  = px - s * Math.cos(rad) + s * Math.cos(rad + Math.PI/2);
     const b1Y  = py - s * Math.sin(rad) + s * Math.sin(rad + Math.PI/2);
@@ -323,8 +360,7 @@ function buildSvgDpad(cmds, hass, entityId) {
   svg.setAttribute('viewBox', '0 0 240 240');
 
   petals.forEach(p => {
-    const dist = (r + R) / 2; // midpoint between inner and outer radius
-
+    const dist = (r + R) / 2;
     const path = document.createElementNS(NS, 'path');
     path.setAttribute('d', petalPath(p.mid));
     path.setAttribute('class', 'dpad-petal');
@@ -337,7 +373,6 @@ function buildSvgDpad(cmds, hass, entityId) {
     svg.appendChild(arrow);
   });
 
-  // Centre circle (select)
   const circle = document.createElementNS(NS, 'circle');
   circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r - 2);
   circle.setAttribute('class', 'dpad-center');
@@ -351,6 +386,70 @@ function buildSvgDpad(cmds, hass, entityId) {
   svg.appendChild(okTxt);
 
   return svg;
+}
+
+// ─── Volume bar builder ───────────────────────────────────────────────────────
+
+function buildVolBar(hass, cfg, cmds) {
+  const mpId = cfg.media_player_entity;
+  if (!mpId) return null;
+
+  const mp      = hass?.states[mpId];
+  const volPct  = mp ? Math.round((mp.attributes.volume_level || 0) * 100) : 0;
+  const muted   = mp?.attributes.is_volume_muted === true;
+
+  const row = document.createElement('div');
+  row.className = 'vol-row';
+  row.id = 'etv-vol-row';
+
+  // Mute button
+  const muteBtn = document.createElement('div');
+  muteBtn.className = 'vol-mute-btn' + (muted ? ' muted' : '');
+  muteBtn.id = 'etv-mute-btn';
+  muteBtn.innerHTML = `<ha-icon icon="${muted ? 'mdi:volume-off' : 'mdi:volume-high'}"></ha-icon>`;
+  muteBtn.addEventListener('click', () => sendCmd(hass, cfg.entity, cmds.volume_mute));
+  row.appendChild(muteBtn);
+
+  // Track
+  const track = document.createElement('div');
+  track.className = 'vol-track';
+  track.id = 'etv-vol-track';
+
+  const fill = document.createElement('div');
+  fill.className = 'vol-fill' + (muted ? ' muted' : '');
+  fill.id = 'etv-vol-fill';
+  fill.style.width = `${volPct}%`;
+  track.appendChild(fill);
+
+  const label = document.createElement('div');
+  label.className = 'vol-label';
+  label.id = 'etv-vol-label';
+  label.textContent = muted ? 'Muted' : `${volPct}%`;
+  track.appendChild(label);
+
+  const iconLeft = document.createElement('ha-icon');
+  iconLeft.className = 'vol-icon-left';
+  iconLeft.setAttribute('icon', 'mdi:volume-minus');
+  track.appendChild(iconLeft);
+
+  const iconRight = document.createElement('ha-icon');
+  iconRight.className = 'vol-icon-right';
+  iconRight.setAttribute('icon', 'mdi:volume-plus');
+  track.appendChild(iconRight);
+
+  // Tap left half = vol down, tap right half = vol up
+  track.addEventListener('click', e => {
+    const rect = track.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    if (x < rect.width / 2) {
+      sendCmd(hass, cfg.entity, cmds.volume_down);
+    } else {
+      sendCmd(hass, cfg.entity, cmds.volume_up);
+    }
+  });
+
+  row.appendChild(track);
+  return row;
 }
 
 // ─── Main Card ────────────────────────────────────────────────────────────────
@@ -367,6 +466,10 @@ class EasyTVCard extends HTMLElement {
     if (!this._config) return;
     if (!this.shadowRoot.querySelector('ha-card')) this._initialRender();
     this._updateCompact();
+    // Live-update volume bar if overlay is open
+    if (this._overlayOpen && this._config.media_player_entity) {
+      this._updateVolumeBar(hass);
+    }
   }
 
   setConfig(config) {
@@ -449,6 +552,33 @@ class EasyTVCard extends HTMLElement {
     }
   }
 
+  _updateVolumeBar(hass) {
+    const cfg   = this._config;
+    const mpId  = cfg.media_player_entity;
+    const mp    = hass?.states[mpId];
+    if (!mp || !this._overlayEl) return;
+
+    const volPct = Math.round((mp.attributes.volume_level || 0) * 100);
+    const muted  = mp.attributes.is_volume_muted === true;
+
+    const fill    = this._overlayEl.querySelector('#etv-vol-fill');
+    const label   = this._overlayEl.querySelector('#etv-vol-label');
+    const muteBtn = this._overlayEl.querySelector('#etv-mute-btn');
+
+    if (fill) {
+      fill.style.width = `${volPct}%`;
+      fill.classList.toggle('muted', muted);
+    }
+    if (label) {
+      label.textContent = muted ? 'Muted' : `${volPct}%`;
+    }
+    if (muteBtn) {
+      muteBtn.classList.toggle('muted', muted);
+      const icon = muteBtn.querySelector('ha-icon');
+      if (icon) icon.setAttribute('icon', muted ? 'mdi:volume-off' : 'mdi:volume-high');
+    }
+  }
+
   _openOverlay() {
     if (this._overlayOpen) return;
     this._overlayOpen = true;
@@ -517,6 +647,10 @@ class EasyTVCard extends HTMLElement {
     });
     body.appendChild(pbRow);
 
+    // Volume bar (only if media_player_entity configured)
+    const volBar = buildVolBar(hass, cfg, cmds);
+    if (volBar) body.appendChild(volBar);
+
     overlay.appendChild(body);
     document.body.appendChild(overlay);
     this._overlayEl = overlay;
@@ -579,7 +713,7 @@ class EasyTVCardEditor extends HTMLElement {
 
       <div class="editor-panel">
         <div class="panel-title">Media Player</div>
-        <div class="panel-desc">Link a media_player entity for volume and now-playing info.</div>
+        <div class="panel-desc">Link a media_player entity to enable the live volume bar and mute toggle in the remote overlay.</div>
         <div class="field-wrap">
           <label>Media player entity (optional)</label>
           <ha-entity-picker data-key="media_player_entity" allow-custom-entity></ha-entity-picker>
@@ -669,6 +803,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.7.2 ',
+  '%c EasyTV Card v0.7.3 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
