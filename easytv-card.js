@@ -1,7 +1,7 @@
-// EasyTV Card v1.0.9
+// EasyTV Card v1.0.10
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '1.0.9';
+const CARD_VERSION = '1.0.10';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -151,11 +151,6 @@ function sendApp(hass, cfg, appId) {
 // ── Compact Card Styles ───────────────────────────────────────────────────────
 
 const CARD_STYLES = `
-  /*
-   * Styled to match the bubble-card glass recipe used on the same dashboard:
-   *   background: transparent, blur(5px), border rgba(255,255,255,0.2),
-   *   box-shadow: 4px 4px 12px rgba(0,0,0,0.3), drop-shadow white rim.
-   */
   :host {
     display: block;
     --easytv-accent:        var(--primary-color, #1976d2);
@@ -183,13 +178,8 @@ const CARD_STYLES = `
     overflow: hidden;
   }
 
-  @keyframes etvCardIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
   .etv-card {
-    animation: etvCardIn 0.25s ease both;
+    /* No entry animation — avoids repaint flicker on hass updates */
   }
 
   /* ════ SINGLE ROW ════ */
@@ -787,13 +777,29 @@ class EasyTVCard extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     this._overlayOpen = false;
+    this._renderedName = null;
+    this._renderedConfig = null;
   }
 
   set hass(hass) {
     this._hass = hass;
     if (!this._config) return;
-    if (!this.shadowRoot.querySelector('.etv-card')) this._initialRender();
-    this._updateCompact();
+
+    // Build DOM once on first render, or rebuild if config changed
+    const configChanged = this._renderedConfig !== this._config;
+    if (!this.shadowRoot.querySelector('.etv-card') || configChanged) {
+      this._buildCard();
+      return;
+    }
+
+    // DOM already exists — only patch the name text if it changed
+    const stateObj = hass?.states[this._config.entity];
+    const name = this._config.name || stateObj?.attributes?.friendly_name || this._config.entity;
+    if (name !== this._renderedName) {
+      const el = this.shadowRoot.querySelector('.tv-name');
+      if (el) el.textContent = name;
+      this._renderedName = name;
+    }
   }
 
   setConfig(config) {
@@ -805,12 +811,21 @@ class EasyTVCard extends HTMLElement {
   static getConfigElement() { return document.createElement('easytv-card-editor'); }
   static getStubConfig()    { return { entity: '', name: '', tv_type: 'google_tv', card_type: 'single' }; }
 
-  _initialRender() {
+  _buildCard() {
+    const sr = this.shadowRoot;
+    const cfg = this._config;
+    const stateObj = this._hass?.states[cfg.entity];
+    const name = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
+    const cardType = cfg.card_type || 'single';
+
+    // Clear everything and rebuild from scratch
+    sr.innerHTML = '';
+
     const s = document.createElement('style');
     s.textContent = CARD_STYLES;
-    this.shadowRoot.appendChild(s);
-    const root = this.shadowRoot;
-    root.addEventListener('click', e => {
+    sr.appendChild(s);
+
+    sr.addEventListener('click', e => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
       const action = btn.dataset.action;
@@ -821,24 +836,11 @@ class EasyTVCard extends HTMLElement {
         if (def) sendCmd(this._hass, this._config.entity, def.cmd(cmds));
       }
     });
-    this._updateCompact();
-  }
-
-  _updateCompact() {
-    const sr = this.shadowRoot;
-    if (!sr) return;
-    const cfg      = this._config;
-    const stateObj = this._hass?.states[cfg.entity];
-    const name     = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
-    const cardType = cfg.card_type || 'single';
 
     const extraCls = [
       cfg.no_button_background ? 'no-btn-bg'    : '',
       cfg.no_button_border     ? 'no-btn-border' : '',
     ].filter(Boolean).join(' ');
-
-    const old = sr.querySelector('.etv-card');
-    if (old) old.remove();
 
     const wrapper = document.createElement('div');
 
@@ -866,7 +868,6 @@ class EasyTVCard extends HTMLElement {
             <button class="icon-btn" data-action="open-overlay" title="Open remote"><ha-icon icon="mdi:remote"></ha-icon></button>
           </div>
         </div>`;
-
     } else {
       const qaKeys = cfg.quick_actions || DEFAULT_QUICK_DOUBLE;
       const qaRowBtns = qaKeys.map(qa => {
@@ -894,6 +895,8 @@ class EasyTVCard extends HTMLElement {
     }
 
     sr.appendChild(wrapper.firstElementChild);
+    this._renderedName = name;
+    this._renderedConfig = cfg;
   }
 
   _openOverlay() {
@@ -1032,6 +1035,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v1.0.9 ',
+  '%c EasyTV Card v1.0.10 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
