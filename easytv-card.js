@@ -1,7 +1,7 @@
-// EasyTV Card v0.8.1
+// EasyTV Card v0.8.2
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.8.1';
+const CARD_VERSION = '0.8.2';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -11,25 +11,6 @@ const TV_PRESETS = {
   samsung:    { up:'KEY_UP', down:'KEY_DOWN', left:'KEY_LEFT', right:'KEY_RIGHT', select:'KEY_ENTER', back:'KEY_RETURN', home:'KEY_HOME', play:'KEY_PLAY', pause:'KEY_PAUSE', stop:'KEY_STOP', forward:'KEY_FF', reverse:'KEY_REWIND', volume_up:'KEY_VOLUP', volume_down:'KEY_VOLDOWN', volume_mute:'KEY_MUTE', power:'KEY_POWER', info:'KEY_INFO', source:'KEY_SOURCE', channel_up:'KEY_CHUP', channel_down:'KEY_CHDOWN' },
   generic:    { up:'up', down:'down', left:'left', right:'right', select:'select', back:'back', home:'home', play:'play', pause:'pause', stop:'stop', forward:'forward', reverse:'reverse', volume_up:'volume_up', volume_down:'volume_down', volume_mute:'volume_mute', power:'power', channel_up:'channel_up', channel_down:'channel_down' },
 };
-
-// ── Default Sources ───────────────────────────────────────────────────────────
-
-const DEFAULT_SOURCES = [
-  { name: 'Netflix',  icon: 'mdi:netflix',  command: 'netflix'  },
-  { name: 'YouTube',  icon: 'mdi:youtube',  command: 'youtube'  },
-];
-
-// MDI SVG paths for source icons (inline, no ha-icon needed in overlay)
-const MDI_PATHS = {
-  'mdi:netflix':          'M6 2l3.5 10L13 2h3v20h-3V12l-3.5 10L6 12v10H3V2h3z',
-  'mdi:youtube':          'M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z',
-  'mdi:television-play':  'M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zm-10-3.5l6-3.5-6-3.5v7z',
-};
-
-function sourceSvg(icon, color) {
-  const path = MDI_PATHS[icon] || MDI_PATHS['mdi:television-play'];
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="26" height="26" style="display:block;flex-shrink:0"><path fill="${color || 'rgba(255,255,255,0.85)'}" d="${path}"/></svg>`;
-}
 
 // ── Quick Action Definitions ──────────────────────────────────────────────────
 
@@ -137,7 +118,7 @@ const CARD_STYLES = `
   .no-btn-border .icon-btn, .no-btn-border .qa-btn { border-color: transparent !important; }
 `;
 
-// ── Overlay Styles (scoped inside shadow root — guaranteed to apply) ──────────
+// ── Overlay Styles ────────────────────────────────────────────────────────────
 
 const OVERLAY_STYLES = `
   :host {
@@ -166,8 +147,6 @@ const OVERLAY_STYLES = `
     from { opacity: 0; transform: translateY(16px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-
-  /* ── Header ── */
   .overlay-header {
     display: flex; align-items: center; gap: 12px;
     padding: 18px 20px 14px; flex-shrink: 0;
@@ -185,18 +164,12 @@ const OVERLAY_STYLES = `
   .close-btn:hover  { background: var(--etv-btn-hover); }
   .close-btn:active { background: var(--etv-btn-active); }
   .close-btn ha-icon { --mdc-icon-size: 20px; }
-
-  /* ── Body ── */
   .overlay-body {
     flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
     display: flex; flex-direction: column; align-items: center;
     padding: 20px 20px 32px; gap: 20px;
   }
-
-  /* ── Power row ── */
-  .power-row {
-    display: flex; justify-content: flex-start; width: 100%;
-  }
+  .power-row { display: flex; justify-content: flex-start; width: 100%; }
   .power-btn {
     width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
@@ -208,30 +181,6 @@ const OVERLAY_STYLES = `
   .power-btn:hover  { background: var(--etv-power-hover); }
   .power-btn:active { background: var(--etv-power-active); transform: scale(0.92); }
   .power-btn ha-icon { --mdc-icon-size: 26px; }
-
-  /* ── Sources row ── */
-  .sources-row {
-    display: flex; gap: 10px; width: 100%;
-    overflow-x: auto; -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
-    scrollbar-width: none;
-  }
-  .sources-row::-webkit-scrollbar { display: none; }
-  .source-btn {
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    border-radius: 16px; padding: 14px 20px; flex-shrink: 0;
-    cursor: pointer; color: var(--etv-text);
-    transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent; min-width: 72px;
-  }
-  .source-btn:hover  { background: var(--etv-btn-hover); }
-  .source-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
-  .source-btn .src-label {
-    font-size: 12px; color: var(--etv-muted); white-space: nowrap;
-  }
-
-  /* ── SVG D-pad ── */
   .dpad-wrap {
     position: relative;
     width: min(280px, calc(100vw - 40px));
@@ -252,8 +201,6 @@ const OVERLAY_STYLES = `
   .dpad-center:active { fill: var(--etv-btn-active); }
   .dpad-arrow-icon { fill: rgba(255,255,255,0.7); pointer-events: none; }
   .dpad-ok { fill: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
-
-  /* ── Utility row ── */
   .util-row { display: flex; gap: 12px; justify-content: center; width: 100%; }
   .util-btn {
     display: flex; flex-direction: column; align-items: center; gap: 5px;
@@ -266,8 +213,6 @@ const OVERLAY_STYLES = `
   .util-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
   .util-btn ha-icon { --mdc-icon-size: 22px; }
   .util-btn span { font-size: 11px; color: var(--etv-muted); }
-
-  /* ── Playback row ── */
   .playback-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
   .pb-btn {
     display: flex; align-items: center; justify-content: center;
@@ -279,8 +224,6 @@ const OVERLAY_STYLES = `
   .pb-btn:hover  { background: var(--etv-btn-hover); }
   .pb-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
   .pb-btn ha-icon { --mdc-icon-size: 24px; }
-
-  /* ── Pill controls row (vol | mute | ch) ── */
   .pill-row {
     display: flex; gap: 12px; justify-content: center;
     align-items: center; width: 100%;
@@ -337,10 +280,6 @@ const EDITOR_STYLES = `
   .panel-title {
     font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
     color: var(--primary-color, #1976d2); margin-bottom: 2px;
-  }
-  .panel-hint {
-    font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.5));
-    line-height: 1.5; padding: 0 2px;
   }
   .field-wrap { display: flex; flex-direction: column; gap: 4px; }
   .field-wrap label {
@@ -425,7 +364,7 @@ function buildSvgDpad(cmds, getHass, entityId) {
   return svg;
 }
 
-// ── Overlay Element (shadow root ensures styles always apply) ─────────────────
+// ── Overlay Element ───────────────────────────────────────────────────────────
 
 class EasyTVOverlayEl extends HTMLElement {
   constructor() {
@@ -441,7 +380,6 @@ class EasyTVOverlayEl extends HTMLElement {
     style.textContent = OVERLAY_STYLES;
     sr.appendChild(style);
 
-    // Header
     const header = document.createElement('div');
     header.className = 'overlay-header';
     header.innerHTML = `
@@ -452,12 +390,10 @@ class EasyTVOverlayEl extends HTMLElement {
     sr.appendChild(header);
     sr.querySelector('#etv-close').addEventListener('click', () => this.remove());
 
-    // Body
     const body = document.createElement('div');
     body.className = 'overlay-body';
     sr.appendChild(body);
 
-    // Power row
     const powerRow = document.createElement('div');
     powerRow.className = 'power-row';
     const powerBtn = document.createElement('div');
@@ -467,28 +403,11 @@ class EasyTVOverlayEl extends HTMLElement {
     powerRow.appendChild(powerBtn);
     body.appendChild(powerRow);
 
-    // Sources row
-    const sources = cfg.sources !== undefined ? cfg.sources : DEFAULT_SOURCES;
-    if (sources && sources.length > 0) {
-      const sourcesRow = document.createElement('div');
-      sourcesRow.className = 'sources-row';
-      sources.forEach(src => {
-        const btn = document.createElement('div');
-        btn.className = 'source-btn';
-        btn.innerHTML = `${sourceSvg(src.icon)}<span class="src-label">${src.name || ''}</span>`;
-        btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, src.command));
-        sourcesRow.appendChild(btn);
-      });
-      body.appendChild(sourcesRow);
-    }
-
-    // D-pad (original SVG)
     const dpadWrap = document.createElement('div');
     dpadWrap.className = 'dpad-wrap';
     dpadWrap.appendChild(buildSvgDpad(cmds, getHass, cfg.entity));
     body.appendChild(dpadWrap);
 
-    // Utility row: Back / Home / Info
     const utilRow = document.createElement('div');
     utilRow.className = 'util-row';
     [
@@ -504,12 +423,11 @@ class EasyTVOverlayEl extends HTMLElement {
     });
     body.appendChild(utilRow);
 
-    // Playback row
     const pbRow = document.createElement('div');
     pbRow.className = 'playback-row';
     [
-      { key: 'reverse', icon: 'mdi:rewind'      },
-      { key: 'play',    icon: 'mdi:play-pause'  },
+      { key: 'reverse', icon: 'mdi:rewind' },
+      { key: 'play',    icon: 'mdi:play-pause' },
       { key: 'forward', icon: 'mdi:fast-forward' },
     ].forEach(({ key, icon }) => {
       const btn = document.createElement('div');
@@ -520,7 +438,6 @@ class EasyTVOverlayEl extends HTMLElement {
     });
     body.appendChild(pbRow);
 
-    // Pill controls: [Vol pill] [Mute] [Ch pill]
     const pillRow = document.createElement('div');
     pillRow.className = 'pill-row';
 
@@ -666,7 +583,6 @@ class EasyTVCard extends HTMLElement {
     overlay.open(cfg, getHass, name);
     this._overlayEl = overlay;
 
-    // Close on backdrop tap
     overlay.addEventListener('click', e => {
       if (e.composedPath()[0] === overlay) this._closeOverlay();
     });
@@ -745,14 +661,6 @@ class EasyTVCardEditor extends HTMLElement {
         <div class="row"><label>No button border</label><ha-switch data-key="no_button_border"></ha-switch></div>
       </div>
 
-      <div class="editor-panel">
-        <div class="panel-title">Source Shortcuts</div>
-        <p class="panel-hint">
-          Defaults: Netflix &amp; YouTube (work on Google TV &amp; Roku).<br>
-          Override with <code>sources:</code> in YAML. Samsung users: use commands like <code>KEY_APP_NETFLIX</code>.
-        </p>
-      </div>
-
       <div class="version-badge">EasyTV Card v${CARD_VERSION}</div>
     `;
     sr.appendChild(editor);
@@ -790,8 +698,6 @@ class EasyTVCardEditor extends HTMLElement {
   }
 }
 
-// ── Register ──────────────────────────────────────────────────────────────────
-
 customElements.define('easytv-card',        EasyTVCard);
 customElements.define('easytv-card-editor', EasyTVCardEditor);
 
@@ -804,6 +710,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.8.1 ',
+  '%c EasyTV Card v0.8.2 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
