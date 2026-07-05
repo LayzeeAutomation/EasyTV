@@ -1,7 +1,7 @@
-// EasyTV Card v1.0.2
+// EasyTV Card v1.0.3
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '1.0.2';
+const CARD_VERSION = '1.0.3';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -134,18 +134,14 @@ function sendCmd(hass, entityId, cmd) {
 }
 
 function sendApp(hass, cfg, appId) {
-  const app      = APP_SHORTCUT_MAP[appId];
+  const app    = APP_SHORTCUT_MAP[appId];
   if (!app || !hass) return;
-  const tvType   = cfg.tv_type || 'generic';
-  const command  = app.commands[tvType] || app.commands.generic;
+  const tvType = cfg.tv_type || 'generic';
+  const command = app.commands[tvType] || app.commands.generic;
   if (!command) return;
-
   if (tvType === 'roku') {
     const mpEntity = cfg.media_player_entity;
-    if (!mpEntity) {
-      console.warn('EasyTV: media_player_entity required for Roku app launching');
-      return;
-    }
+    if (!mpEntity) { console.warn('EasyTV: media_player_entity required for Roku'); return; }
     hass.callService('media_player', 'select_source', { entity_id: mpEntity, source: command });
   } else {
     hass.callService('remote', 'send_command', { entity_id: cfg.entity, command });
@@ -157,63 +153,199 @@ function sendApp(hass, cfg, appId) {
 const CARD_STYLES = `
   :host {
     display: block;
-    --easytv-card-background:      var(--ha-card-background, var(--card-background-color, #1c1c1c));
-    --easytv-card-border-radius:   var(--ha-card-border-radius, 16px);
-    --easytv-card-border:          1px solid var(--divider-color, rgba(255,255,255,0.12));
-    --easytv-card-box-shadow:      var(--ha-card-box-shadow, none);
-    --easytv-card-backdrop-filter: none;
-    --easytv-text-color:           var(--primary-text-color, #fff);
-    --easytv-muted-color:          var(--secondary-text-color, rgba(255,255,255,0.6));
-    --easytv-accent-color:         var(--primary-color, #1976d2);
-    --easytv-button-background:    var(--secondary-background-color, var(--card-background-color, #2a2a2a));
-    --easytv-button-border-radius: 50%;
-    --easytv-button-border:        1px solid var(--divider-color, rgba(255,255,255,0.12));
-    --easytv-button-background-hover:  color-mix(in srgb, var(--easytv-button-background) 82%, white);
-    --easytv-button-background-active: color-mix(in srgb, var(--easytv-button-background) 72%, white);
+    --easytv-accent:        var(--primary-color, #1976d2);
+    --easytv-text:          var(--primary-text-color, #fff);
+    --easytv-muted:         var(--secondary-text-color, rgba(255,255,255,0.55));
+    --easytv-bg:            var(--ha-card-background, var(--card-background-color, rgba(28,28,38,0.85)));
+    --easytv-border:        var(--divider-color, rgba(255,255,255,0.10));
+    --easytv-radius:        var(--ha-card-border-radius, 18px);
+    --easytv-btn-bg:        rgba(255,255,255,0.07);
+    --easytv-btn-hover:     rgba(255,255,255,0.14);
+    --easytv-btn-active:    rgba(255,255,255,0.22);
+    --easytv-btn-border:    rgba(255,255,255,0.10);
+    --easytv-pill-bg:       rgba(255,255,255,0.06);
+    --easytv-pill-border:   rgba(255,255,255,0.10);
+    --easytv-on-color:      #4ade80;
+    --easytv-off-color:     rgba(255,255,255,0.22);
+    /* compact app row */
+    --easytv-app-gap:  8px;
+    --easytv-app-cols: 4;
   }
-  ha-card { background: transparent !important; box-shadow: none !important; overflow: visible; }
+
+  ha-card {
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible;
+  }
+
+  @keyframes etvCardIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ════ SHARED SHELL ════ */
+  .etv-card {
+    border-radius: var(--easytv-radius);
+    background: var(--easytv-bg);
+    border: 1px solid var(--easytv-border);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07);
+    backdrop-filter: blur(20px) saturate(1.3);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    color: var(--easytv-text);
+    overflow: hidden;
+    animation: etvCardIn 0.25s ease both;
+    /* left accent bar */
+    border-left: 3px solid var(--easytv-accent);
+  }
+
+  /* ════ SINGLE ROW ════ */
   .compact-single {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 14px; border-radius: var(--easytv-card-border-radius);
-    background: var(--easytv-card-background); border: var(--easytv-card-border);
-    box-shadow: var(--easytv-card-box-shadow);
-    backdrop-filter: var(--easytv-card-backdrop-filter); -webkit-backdrop-filter: var(--easytv-card-backdrop-filter);
-    color: var(--easytv-text-color); gap: 10px;
+    display: flex; align-items: center;
+    padding: 12px 14px 12px 16px;
+    gap: 12px;
   }
-  .compact-single .c-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-  .compact-single .c-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-  .compact-double {
-    display: flex; flex-direction: column; padding: 14px 14px 12px;
-    border-radius: var(--easytv-card-border-radius); background: var(--easytv-card-background);
-    border: var(--easytv-card-border); box-shadow: var(--easytv-card-box-shadow);
-    backdrop-filter: var(--easytv-card-backdrop-filter); -webkit-backdrop-filter: var(--easytv-card-backdrop-filter);
-    color: var(--easytv-text-color); gap: 12px;
+  .c-left {
+    display: flex; align-items: center; gap: 10px;
+    flex: 1; min-width: 0;
   }
-  .compact-double .d-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .compact-double .d-top-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-  .compact-double .d-bottom { display: flex; align-items: center; gap: 8px; }
-  .compact-double .d-bottom .qa-btn {
-    flex: 1; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-    background: var(--easytv-button-background); border: var(--easytv-button-border);
-    color: var(--easytv-text-color); cursor: pointer; transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent; padding: 0;
+  .tv-icon-wrap {
+    position: relative; flex-shrink: 0;
   }
-  .compact-double .d-bottom .qa-btn:hover  { background: var(--easytv-button-background-hover); }
-  .compact-double .d-bottom .qa-btn:active { background: var(--easytv-button-background-active); transform: scale(0.93); }
-  .compact-double .d-bottom .qa-btn ha-icon { --mdc-icon-size: 22px; }
-  .tv-icon { --mdc-icon-size: 26px; color: var(--easytv-accent-color); }
-  .tv-name { font-weight: 600; font-size: 15px; color: var(--easytv-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tv-icon {
+    --mdc-icon-size: 26px;
+    color: var(--easytv-accent);
+    display: block;
+  }
+  .status-dot {
+    position: absolute; bottom: -1px; right: -2px;
+    width: 8px; height: 8px; border-radius: 50%;
+    border: 1.5px solid var(--easytv-bg);
+    background: var(--easytv-off-color);
+    transition: background 0.4s;
+  }
+  .status-dot.on  { background: var(--easytv-on-color); box-shadow: 0 0 6px var(--easytv-on-color); }
+  .tv-info { flex: 1; min-width: 0; }
+  .tv-name {
+    font-weight: 700; font-size: 15px;
+    color: var(--easytv-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+  .tv-state {
+    font-size: 11px; color: var(--easytv-muted);
+    margin-top: 1px; text-transform: capitalize;
+  }
+  .c-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  /* connected pill group for quick actions */
+  .qa-pill {
+    display: flex; align-items: stretch;
+    background: var(--easytv-pill-bg);
+    border: 1px solid var(--easytv-pill-border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .qa-pill-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 40px; height: 38px;
+    cursor: pointer; color: var(--easytv-text);
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+  }
+  .qa-pill-btn:not(:last-child) { border-right: 1px solid var(--easytv-pill-border); }
+  .qa-pill-btn:hover  { background: var(--easytv-btn-hover); }
+  .qa-pill-btn:active { background: var(--easytv-btn-active); transform: scale(0.91); }
+  .qa-pill-btn ha-icon { --mdc-icon-size: 18px; }
+
+  /* open-overlay icon button */
   .icon-btn {
-    background: var(--easytv-button-background); border: var(--easytv-button-border);
-    cursor: pointer; color: var(--easytv-text-color); width: 40px; height: 40px;
-    border-radius: var(--easytv-button-border-radius); display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+    background: var(--easytv-btn-bg);
+    border: 1px solid var(--easytv-btn-border);
+    cursor: pointer; color: var(--easytv-text);
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent; flex-shrink: 0;
   }
-  .icon-btn:hover  { background: var(--easytv-button-background-hover); }
-  .icon-btn:active { background: var(--easytv-button-background-active); transform: scale(0.92); }
+  .icon-btn:hover  { background: var(--easytv-btn-hover); }
+  .icon-btn:active { background: var(--easytv-btn-active); transform: scale(0.92); }
   .icon-btn ha-icon { --mdc-icon-size: 20px; }
-  .no-btn-bg .icon-btn, .no-btn-bg .qa-btn   { background: transparent !important; }
-  .no-btn-border .icon-btn, .no-btn-border .qa-btn { border-color: transparent !important; }
+
+  /* ════ DOUBLE ROW ════ */
+  .compact-double {
+    display: flex; flex-direction: column;
+    padding: 14px 14px 0 16px;
+    gap: 0;
+  }
+  .d-top {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 10px;
+    padding-bottom: 12px;
+  }
+  .d-top-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+
+  /* full-width quick action row */
+  .d-actions {
+    display: flex; gap: 6px;
+    padding-bottom: 12px;
+  }
+  .d-qa-btn {
+    flex: 1; height: 42px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--easytv-btn-bg);
+    border: 1px solid var(--easytv-btn-border);
+    color: var(--easytv-text); cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .d-qa-btn:hover  { background: var(--easytv-btn-hover); }
+  .d-qa-btn:active { background: var(--easytv-btn-active); transform: scale(0.93); }
+  .d-qa-btn ha-icon { --mdc-icon-size: 20px; }
+
+  /* ── compact app row (double card) ─────── */
+  .compact-app-row {
+    display: flex;
+    gap: var(--easytv-app-gap);
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+    padding: 2px 0 10px;
+    box-sizing: border-box;
+    /* subtle top divider */
+    border-top: 1px solid var(--easytv-border);
+    margin-top: 2px;
+  }
+  .compact-app-row::-webkit-scrollbar { display: none; }
+
+  .compact-app-btn {
+    flex: 0 0 calc((100% - (var(--easytv-app-cols) - 1) * var(--easytv-app-gap)) / var(--easytv-app-cols));
+    scroll-snap-align: start;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; padding: 8px 4px;
+    border-radius: 12px; cursor: pointer;
+    transition: transform 0.15s, filter 0.15s;
+    -webkit-tap-highlight-color: transparent; user-select: none;
+    border: 1px solid transparent;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10);
+    box-sizing: border-box;
+  }
+  .compact-app-btn:hover  { filter: brightness(1.18); }
+  .compact-app-btn:active { transform: scale(0.90); filter: brightness(0.88); }
+  .compact-app-btn ha-icon { --mdc-icon-size: 22px; }
+  .compact-app-btn span {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 100%; text-align: center;
+  }
+
+  /* no-background / no-border overrides */
+  .no-btn-bg  .qa-pill-btn, .no-btn-bg  .d-qa-btn, .no-btn-bg  .icon-btn { background: transparent !important; }
+  .no-btn-border .qa-pill-btn, .no-btn-border .d-qa-btn, .no-btn-border .icon-btn,
+  .no-btn-border .qa-pill { border-color: transparent !important; }
 `;
 
 // ── Overlay Styles ────────────────────────────────────────────────────────────
@@ -236,30 +368,25 @@ const OVERLAY_STYLES = `
     --etv-highlight:  rgba(255,255,255,0.18);
     --etv-accent:     #1976d2;
     --etv-radius-btn: 14px;
-    /* Power */
     --etv-power-bg:      rgba(220,50,50,0.18);
     --etv-power-border:  rgba(220,50,50,0.5);
     --etv-power-hover:   rgba(220,50,50,0.32);
     --etv-power-active:  rgba(220,50,50,0.46);
     --etv-power-color:   rgba(255,100,100,1);
     --etv-power-glow:    0 0 14px rgba(220,50,50,0.45);
-    /* Vol pill accent – blue tint */
     --etv-vol-bg:     rgba(30,100,220,0.15);
     --etv-vol-border: rgba(60,140,255,0.35);
     --etv-vol-hover:  rgba(30,100,220,0.26);
     --etv-vol-active: rgba(30,100,220,0.38);
-    /* CH pill accent – teal/green tint */
     --etv-ch-bg:      rgba(20,160,100,0.15);
     --etv-ch-border:  rgba(40,200,130,0.35);
     --etv-ch-hover:   rgba(20,160,100,0.26);
     --etv-ch-active:  rgba(20,160,100,0.38);
-    /* Play/pause accent – slight white glow */
     --etv-play-bg:    rgba(255,255,255,0.13);
     --etv-play-border:rgba(255,255,255,0.28);
     --etv-play-hover: rgba(255,255,255,0.22);
     --etv-play-active:rgba(255,255,255,0.32);
     --etv-play-glow:  0 0 10px rgba(255,255,255,0.12);
-    /* App row: 3 cards visible, gap 10px → card width = (100% - 2*10px) / 3 */
     --etv-app-gap: 10px;
     --etv-app-cols: 3;
   }
@@ -278,8 +405,7 @@ const OVERLAY_STYLES = `
   .close-btn {
     cursor: pointer; width: 40px; height: 40px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg);
-    border: 1px solid var(--etv-border);
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
     box-shadow: inset 0 1px 0 var(--etv-highlight);
     transition: background 0.15s; flex-shrink: 0; color: var(--etv-text);
   }
@@ -291,32 +417,23 @@ const OVERLAY_STYLES = `
     display: flex; flex-direction: column; align-items: center;
     padding: 20px 20px 32px; gap: 20px;
   }
-
-  /* ── Power row ── */
-  .power-row {
-    display: flex; align-items: center; justify-content: space-between; width: 100%;
-  }
+  .power-row { display: flex; align-items: center; justify-content: space-between; width: 100%; }
   .power-btn {
     width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    background: var(--etv-power-bg);
-    border: 1px solid var(--etv-power-border);
+    background: var(--etv-power-bg); border: 1px solid var(--etv-power-border);
     box-shadow: inset 0 1px 0 rgba(255,120,120,0.2), var(--etv-power-glow);
     cursor: pointer; color: var(--etv-power-color);
     transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
   }
-  .power-btn:hover  {
-    background: var(--etv-power-hover);
-    box-shadow: inset 0 1px 0 rgba(255,120,120,0.2), 0 0 20px rgba(220,50,50,0.6);
-  }
+  .power-btn:hover  { background: var(--etv-power-hover); box-shadow: inset 0 1px 0 rgba(255,120,120,0.2), 0 0 20px rgba(220,50,50,0.6); }
   .power-btn:active { background: var(--etv-power-active); transform: scale(0.92); box-shadow: none; }
   .power-btn ha-icon { --mdc-icon-size: 26px; }
   .source-btn {
     width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg);
-    border: 1px solid var(--etv-border);
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
     box-shadow: inset 0 1px 0 var(--etv-highlight);
     cursor: pointer; color: var(--etv-text);
     transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent;
@@ -324,8 +441,6 @@ const OVERLAY_STYLES = `
   .source-btn:hover  { background: var(--etv-btn-hover); }
   .source-btn:active { background: var(--etv-btn-active); transform: scale(0.92); }
   .source-btn ha-icon { --mdc-icon-size: 24px; }
-
-  /* ── D-pad scene ── */
   .dpad-scene {
     position: relative;
     width: min(300px, calc(100vw - 40px));
@@ -334,8 +449,6 @@ const OVERLAY_STYLES = `
   .dpad-scene.numpad-mode { padding: 0; }
   .dpad-wrap { position: relative; width: 100%; aspect-ratio: 1; }
   .dpad-wrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
-
-  /* Petals: gradient fill + top highlight */
   .dpad-petal {
     fill: url(#petalGrad); stroke: rgba(255,255,255,0.18); stroke-width: 1;
     cursor: pointer; transition: fill 0.15s; -webkit-tap-highlight-color: transparent;
@@ -343,27 +456,18 @@ const OVERLAY_STYLES = `
   }
   .dpad-petal:hover  { fill: url(#petalGradHover); }
   .dpad-petal:active { fill: url(#petalGradActive); }
-
-  /* Centre circle */
   .dpad-center {
     fill: url(#centerGrad); stroke: rgba(255,255,255,0.2); stroke-width: 1.5;
     cursor: pointer; transition: fill 0.15s; -webkit-tap-highlight-color: transparent;
   }
   .dpad-center:hover  { fill: url(#centerGradHover); }
   .dpad-center:active { fill: url(#centerGradActive); }
-
   .dpad-arrow-icon { fill: rgba(255,255,255,0.75); pointer-events: none; }
   .dpad-ok { fill: rgba(255,255,255,0.85); font-size: 14px; font-weight: 700; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
-
-  /* ── Number pad ── */
-  .numpad-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 10px; width: 100%; box-sizing: border-box;
-  }
+  .numpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; box-sizing: border-box; }
   .num-btn {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg);
-    border: 1px solid var(--etv-border);
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
     box-shadow: inset 0 1px 0 var(--etv-highlight), 0 2px 6px rgba(0,0,0,0.3);
     border-radius: 14px; cursor: pointer; color: var(--etv-text);
     transition: background 0.15s, transform 0.1s;
@@ -371,12 +475,11 @@ const OVERLAY_STYLES = `
   }
   .num-btn:hover  { background: var(--etv-btn-hover); }
   .num-btn:active { background: var(--etv-btn-active); transform: scale(0.93); box-shadow: none; }
-  .num-btn .num-digit  { font-size: 20px; font-weight: 700; line-height: 1; }
-  .num-btn .num-label  { font-size: 8px; letter-spacing: 0.12em; color: var(--etv-muted); margin-top: 2px; }
+  .num-btn .num-digit { font-size: 20px; font-weight: 700; line-height: 1; }
+  .num-btn .num-label { font-size: 8px; letter-spacing: 0.12em; color: var(--etv-muted); margin-top: 2px; }
   .num-back {
     display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg);
-    border: 1px solid var(--etv-border);
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
     box-shadow: inset 0 1px 0 var(--etv-highlight), 0 2px 6px rgba(0,0,0,0.3);
     border-radius: 50%; cursor: pointer; color: var(--etv-text);
     transition: background 0.15s, transform 0.1s;
@@ -386,13 +489,10 @@ const OVERLAY_STYLES = `
   .num-back:active { background: var(--etv-btn-active); transform: scale(0.93); }
   .num-back ha-icon { --mdc-icon-size: 22px; }
   .num-spacer { aspect-ratio: 1; }
-
-  /* ── Corner buttons ── */
   .corner-btn {
     position: absolute; width: 48px; height: 48px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg);
-    border: 1px solid var(--etv-border);
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
     box-shadow: inset 0 1px 0 var(--etv-highlight), 0 2px 8px rgba(0,0,0,0.35);
     cursor: pointer; color: var(--etv-text);
     transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
@@ -401,32 +501,23 @@ const OVERLAY_STYLES = `
   .corner-btn:hover  { background: var(--etv-btn-hover); box-shadow: inset 0 1px 0 var(--etv-highlight), 0 0 12px rgba(255,255,255,0.08); }
   .corner-btn ha-icon { --mdc-icon-size: 22px; }
   .corner-toggle { top: 24px; left: 24px; transform: translate(-50%, -50%); }
-  .corner-toggle:active { background: var(--etv-btn-active); box-shadow: none; transform: translate(-50%, -50%) scale(0.92); }
+  .corner-toggle:active { background: var(--etv-btn-active); box-shadow: none; transform: translate(-50%,-50%) scale(0.92); }
   .corner-info { top: 24px; right: 24px; transform: translate(50%, -50%); }
-  .corner-info:active { background: var(--etv-btn-active); box-shadow: none; transform: translate(50%, -50%) scale(0.92); }
+  .corner-info:active { background: var(--etv-btn-active); box-shadow: none; transform: translate(50%,-50%) scale(0.92); }
   .corner-back { bottom: 24px; left: 24px; transform: translate(-50%, 50%); }
-  .corner-back:active { background: var(--etv-btn-active); box-shadow: none; transform: translate(-50%, 50%) scale(0.92); }
+  .corner-back:active { background: var(--etv-btn-active); box-shadow: none; transform: translate(-50%,50%) scale(0.92); }
   .corner-home { bottom: 24px; right: 24px; transform: translate(50%, 50%); }
-  .corner-home:active { background: var(--etv-btn-active); box-shadow: none; transform: translate(50%, 50%) scale(0.92); }
-
-  /* ── Media section ── */
-  .media-section {
-    display: flex; align-items: center; gap: 12px; width: 100%;
-  }
-
-  /* Vol pill – blue tint */
+  .corner-home:active { background: var(--etv-btn-active); box-shadow: none; transform: translate(50%,50%) scale(0.92); }
+  .media-section { display: flex; align-items: center; gap: 12px; width: 100%; }
   .pill-wrap-vol {
     display: flex; flex-direction: column;
-    background: var(--etv-vol-bg);
-    border: 1px solid var(--etv-vol-border);
+    background: var(--etv-vol-bg); border: 1px solid var(--etv-vol-border);
     box-shadow: inset 0 1px 0 rgba(100,180,255,0.15), 0 2px 8px rgba(0,0,0,0.3);
     border-radius: 32px; overflow: hidden; flex-shrink: 0; width: 52px;
   }
-  /* CH pill – teal/green tint */
   .pill-wrap-ch {
     display: flex; flex-direction: column;
-    background: var(--etv-ch-bg);
-    border: 1px solid var(--etv-ch-border);
+    background: var(--etv-ch-bg); border: 1px solid var(--etv-ch-border);
     box-shadow: inset 0 1px 0 rgba(60,210,150,0.15), 0 2px 8px rgba(0,0,0,0.3);
     border-radius: 32px; overflow: hidden; flex-shrink: 0; width: 52px;
   }
@@ -443,14 +534,10 @@ const OVERLAY_STYLES = `
   .pill-half ha-icon { --mdc-icon-size: 22px; }
   .pill-half span { font-size: 9px; color: var(--etv-muted); letter-spacing: 0.03em; }
   .pill-divider { height: 1px; background: var(--etv-border); margin: 0 8px; flex-shrink: 0; }
-
   .centre-controls { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-
-  /* Play/pause – primary accent */
   .pb-btn-wide {
     display: flex; align-items: center; justify-content: center;
-    background: var(--etv-play-bg);
-    border: 1px solid var(--etv-play-border);
+    background: var(--etv-play-bg); border: 1px solid var(--etv-play-border);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), var(--etv-play-glow);
     border-radius: var(--etv-radius-btn); height: 52px; width: 100%;
     cursor: pointer; color: var(--etv-text);
@@ -460,12 +547,10 @@ const OVERLAY_STYLES = `
   .pb-btn-wide:hover  { background: var(--etv-play-hover); box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 0 16px rgba(255,255,255,0.18); }
   .pb-btn-wide:active { background: var(--etv-play-active); transform: scale(0.97); box-shadow: none; }
   .pb-btn-wide ha-icon { --mdc-icon-size: 28px; }
-
   .centre-row2 { display: flex; gap: 8px; }
   .pb-btn {
     flex: 1; display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg);
-    border: 1px solid var(--etv-border);
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
     box-shadow: inset 0 1px 0 var(--etv-highlight), 0 2px 6px rgba(0,0,0,0.25);
     border-radius: var(--etv-radius-btn); height: 52px;
     cursor: pointer; color: var(--etv-text);
@@ -475,33 +560,19 @@ const OVERLAY_STYLES = `
   .pb-btn:hover  { background: var(--etv-btn-hover); box-shadow: inset 0 1px 0 var(--etv-highlight), 0 0 10px rgba(255,255,255,0.07); }
   .pb-btn:active { background: var(--etv-btn-active); transform: scale(0.93); box-shadow: none; }
   .pb-btn ha-icon { --mdc-icon-size: 22px; }
-
-  /* ── App shortcuts row ──
-     Exactly --etv-app-cols complete cards visible at rest.
-     Cards are fluid: width = (100% - (cols-1)*gap) / cols
-     scroll-snap ensures scrolling always lands on a clean boundary.
-  */
   .app-row {
-    display: flex;
-    gap: var(--etv-app-gap);
-    width: 100%;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    display: flex; gap: var(--etv-app-gap); width: 100%;
+    overflow-x: auto; padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
     scroll-snap-type: x mandatory;
-    /* hide any fractional card bleed */
-    overflow: hidden;
-    overflow-x: auto;
+    overflow: hidden; overflow-x: auto;
   }
   .app-row::-webkit-scrollbar { display: none; }
   .app-btn {
-    /* fluid width: fills exactly 3 per row with 2 gaps between them */
     flex: 0 0 calc((100% - (var(--etv-app-cols) - 1) * var(--etv-app-gap)) / var(--etv-app-cols));
     scroll-snap-align: start;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 5px; padding: 10px 6px;
-    border-radius: 14px; cursor: pointer;
+    gap: 5px; padding: 10px 6px; border-radius: 14px; cursor: pointer;
     transition: transform 0.15s, filter 0.15s, box-shadow 0.15s;
     -webkit-tap-highlight-color: transparent; user-select: none;
     border: 1px solid transparent;
@@ -513,35 +584,23 @@ const OVERLAY_STYLES = `
   .app-btn ha-icon { --mdc-icon-size: 26px; }
   .app-btn span {
     font-size: 10px; font-weight: 600; letter-spacing: 0.01em;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
-    text-align: center;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-align: center;
   }
-
-  /* Utility */
   .etv-hidden { visibility: hidden; pointer-events: none; height: 0 !important; overflow: hidden; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
 `;
 
 // ── Editor Styles ─────────────────────────────────────────────────────────────
 
 const EDITOR_STYLES = `
-  .editor {
-    display: flex; flex-direction: column; gap: 16px; padding: 16px;
-    font-family: var(--paper-font-body1_-_font-family, sans-serif);
-  }
+  .editor { display: flex; flex-direction: column; gap: 16px; padding: 16px; font-family: var(--paper-font-body1_-_font-family, sans-serif); }
   .editor-panel {
-    display: flex; flex-direction: column; gap: 12px; padding: 14px;
-    border-radius: 14px;
+    display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 14px;
     background: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.03)));
     border: 1px solid var(--divider-color, rgba(255,255,255,0.12));
   }
-  .panel-title {
-    font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
-    color: var(--primary-color, #1976d2); margin-bottom: 2px;
-  }
+  .panel-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--primary-color, #1976d2); margin-bottom: 2px; }
   .field-wrap { display: flex; flex-direction: column; gap: 4px; }
-  .field-wrap label {
-    font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.6)); padding-left: 2px;
-  }
+  .field-wrap label { font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.6)); padding-left: 2px; }
   ha-entity-picker { width: 100%; display: block; }
   .etv-input, .etv-select {
     width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px;
@@ -558,10 +617,7 @@ const EDITOR_STYLES = `
   }
   .row { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px; gap: 12px; }
   .row label { font-size: 14px; color: var(--primary-text-color, #fff); }
-  .version-badge {
-    font-size: 11px; color: var(--secondary-text-color, rgba(255,255,255,0.5));
-    text-align: center; padding-top: 4px;
-  }
+  .version-badge { font-size: 11px; color: var(--secondary-text-color, rgba(255,255,255,0.5)); text-align: center; padding-top: 4px; }
 `;
 
 // ── SVG D-pad builder ─────────────────────────────────────────────────────────
@@ -569,7 +625,6 @@ const EDITOR_STYLES = `
 function buildSvgDpad(cmds, getHass, entityId) {
   const cx = 120, cy = 120, R = 112, r = 40, gapDeg = 5;
   const toRad = d => d * Math.PI / 180;
-
   function petalPath(mid) {
     const half = 45 - gapDeg / 2;
     const a1 = toRad(mid - half), a2 = toRad(mid + half);
@@ -579,7 +634,6 @@ function buildSvgDpad(cmds, getHass, entityId) {
     const x4 = cx+r*Math.cos(a2), y4 = cy+r*Math.sin(a2);
     return `M${x1},${y1} L${x2},${y2} A${R},${R} 0 0,1 ${x3},${y3} L${x4},${y4} A${r},${r} 0 0,0 ${x1},${y1} Z`;
   }
-
   function arrowPoly(mid, dist) {
     const rad = toRad(mid), px = cx+dist*Math.cos(rad), py = cy+dist*Math.sin(rad), s = 9;
     const tx = px+s*Math.cos(rad), ty = py+s*Math.sin(rad);
@@ -587,160 +641,118 @@ function buildSvgDpad(cmds, getHass, entityId) {
     const b2x = px-s*Math.cos(rad)+s*Math.cos(rad-Math.PI/2), b2y = py-s*Math.sin(rad)+s*Math.sin(rad-Math.PI/2);
     return `${tx},${ty} ${b1x},${b1y} ${b2x},${b2y}`;
   }
-
   const NS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', '0 0 240 240');
-
   const defs = document.createElementNS(NS, 'defs');
-
-  const pg = document.createElementNS(NS, 'radialGradient');
-  pg.setAttribute('id', 'petalGrad'); pg.setAttribute('cx','50%'); pg.setAttribute('cy','50%'); pg.setAttribute('r','70%');
-  const ps1 = document.createElementNS(NS, 'stop'); ps1.setAttribute('offset','0%'); ps1.setAttribute('stop-color','rgba(255,255,255,0.14)');
-  const ps2 = document.createElementNS(NS, 'stop'); ps2.setAttribute('offset','100%'); ps2.setAttribute('stop-color','rgba(255,255,255,0.05)');
-  pg.appendChild(ps1); pg.appendChild(ps2); defs.appendChild(pg);
-
-  const pgh = document.createElementNS(NS, 'radialGradient');
-  pgh.setAttribute('id', 'petalGradHover'); pgh.setAttribute('cx','50%'); pgh.setAttribute('cy','50%'); pgh.setAttribute('r','70%');
-  const ph1 = document.createElementNS(NS, 'stop'); ph1.setAttribute('offset','0%'); ph1.setAttribute('stop-color','rgba(255,255,255,0.24)');
-  const ph2 = document.createElementNS(NS, 'stop'); ph2.setAttribute('offset','100%'); ph2.setAttribute('stop-color','rgba(255,255,255,0.12)');
-  pgh.appendChild(ph1); pgh.appendChild(ph2); defs.appendChild(pgh);
-
-  const pga = document.createElementNS(NS, 'radialGradient');
-  pga.setAttribute('id', 'petalGradActive'); pga.setAttribute('cx','50%'); pga.setAttribute('cy','50%'); pga.setAttribute('r','70%');
-  const pa1 = document.createElementNS(NS, 'stop'); pa1.setAttribute('offset','0%'); pa1.setAttribute('stop-color','rgba(255,255,255,0.32)');
-  const pa2 = document.createElementNS(NS, 'stop'); pa2.setAttribute('offset','100%'); pa2.setAttribute('stop-color','rgba(255,255,255,0.18)');
-  pga.appendChild(pa1); pga.appendChild(pa2); defs.appendChild(pga);
-
-  const cg = document.createElementNS(NS, 'radialGradient');
-  cg.setAttribute('id', 'centerGrad'); cg.setAttribute('cx','40%'); cg.setAttribute('cy','35%'); cg.setAttribute('r','65%');
-  const cs1 = document.createElementNS(NS, 'stop'); cs1.setAttribute('offset','0%'); cs1.setAttribute('stop-color','rgba(255,255,255,0.18)');
-  const cs2 = document.createElementNS(NS, 'stop'); cs2.setAttribute('offset','100%'); cs2.setAttribute('stop-color','rgba(255,255,255,0.07)');
-  cg.appendChild(cs1); cg.appendChild(cs2); defs.appendChild(cg);
-
-  const cgh = document.createElementNS(NS, 'radialGradient');
-  cgh.setAttribute('id', 'centerGradHover'); cgh.setAttribute('cx','40%'); cgh.setAttribute('cy','35%'); cgh.setAttribute('r','65%');
-  const ch1 = document.createElementNS(NS, 'stop'); ch1.setAttribute('offset','0%'); ch1.setAttribute('stop-color','rgba(255,255,255,0.28)');
-  const ch2 = document.createElementNS(NS, 'stop'); ch2.setAttribute('offset','100%'); ch2.setAttribute('stop-color','rgba(255,255,255,0.14)');
-  cgh.appendChild(ch1); cgh.appendChild(ch2); defs.appendChild(cgh);
-
-  const cga = document.createElementNS(NS, 'radialGradient');
-  cga.setAttribute('id', 'centerGradActive'); cga.setAttribute('cx','40%'); cga.setAttribute('cy','35%'); cga.setAttribute('r','65%');
-  const ca1 = document.createElementNS(NS, 'stop'); ca1.setAttribute('offset','0%'); ca1.setAttribute('stop-color','rgba(255,255,255,0.38)');
-  const ca2 = document.createElementNS(NS, 'stop'); ca2.setAttribute('offset','100%'); ca2.setAttribute('stop-color','rgba(255,255,255,0.22)');
-  cga.appendChild(ca1); cga.appendChild(ca2); defs.appendChild(cga);
-
+  const gradDefs = [
+    { id:'petalGrad',       cx:'50%',cy:'50%',r:'70%', s1:'rgba(255,255,255,0.14)', s2:'rgba(255,255,255,0.05)' },
+    { id:'petalGradHover',  cx:'50%',cy:'50%',r:'70%', s1:'rgba(255,255,255,0.24)', s2:'rgba(255,255,255,0.12)' },
+    { id:'petalGradActive', cx:'50%',cy:'50%',r:'70%', s1:'rgba(255,255,255,0.32)', s2:'rgba(255,255,255,0.18)' },
+    { id:'centerGrad',      cx:'40%',cy:'35%',r:'65%', s1:'rgba(255,255,255,0.18)', s2:'rgba(255,255,255,0.07)' },
+    { id:'centerGradHover', cx:'40%',cy:'35%',r:'65%', s1:'rgba(255,255,255,0.28)', s2:'rgba(255,255,255,0.14)' },
+    { id:'centerGradActive',cx:'40%',cy:'35%',r:'65%', s1:'rgba(255,255,255,0.38)', s2:'rgba(255,255,255,0.22)' },
+  ];
+  gradDefs.forEach(({ id, cx: gcx, cy: gcy, r: gr, s1, s2 }) => {
+    const g = document.createElementNS(NS, 'radialGradient');
+    g.setAttribute('id', id); g.setAttribute('cx', gcx); g.setAttribute('cy', gcy); g.setAttribute('r', gr);
+    const st1 = document.createElementNS(NS, 'stop'); st1.setAttribute('offset','0%'); st1.setAttribute('stop-color', s1);
+    const st2 = document.createElementNS(NS, 'stop'); st2.setAttribute('offset','100%'); st2.setAttribute('stop-color', s2);
+    g.appendChild(st1); g.appendChild(st2); defs.appendChild(g);
+  });
   svg.appendChild(defs);
-
   [{ key:'up', mid:270 }, { key:'right', mid:0 }, { key:'down', mid:90 }, { key:'left', mid:180 }]
     .forEach(p => {
       const dist = (r + R) / 2;
       const path = document.createElementNS(NS, 'path');
-      path.setAttribute('d', petalPath(p.mid));
-      path.setAttribute('class', 'dpad-petal');
+      path.setAttribute('d', petalPath(p.mid)); path.setAttribute('class', 'dpad-petal');
       path.addEventListener('click', () => sendCmd(getHass(), entityId, cmds[p.key]));
       svg.appendChild(path);
       const arrow = document.createElementNS(NS, 'polygon');
-      arrow.setAttribute('points', arrowPoly(p.mid, dist));
-      arrow.setAttribute('class', 'dpad-arrow-icon');
+      arrow.setAttribute('points', arrowPoly(p.mid, dist)); arrow.setAttribute('class', 'dpad-arrow-icon');
       svg.appendChild(arrow);
     });
-
   const circle = document.createElementNS(NS, 'circle');
   circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r - 2);
   circle.setAttribute('class', 'dpad-center');
   circle.addEventListener('click', () => sendCmd(getHass(), entityId, cmds.select));
   svg.appendChild(circle);
-
   const okTxt = document.createElementNS(NS, 'text');
-  okTxt.setAttribute('x', cx); okTxt.setAttribute('y', cy);
-  okTxt.setAttribute('class', 'dpad-ok');
-  okTxt.textContent = 'OK';
-  svg.appendChild(okTxt);
-
+  okTxt.setAttribute('x', cx); okTxt.setAttribute('y', cy); okTxt.setAttribute('class', 'dpad-ok');
+  okTxt.textContent = 'OK'; svg.appendChild(okTxt);
   return svg;
 }
 
 // ── Number pad builder ────────────────────────────────────────────────────────
 
 const NUM_KEYS = [
-  { digit: '1', label: '' },
-  { digit: '2', label: 'ABC' },
-  { digit: '3', label: 'DEF' },
-  { digit: '4', label: 'GHI' },
-  { digit: '5', label: 'JKL' },
-  { digit: '6', label: 'MNO' },
-  { digit: '7', label: 'PQRS' },
-  { digit: '8', label: 'TUV' },
-  { digit: '9', label: 'WXYZ' },
+  { digit: '1', label: '' },   { digit: '2', label: 'ABC' }, { digit: '3', label: 'DEF' },
+  { digit: '4', label: 'GHI' },{ digit: '5', label: 'JKL' }, { digit: '6', label: 'MNO' },
+  { digit: '7', label: 'PQRS'},{ digit: '8', label: 'TUV' }, { digit: '9', label: 'WXYZ' },
 ];
 
 function buildNumpad(getHass, entityId, onBack) {
   const grid = document.createElement('div');
   grid.className = 'numpad-grid';
-
   NUM_KEYS.forEach(({ digit, label }) => {
-    const btn = document.createElement('div');
-    btn.className = 'num-btn';
+    const btn = document.createElement('div'); btn.className = 'num-btn';
     btn.innerHTML = `<span class="num-digit">${digit}</span>${label ? `<span class="num-label">${label}</span>` : ''}`;
     btn.addEventListener('click', () => sendCmd(getHass(), entityId, digit));
     grid.appendChild(btn);
   });
-
-  const backCell = document.createElement('div');
-  backCell.className = 'num-back';
+  const backCell = document.createElement('div'); backCell.className = 'num-back';
   backCell.innerHTML = `<ha-icon icon="mdi:arrow-left"></ha-icon>`;
-  backCell.addEventListener('click', () => onBack());
-  grid.appendChild(backCell);
-
-  const zeroBtn = document.createElement('div');
-  zeroBtn.className = 'num-btn';
+  backCell.addEventListener('click', () => onBack()); grid.appendChild(backCell);
+  const zeroBtn = document.createElement('div'); zeroBtn.className = 'num-btn';
   zeroBtn.innerHTML = `<span class="num-digit">0</span><span class="num-label">+</span>`;
-  zeroBtn.addEventListener('click', () => sendCmd(getHass(), entityId, '0'));
-  grid.appendChild(zeroBtn);
-
-  const spacer = document.createElement('div');
-  spacer.className = 'num-spacer';
-  grid.appendChild(spacer);
-
+  zeroBtn.addEventListener('click', () => sendCmd(getHass(), entityId, '0')); grid.appendChild(zeroBtn);
+  const spacer = document.createElement('div'); spacer.className = 'num-spacer'; grid.appendChild(spacer);
   return grid;
 }
 
-// ── App row builder ───────────────────────────────────────────────────────────
+// ── App row builder (overlay) ──────────────────────────────────────────────────
 
 function buildAppRow(cfg, getHass) {
   const row = document.createElement('div');
   row.className = 'app-row';
-
   const appIds = cfg.apps || DEFAULT_APPS;
-
   appIds.forEach(id => {
-    const app = APP_SHORTCUT_MAP[id];
-    if (!app) return;
-
-    const btn = document.createElement('div');
-    btn.className = 'app-btn';
-    btn.style.background = app.bg;
-    btn.style.color = app.fg;
+    const app = APP_SHORTCUT_MAP[id]; if (!app) return;
+    const btn = document.createElement('div'); btn.className = 'app-btn';
+    btn.style.background = app.bg; btn.style.color = app.fg;
     btn.style.borderColor = `color-mix(in srgb, ${app.bg} 55%, white)`;
     btn.innerHTML = `<ha-icon icon="${app.icon}"></ha-icon><span>${app.label}</span>`;
     btn.addEventListener('click', () => sendApp(getHass(), cfg, id));
     row.appendChild(btn);
   });
+  return row;
+}
 
+// ── Compact app row builder (card) ───────────────────────────────────────────
+
+function buildCompactAppRow(cfg, getHass) {
+  const row = document.createElement('div');
+  row.className = 'compact-app-row';
+  const appIds = cfg.apps || DEFAULT_APPS;
+  appIds.forEach(id => {
+    const app = APP_SHORTCUT_MAP[id]; if (!app) return;
+    const btn = document.createElement('div'); btn.className = 'compact-app-btn';
+    btn.style.background = app.bg; btn.style.color = app.fg;
+    btn.style.borderColor = `color-mix(in srgb, ${app.bg} 55%, white)`;
+    btn.innerHTML = `<ha-icon icon="${app.icon}"></ha-icon><span>${app.label}</span>`;
+    btn.addEventListener('click', (e) => { e.stopPropagation(); sendApp(getHass(), cfg, id); });
+    row.appendChild(btn);
+  });
   return row;
 }
 
 // ── Overlay Element ───────────────────────────────────────────────────────────
 
 class EasyTVOverlayEl extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-  }
+  constructor() { super(); this.attachShadow({ mode: 'open' }); }
 
   open(cfg, getHass, name) {
-    const sr   = this.shadowRoot;
+    const sr = this.shadowRoot;
     const cmds = buildCmds(cfg);
     let numpadMode = false;
 
@@ -762,56 +774,39 @@ class EasyTVOverlayEl extends HTMLElement {
     body.className = 'overlay-body';
     sr.appendChild(body);
 
-    // ── Power row ──
-    const powerRow = document.createElement('div');
-    powerRow.className = 'power-row';
-    const powerBtn = document.createElement('div');
-    powerBtn.className = 'power-btn';
+    const powerRow = document.createElement('div'); powerRow.className = 'power-row';
+    const powerBtn = document.createElement('div'); powerBtn.className = 'power-btn';
     powerBtn.innerHTML = `<ha-icon icon="mdi:power"></ha-icon>`;
     powerBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.power));
     powerRow.appendChild(powerBtn);
-    const sourceBtn = document.createElement('div');
-    sourceBtn.className = 'source-btn';
-    sourceBtn.innerHTML = `<ha-icon icon="mdi:import"></ha-icon>`;
-    sourceBtn.title = 'Source';
+    const sourceBtn = document.createElement('div'); sourceBtn.className = 'source-btn';
+    sourceBtn.innerHTML = `<ha-icon icon="mdi:import"></ha-icon>`; sourceBtn.title = 'Source';
     sourceBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.source));
     powerRow.appendChild(sourceBtn);
     body.appendChild(powerRow);
 
-    // ── Switch logic ──
     const enterNumpad = () => {
-      numpadMode = true;
-      dpadWrap.innerHTML = '';
-      dpadWrap.appendChild(numGrid);
-      dpadScene.classList.add('numpad-mode');
-      toggleBtn.classList.add('etv-hidden');
+      numpadMode = true; dpadWrap.innerHTML = ''; dpadWrap.appendChild(numGrid);
+      dpadScene.classList.add('numpad-mode'); toggleBtn.classList.add('etv-hidden');
       cornerBtnEls.forEach(b => b.classList.add('etv-hidden'));
       mediaSection.classList.add('etv-hidden');
       appRowEl && appRowEl.classList.add('etv-hidden');
     };
     const exitNumpad = () => {
-      numpadMode = false;
-      dpadWrap.innerHTML = '';
-      dpadWrap.appendChild(navSvg);
-      dpadScene.classList.remove('numpad-mode');
-      toggleBtn.classList.remove('etv-hidden');
+      numpadMode = false; dpadWrap.innerHTML = ''; dpadWrap.appendChild(navSvg);
+      dpadScene.classList.remove('numpad-mode'); toggleBtn.classList.remove('etv-hidden');
       cornerBtnEls.forEach(b => b.classList.remove('etv-hidden'));
       mediaSection.classList.remove('etv-hidden');
       appRowEl && appRowEl.classList.remove('etv-hidden');
     };
 
-    // ── D-pad scene ──
-    const dpadScene = document.createElement('div');
-    dpadScene.className = 'dpad-scene';
-    const dpadWrap = document.createElement('div');
-    dpadWrap.className = 'dpad-wrap';
-    const navSvg  = buildSvgDpad(cmds, getHass, cfg.entity);
+    const dpadScene = document.createElement('div'); dpadScene.className = 'dpad-scene';
+    const dpadWrap = document.createElement('div'); dpadWrap.className = 'dpad-wrap';
+    const navSvg = buildSvgDpad(cmds, getHass, cfg.entity);
     const numGrid = buildNumpad(getHass, cfg.entity, exitNumpad);
-    dpadWrap.appendChild(navSvg);
-    dpadScene.appendChild(dpadWrap);
+    dpadWrap.appendChild(navSvg); dpadScene.appendChild(dpadWrap);
 
-    const toggleBtn = document.createElement('div');
-    toggleBtn.className = 'corner-btn corner-toggle';
+    const toggleBtn = document.createElement('div'); toggleBtn.className = 'corner-btn corner-toggle';
     toggleBtn.innerHTML = `<ha-icon icon="mdi:numeric"></ha-icon>`;
     toggleBtn.title = 'Switch to number pad';
     toggleBtn.addEventListener('click', () => { if (numpadMode) exitNumpad(); else enterNumpad(); });
@@ -823,64 +818,51 @@ class EasyTVOverlayEl extends HTMLElement {
       { cls: 'corner-btn corner-home', icon: 'mdi:home-outline',        key: 'home' },
     ];
     const cornerBtnEls = cornerBtnsData.map(({ cls, icon, key }) => {
-      const btn = document.createElement('div');
-      btn.className = cls;
+      const btn = document.createElement('div'); btn.className = cls;
       btn.innerHTML = `<ha-icon icon="${icon}"></ha-icon>`;
       btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds[key]));
-      dpadScene.appendChild(btn);
-      return btn;
+      dpadScene.appendChild(btn); return btn;
     });
     body.appendChild(dpadScene);
 
-    // ── Media section ──
-    const mediaSection = document.createElement('div');
-    mediaSection.className = 'media-section';
-
+    const mediaSection = document.createElement('div'); mediaSection.className = 'media-section';
     const volPill = document.createElement('div'); volPill.className = 'pill-wrap-vol';
-    const volUp   = document.createElement('div'); volUp.className   = 'pill-half';
+    const volUp = document.createElement('div'); volUp.className = 'pill-half';
     volUp.innerHTML = `<ha-icon icon="mdi:volume-plus"></ha-icon><span>VOL +</span>`;
     volUp.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_up));
-    const volDiv  = document.createElement('div'); volDiv.className  = 'pill-divider';
+    const volDiv = document.createElement('div'); volDiv.className = 'pill-divider';
     const volDown = document.createElement('div'); volDown.className = 'pill-half';
     volDown.innerHTML = `<ha-icon icon="mdi:volume-minus"></ha-icon><span>VOL −</span>`;
     volDown.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_down));
     volPill.appendChild(volUp); volPill.appendChild(volDiv); volPill.appendChild(volDown);
     mediaSection.appendChild(volPill);
-
-    const centreControls = document.createElement('div');
-    centreControls.className = 'centre-controls';
-    const playBtn = document.createElement('div');
-    playBtn.className = 'pb-btn-wide';
+    const centreControls = document.createElement('div'); centreControls.className = 'centre-controls';
+    const playBtn = document.createElement('div'); playBtn.className = 'pb-btn-wide';
     playBtn.innerHTML = `<ha-icon icon="mdi:play-pause"></ha-icon>`;
     playBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.play));
     centreControls.appendChild(playBtn);
-    const centreRow2 = document.createElement('div');
-    centreRow2.className = 'centre-row2';
+    const centreRow2 = document.createElement('div'); centreRow2.className = 'centre-row2';
     [{ key:'reverse', icon:'mdi:rewind' }, { key:'volume_mute', icon:'mdi:volume-off' }, { key:'forward', icon:'mdi:fast-forward' }]
       .forEach(({ key, icon }) => {
-        const btn = document.createElement('div');
-        btn.className = 'pb-btn';
+        const btn = document.createElement('div'); btn.className = 'pb-btn';
         btn.innerHTML = `<ha-icon icon="${icon}"></ha-icon>`;
         btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds[key]));
         centreRow2.appendChild(btn);
       });
     centreControls.appendChild(centreRow2);
     mediaSection.appendChild(centreControls);
-
-    const chPill  = document.createElement('div'); chPill.className  = 'pill-wrap-ch';
-    const chUp    = document.createElement('div'); chUp.className    = 'pill-half';
+    const chPill = document.createElement('div'); chPill.className = 'pill-wrap-ch';
+    const chUp = document.createElement('div'); chUp.className = 'pill-half';
     chUp.innerHTML = `<ha-icon icon="mdi:chevron-up"></ha-icon><span>CH +</span>`;
     chUp.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.channel_up));
-    const chDiv   = document.createElement('div'); chDiv.className   = 'pill-divider';
-    const chDown  = document.createElement('div'); chDown.className  = 'pill-half';
+    const chDiv = document.createElement('div'); chDiv.className = 'pill-divider';
+    const chDown = document.createElement('div'); chDown.className = 'pill-half';
     chDown.innerHTML = `<ha-icon icon="mdi:chevron-down"></ha-icon><span>CH −</span>`;
     chDown.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.channel_down));
     chPill.appendChild(chUp); chPill.appendChild(chDiv); chPill.appendChild(chDown);
     mediaSection.appendChild(chPill);
-
     body.appendChild(mediaSection);
 
-    // ── App shortcuts row ──
     let appRowEl = null;
     if (cfg.show_apps !== false) {
       appRowEl = buildAppRow(cfg, getHass);
@@ -942,47 +924,76 @@ class EasyTVCard extends HTMLElement {
     const cfg      = this._config;
     const stateObj = this._hass?.states[cfg.entity];
     const name     = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
+    const state    = stateObj?.state || 'unknown';
+    const isOn     = state === 'on';
     const cardType = cfg.card_type || 'single';
-    const cls = [
-      cfg.no_background        ? 'no-bg'        : '',
+    const getHass  = () => this._hass;
+
+    const extraCls = [
       cfg.no_button_background ? 'no-btn-bg'    : '',
       cfg.no_button_border     ? 'no-btn-border' : '',
     ].filter(Boolean).join(' ');
 
     if (cardType === 'single') {
       const qaKeys = cfg.quick_actions || DEFAULT_QUICK_SINGLE;
-      const qaBtns = qaKeys.map(qa => {
+      const qaPillBtns = qaKeys.map(qa => {
         const def = QUICK_ACTION_DEFS[qa];
-        return def ? `<button class="icon-btn" data-action="quick-action" data-qa="${qa}" title="${def.title}"><ha-icon icon="${def.icon}"></ha-icon></button>` : '';
+        return def
+          ? `<div class="qa-pill-btn" data-action="quick-action" data-qa="${qa}" title="${def.title}"><ha-icon icon="${def.icon}"></ha-icon></div>`
+          : '';
       }).join('');
+
       card.innerHTML = `
-        <div class="compact-single ${cls}">
+        <div class="etv-card compact-single ${extraCls}">
           <div class="c-left">
-            <ha-icon class="tv-icon" icon="mdi:television"></ha-icon>
-            <span class="tv-name">${name}</span>
+            <div class="tv-icon-wrap">
+              <ha-icon class="tv-icon" icon="mdi:television"></ha-icon>
+              <span class="status-dot ${isOn ? 'on' : ''}"></span>
+            </div>
+            <div class="tv-info">
+              <div class="tv-name">${name}</div>
+              <div class="tv-state">${state}</div>
+            </div>
           </div>
           <div class="c-actions">
-            ${qaBtns}
+            <div class="qa-pill">${qaPillBtns}</div>
             <button class="icon-btn" data-action="open-overlay" title="Open remote"><ha-icon icon="mdi:remote"></ha-icon></button>
           </div>
         </div>`;
+
     } else {
+      // double row
       const qaKeys = cfg.quick_actions || DEFAULT_QUICK_DOUBLE;
-      const qaBtns = qaKeys.map(qa => {
+      const qaRowBtns = qaKeys.map(qa => {
         const def = QUICK_ACTION_DEFS[qa];
-        return def ? `<button class="qa-btn" data-action="quick-action" data-qa="${qa}" title="${def.title}"><ha-icon icon="${def.icon}"></ha-icon></button>` : '';
+        return def
+          ? `<div class="d-qa-btn" data-action="quick-action" data-qa="${qa}" title="${def.title}"><ha-icon icon="${def.icon}"></ha-icon></div>`
+          : '';
       }).join('');
+
       card.innerHTML = `
-        <div class="compact-double ${cls}">
+        <div class="etv-card compact-double ${extraCls}">
           <div class="d-top">
             <div class="d-top-left">
-              <ha-icon class="tv-icon" icon="mdi:television"></ha-icon>
-              <span class="tv-name">${name}</span>
+              <div class="tv-icon-wrap">
+                <ha-icon class="tv-icon" icon="mdi:television"></ha-icon>
+                <span class="status-dot ${isOn ? 'on' : ''}"></span>
+              </div>
+              <div class="tv-info">
+                <div class="tv-name">${name}</div>
+                <div class="tv-state">${state}</div>
+              </div>
             </div>
             <button class="icon-btn" data-action="open-overlay" title="Open remote"><ha-icon icon="mdi:remote"></ha-icon></button>
           </div>
-          <div class="d-bottom">${qaBtns}</div>
+          <div class="d-actions">${qaRowBtns}</div>
         </div>`;
+
+      // append compact app row if enabled
+      if (cfg.show_apps !== false) {
+        const shell = card.querySelector('.etv-card');
+        shell.appendChild(buildCompactAppRow(cfg, getHass));
+      }
     }
   }
 
@@ -1007,37 +1018,28 @@ class EasyTVCard extends HTMLElement {
     this._overlayOpen = false;
   }
 
-  getCardSize() { return 1; }
+  getCardSize() { return this._config?.card_type === 'double' ? 2 : 1; }
 }
 
 // ── Editor ────────────────────────────────────────────────────────────────────
 
 class EasyTVCardEditor extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-    this._config = {};
-  }
+  constructor() { super(); this.attachShadow({ mode: 'open' }); this._config = {}; }
 
   set hass(hass) {
     this._hass = hass;
     this.shadowRoot.querySelectorAll('ha-entity-picker').forEach(p => { p.hass = hass; });
   }
 
-  setConfig(config) {
-    this._config = { ...config };
-    this._render();
-  }
+  setConfig(config) { this._config = { ...config }; this._render(); }
 
   _render() {
     const cfg = this._config;
     const sr  = this.shadowRoot;
     sr.innerHTML = '';
-
     const style = document.createElement('style');
     style.textContent = EDITOR_STYLES;
     sr.appendChild(style);
-
     const editor = document.createElement('div');
     editor.className = 'editor';
     editor.innerHTML = `
@@ -1052,7 +1054,6 @@ class EasyTVCardEditor extends HTMLElement {
           <input class="etv-input" data-key="name" value="${cfg.name || ''}" placeholder="Living Room TV">
         </div>
       </div>
-
       <div class="editor-panel">
         <div class="panel-title">Card</div>
         <div class="field-wrap">
@@ -1067,14 +1068,12 @@ class EasyTVCardEditor extends HTMLElement {
           <label>Card style</label>
           <select class="etv-select" data-key="card_type">
             <option value="single"${(cfg.card_type || 'single') === 'single' ? ' selected' : ''}>Single row</option>
-            <option value="double"${cfg.card_type === 'double' ? ' selected' : ''}>Double row</option>
+            <option value="double"${cfg.card_type === 'double' ? ' selected' : ''}>Double row + apps</option>
           </select>
         </div>
-        <div class="row"><label>No card background</label><ha-switch data-key="no_background"></ha-switch></div>
         <div class="row"><label>No button background</label><ha-switch data-key="no_button_background"></ha-switch></div>
         <div class="row"><label>No button border</label><ha-switch data-key="no_button_border"></ha-switch></div>
       </div>
-
       <div class="editor-panel">
         <div class="panel-title">App Shortcuts</div>
         <div class="row"><label>Show app shortcuts</label><ha-switch data-key="show_apps" data-default="true"></ha-switch></div>
@@ -1083,11 +1082,9 @@ class EasyTVCardEditor extends HTMLElement {
           <ha-entity-picker data-key="media_player_entity" allow-custom-entity></ha-entity-picker>
         </div>
       </div>
-
       <div class="version-badge">EasyTV Card v${CARD_VERSION}</div>
     `;
     sr.appendChild(editor);
-
     editor.querySelectorAll('ha-entity-picker[data-key]').forEach(picker => {
       picker.hass  = this._hass;
       picker.value = cfg[picker.dataset.key] || '';
@@ -1096,9 +1093,7 @@ class EasyTVCardEditor extends HTMLElement {
         this._fireChange();
       });
     });
-
     const switchKeys = {
-      no_background:        !!cfg.no_background,
       no_button_background: !!cfg.no_button_background,
       no_button_border:     !!cfg.no_button_border,
       show_apps:            cfg.show_apps !== false,
@@ -1110,7 +1105,6 @@ class EasyTVCardEditor extends HTMLElement {
         this._fireChange();
       });
     });
-
     editor.querySelectorAll('.etv-input[data-key], .etv-select[data-key]').forEach(el => {
       el.addEventListener('change', () => {
         this._config = { ...this._config, [el.dataset.key]: el.value || undefined };
@@ -1138,6 +1132,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v1.0.2 ',
+  '%c EasyTV Card v1.0.3 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
