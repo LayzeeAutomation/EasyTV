@@ -1,7 +1,7 @@
-// EasyTV Card v0.7.6
+// EasyTV Card v0.7.7
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.7.6';
+const CARD_VERSION = '0.7.7';
 
 // ─── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -11,6 +11,13 @@ const TV_PRESETS = {
   samsung:    { up:'KEY_UP', down:'KEY_DOWN', left:'KEY_LEFT', right:'KEY_RIGHT', select:'KEY_ENTER', back:'KEY_RETURN', home:'KEY_HOME', play:'KEY_PLAY', pause:'KEY_PAUSE', stop:'KEY_STOP', forward:'KEY_FF', reverse:'KEY_REWIND', volume_up:'KEY_VOLUP', volume_down:'KEY_VOLDOWN', volume_mute:'KEY_MUTE', power:'KEY_POWER', info:'KEY_INFO', source:'KEY_SOURCE', channel_up:'KEY_CHUP', channel_down:'KEY_CHDOWN' },
   generic:    { up:'up', down:'down', left:'left', right:'right', select:'select', back:'back', home:'home', play:'play', pause:'pause', stop:'stop', forward:'forward', reverse:'reverse', volume_up:'volume_up', volume_down:'volume_down', volume_mute:'volume_mute', power:'power', channel_up:'channel_up', channel_down:'channel_down' },
 };
+
+// ─── Default Sources ───────────────────────────────────────────────────────────
+
+const DEFAULT_SOURCES = [
+  { name: 'Netflix',  icon: 'mdi:netflix',  command: 'netflix'  },
+  { name: 'YouTube',  icon: 'mdi:youtube',  command: 'youtube'  },
+];
 
 // ─── Quick Action Definitions ──────────────────────────────────────────────────
 
@@ -191,6 +198,29 @@ const OVERLAY_STYLES = `
   #easytv-overlay .power-btn:active { background: var(--etv-power-active); transform: scale(0.92); }
   #easytv-overlay .power-btn ha-icon { --mdc-icon-size: 26px; }
 
+  /* ── Sources row ── */
+  #easytv-overlay .sources-row {
+    display: flex; gap: 10px; width: 100%;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  #easytv-overlay .sources-row::-webkit-scrollbar { display: none; }
+  #easytv-overlay .source-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    border-radius: 16px; padding: 12px 16px; flex-shrink: 0;
+    cursor: pointer; color: var(--etv-text);
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent; min-width: 64px;
+  }
+  #easytv-overlay .source-btn:hover  { background: var(--etv-btn-hover); }
+  #easytv-overlay .source-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
+  #easytv-overlay .source-btn ha-icon { --mdc-icon-size: 26px; }
+  #easytv-overlay .source-btn span {
+    font-size: 11px; color: var(--etv-muted); white-space: nowrap;
+  }
+
   /* ── SVG D-pad ── */
   #easytv-overlay .dpad-wrap {
     position: relative;
@@ -297,6 +327,10 @@ const EDITOR_STYLES = `
   .panel-title {
     font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
     color: var(--primary-color, #1976d2); margin-bottom: 2px;
+  }
+  .panel-hint {
+    font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.5));
+    line-height: 1.5; padding: 0 2px;
   }
   .field-wrap { display: flex; flex-direction: column; gap: 4px; }
   .field-wrap label {
@@ -515,6 +549,21 @@ class EasyTVCard extends HTMLElement {
     powerRow.appendChild(powerBtn);
     body.appendChild(powerRow);
 
+    // Sources row — default or user-defined, hidden if explicitly set to []
+    const sources = cfg.sources !== undefined ? cfg.sources : DEFAULT_SOURCES;
+    if (sources && sources.length > 0) {
+      const sourcesRow = document.createElement('div');
+      sourcesRow.className = 'sources-row';
+      sources.forEach(src => {
+        const btn = document.createElement('div');
+        btn.className = 'source-btn';
+        btn.innerHTML = `<ha-icon icon="${src.icon || 'mdi:television-play'}"></ha-icon><span>${src.name || ''}</span>`;
+        btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, src.command));
+        sourcesRow.appendChild(btn);
+      });
+      body.appendChild(sourcesRow);
+    }
+
     // D-pad
     const dpadWrap = document.createElement('div');
     dpadWrap.className = 'dpad-wrap';
@@ -557,7 +606,6 @@ class EasyTVCard extends HTMLElement {
     const pillRow = document.createElement('div');
     pillRow.className = 'pill-row';
 
-    // Volume pill (left)
     const volPill = document.createElement('div');
     volPill.className = 'pill-wrap';
     const volUp = document.createElement('div');
@@ -575,14 +623,12 @@ class EasyTVCard extends HTMLElement {
     volPill.appendChild(volDown);
     pillRow.appendChild(volPill);
 
-    // Mute button (centre)
     const muteBtn = document.createElement('div');
     muteBtn.className = 'pill-mute';
     muteBtn.innerHTML = `<ha-icon icon="mdi:volume-off"></ha-icon>`;
     muteBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_mute));
     pillRow.appendChild(muteBtn);
 
-    // Channel pill (right)
     const chPill = document.createElement('div');
     chPill.className = 'pill-wrap';
     const chUp = document.createElement('div');
@@ -692,6 +738,14 @@ class EasyTVCardEditor extends HTMLElement {
         </div>
       </div>
 
+      <div class="editor-panel">
+        <div class="panel-title">Source Shortcuts</div>
+        <p class="panel-hint">
+          Defaults: Netflix &amp; YouTube (work on Google TV &amp; Roku).<br>
+          Override with <code>sources:</code> in YAML. Samsung users: use commands like <code>KEY_APP_NETFLIX</code>.
+        </p>
+      </div>
+
       <div class="version-badge">EasyTV Card v${CARD_VERSION}</div>
     `;
 
@@ -744,6 +798,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.7.6 ',
+  '%c EasyTV Card v0.7.7 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
