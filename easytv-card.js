@@ -1,7 +1,7 @@
-// EasyTV Card v0.8.9
+// EasyTV Card v0.9.0
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.8.9';
+const CARD_VERSION = '0.9.0';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -234,7 +234,7 @@ const OVERLAY_STYLES = `
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
-    width: 100%; height: 100%;
+    width: 100%;
     box-sizing: border-box;
   }
   .num-btn {
@@ -250,6 +250,21 @@ const OVERLAY_STYLES = `
   .num-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
   .num-btn .num-digit  { font-size: 20px; font-weight: 700; line-height: 1; }
   .num-btn .num-label  { font-size: 8px; letter-spacing: 0.12em; color: var(--etv-muted); margin-top: 2px; }
+  /* Back cell in numpad bottom-left — circular */
+  .num-back {
+    display: flex; align-items: center; justify-content: center;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    border-radius: 50%; cursor: pointer; color: var(--etv-text);
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    aspect-ratio: 1;
+    user-select: none;
+  }
+  .num-back:hover  { background: var(--etv-btn-hover); }
+  .num-back:active { background: var(--etv-btn-active); transform: scale(0.93); }
+  .num-back ha-icon { --mdc-icon-size: 22px; }
+  /* Empty spacer cell */
+  .num-spacer { aspect-ratio: 1; }
 
   /* ── Corner circular buttons ── */
   .corner-btn {
@@ -275,20 +290,6 @@ const OVERLAY_STYLES = `
   /* bottom-right → Home */
   .corner-home { bottom: 24px; right: 24px; transform: translate(50%, 50%); }
   .corner-home:active { background: var(--etv-btn-active); transform: translate(50%, 50%) scale(0.92); }
-
-  /* ── Wide back bar — shown only in numpad mode ── */
-  .numpad-back-bar {
-    display: flex; align-items: center; justify-content: center;
-    width: 66%; margin: 16px auto 0;
-    height: 52px; border-radius: 26px;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    cursor: pointer; color: var(--etv-text);
-    transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-    font-size: 15px; font-weight: 600; letter-spacing: 0.02em;
-  }
-  .numpad-back-bar:hover  { background: var(--etv-btn-hover); }
-  .numpad-back-bar:active { background: var(--etv-btn-active); transform: scale(0.97); }
 
   .playback-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
   .pb-btn {
@@ -443,30 +444,48 @@ function buildSvgDpad(cmds, getHass, entityId) {
 // ── Number pad builder ──────────────────────────────────────────────────────
 
 const NUM_KEYS = [
-  { digit: '1', label: '',    cmd: '1' },
-  { digit: '2', label: 'ABC', cmd: '2' },
-  { digit: '3', label: 'DEF', cmd: '3' },
-  { digit: '4', label: 'GHI', cmd: '4' },
-  { digit: '5', label: 'JKL', cmd: '5' },
-  { digit: '6', label: 'MNO', cmd: '6' },
-  { digit: '7', label: 'PQRS', cmd: '7' },
-  { digit: '8', label: 'TUV', cmd: '8' },
-  { digit: '9', label: 'WXYZ', cmd: '9' },
-  { digit: '*', label: '',    cmd: '*' },
-  { digit: '0', label: '+',   cmd: '0' },
-  { digit: '#', label: '',    cmd: '#' },
+  { digit: '1', label: '' },
+  { digit: '2', label: 'ABC' },
+  { digit: '3', label: 'DEF' },
+  { digit: '4', label: 'GHI' },
+  { digit: '5', label: 'JKL' },
+  { digit: '6', label: 'MNO' },
+  { digit: '7', label: 'PQRS' },
+  { digit: '8', label: 'TUV' },
+  { digit: '9', label: 'WXYZ' },
 ];
 
-function buildNumpad(getHass, entityId) {
+// exitNumpad callback injected at build time
+function buildNumpad(getHass, entityId, onBack) {
   const grid = document.createElement('div');
   grid.className = 'numpad-grid';
-  NUM_KEYS.forEach(({ digit, label, cmd }) => {
+
+  // rows 1–3: digits 1–9
+  NUM_KEYS.forEach(({ digit, label }) => {
     const btn = document.createElement('div');
     btn.className = 'num-btn';
     btn.innerHTML = `<span class="num-digit">${digit}</span>${label ? `<span class="num-label">${label}</span>` : ''}`;
-    btn.addEventListener('click', () => sendCmd(getHass(), entityId, cmd));
+    btn.addEventListener('click', () => sendCmd(getHass(), entityId, digit));
     grid.appendChild(btn);
   });
+
+  // bottom row: [back circle] [0] [spacer]
+  const backCell = document.createElement('div');
+  backCell.className = 'num-back';
+  backCell.innerHTML = `<ha-icon icon="mdi:arrow-left"></ha-icon>`;
+  backCell.addEventListener('click', () => onBack());
+  grid.appendChild(backCell);
+
+  const zeroBtn = document.createElement('div');
+  zeroBtn.className = 'num-btn';
+  zeroBtn.innerHTML = `<span class="num-digit">0</span><span class="num-label">+</span>`;
+  zeroBtn.addEventListener('click', () => sendCmd(getHass(), entityId, '0'));
+  grid.appendChild(zeroBtn);
+
+  const spacer = document.createElement('div');
+  spacer.className = 'num-spacer';
+  grid.appendChild(spacer);
+
   return grid;
 }
 
@@ -519,6 +538,29 @@ class EasyTVOverlayEl extends HTMLElement {
 
     body.appendChild(powerRow);
 
+    // ── Switch logic (declared early so buildNumpad can reference exitNumpad) ──
+    const enterNumpad = () => {
+      numpadMode = true;
+      dpadWrap.innerHTML = '';
+      dpadWrap.appendChild(numGrid);
+      dpadScene.classList.add('numpad-mode');
+      toggleBtn.classList.add('etv-hidden');
+      cornerBtnEls.forEach(b => b.classList.add('etv-hidden'));
+      pbRow.classList.add('etv-hidden');
+      pillRow.classList.add('etv-hidden');
+    };
+
+    const exitNumpad = () => {
+      numpadMode = false;
+      dpadWrap.innerHTML = '';
+      dpadWrap.appendChild(navSvg);
+      dpadScene.classList.remove('numpad-mode');
+      toggleBtn.classList.remove('etv-hidden');
+      cornerBtnEls.forEach(b => b.classList.remove('etv-hidden'));
+      pbRow.classList.remove('etv-hidden');
+      pillRow.classList.remove('etv-hidden');
+    };
+
     // ── D-pad scene ──
     const dpadScene = document.createElement('div');
     dpadScene.className = 'dpad-scene';
@@ -526,7 +568,7 @@ class EasyTVOverlayEl extends HTMLElement {
     const dpadWrap = document.createElement('div');
     dpadWrap.className = 'dpad-wrap';
     const navSvg  = buildSvgDpad(cmds, getHass, cfg.entity);
-    const numGrid = buildNumpad(getHass, cfg.entity);
+    const numGrid = buildNumpad(getHass, cfg.entity, exitNumpad);
     dpadWrap.appendChild(navSvg);
     dpadScene.appendChild(dpadWrap);
 
@@ -535,6 +577,7 @@ class EasyTVOverlayEl extends HTMLElement {
     toggleBtn.className = 'corner-btn corner-toggle';
     toggleBtn.innerHTML = `<ha-icon icon="mdi:numeric"></ha-icon>`;
     toggleBtn.title = 'Switch to number pad';
+    toggleBtn.addEventListener('click', () => { if (numpadMode) exitNumpad(); else enterNumpad(); });
     dpadScene.appendChild(toggleBtn);
 
     // Info, Back, Home corners
@@ -553,12 +596,6 @@ class EasyTVOverlayEl extends HTMLElement {
     });
 
     body.appendChild(dpadScene);
-
-    // ── Wide back bar — hidden in nav mode, shown in numpad mode ──
-    const backBar = document.createElement('div');
-    backBar.className = 'numpad-back-bar etv-hidden';
-    backBar.textContent = 'Back';
-    body.appendChild(backBar);
 
     // ── Playback row ──
     const pbRow = document.createElement('div');
@@ -608,43 +645,6 @@ class EasyTVOverlayEl extends HTMLElement {
     pillRow.appendChild(chPill);
 
     body.appendChild(pillRow);
-
-    // ── Switch logic ──
-    const enterNumpad = () => {
-      numpadMode = true;
-      dpadWrap.innerHTML = '';
-      dpadWrap.appendChild(numGrid);
-      dpadScene.classList.add('numpad-mode');
-      // Hide toggle button in numpad mode
-      toggleBtn.classList.add('etv-hidden');
-      // Hide corner nav buttons and bottom rows
-      cornerBtnEls.forEach(b => b.classList.add('etv-hidden'));
-      pbRow.classList.add('etv-hidden');
-      pillRow.classList.add('etv-hidden');
-      // Show back bar
-      backBar.classList.remove('etv-hidden');
-    };
-
-    const exitNumpad = () => {
-      numpadMode = false;
-      dpadWrap.innerHTML = '';
-      dpadWrap.appendChild(navSvg);
-      dpadScene.classList.remove('numpad-mode');
-      // Restore toggle button
-      toggleBtn.classList.remove('etv-hidden');
-      // Restore nav elements
-      cornerBtnEls.forEach(b => b.classList.remove('etv-hidden'));
-      pbRow.classList.remove('etv-hidden');
-      pillRow.classList.remove('etv-hidden');
-      // Hide back bar
-      backBar.classList.add('etv-hidden');
-    };
-
-    toggleBtn.addEventListener('click', () => {
-      if (numpadMode) exitNumpad(); else enterNumpad();
-    });
-
-    backBar.addEventListener('click', () => exitNumpad());
   }
 }
 
@@ -885,6 +885,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.8.9 ',
+  '%c EasyTV Card v0.9.0 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
