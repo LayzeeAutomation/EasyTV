@@ -1,7 +1,7 @@
-// EasyTV Card v1.0.4
+// EasyTV Card v1.0.5
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '1.0.4';
+const CARD_VERSION = '1.0.5';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -165,10 +165,8 @@ const CARD_STYLES = `
     --easytv-btn-border:    rgba(255,255,255,0.10);
     --easytv-pill-bg:       rgba(255,255,255,0.06);
     --easytv-pill-border:   rgba(255,255,255,0.10);
-    --easytv-on-color:      #4ade80;
-    --easytv-off-color:     rgba(255,255,255,0.22);
-    --easytv-app-gap:  8px;
-    --easytv-app-cols: 4;
+    /* light-blue TV icon colour */
+    --easytv-tv-icon-color: #7DD3FC;
   }
 
   ha-card {
@@ -182,6 +180,7 @@ const CARD_STYLES = `
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  /* No accent bar — plain border all round */
   .etv-card {
     border-radius: var(--easytv-radius);
     background: var(--easytv-bg);
@@ -192,9 +191,9 @@ const CARD_STYLES = `
     color: var(--easytv-text);
     overflow: hidden;
     animation: etvCardIn 0.25s ease both;
-    border-left: 3px solid var(--easytv-accent);
   }
 
+  /* ════ SINGLE ROW ════ */
   .compact-single {
     display: flex; align-items: center;
     padding: 12px 14px 12px 16px;
@@ -204,24 +203,18 @@ const CARD_STYLES = `
     display: flex; align-items: center; gap: 10px;
     flex: 1; min-width: 0;
   }
-  .tv-icon-wrap { position: relative; flex-shrink: 0; }
-  .tv-icon { --mdc-icon-size: 26px; color: var(--easytv-accent); display: block; }
-  .status-dot {
-    position: absolute; bottom: -1px; right: -2px;
-    width: 8px; height: 8px; border-radius: 50%;
-    border: 1.5px solid var(--easytv-bg);
-    background: var(--easytv-off-color);
-    transition: background 0.4s;
-  }
-  .status-dot.on  { background: var(--easytv-on-color); box-shadow: 0 0 6px var(--easytv-on-color); }
+  .tv-icon-wrap { flex-shrink: 0; }
+  /* Smaller, light-blue TV icon — no dot */
+  .tv-icon { --mdc-icon-size: 20px; color: var(--easytv-tv-icon-color); display: block; }
   .tv-info { flex: 1; min-width: 0; }
+  /* Slightly smaller title */
   .tv-name {
-    font-weight: 700; font-size: 15px; color: var(--easytv-text);
+    font-weight: 600; font-size: 13px; color: var(--easytv-text);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
   }
-  .tv-state { font-size: 11px; color: var(--easytv-muted); margin-top: 1px; text-transform: capitalize; }
   .c-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
+  /* connected pill group for quick actions */
   .qa-pill {
     display: flex; align-items: stretch;
     background: var(--easytv-pill-bg);
@@ -240,6 +233,7 @@ const CARD_STYLES = `
   .qa-pill-btn:active { background: var(--easytv-btn-active); transform: scale(0.91); }
   .qa-pill-btn ha-icon { --mdc-icon-size: 18px; }
 
+  /* open-overlay icon button */
   .icon-btn {
     background: var(--easytv-btn-bg); border: 1px solid var(--easytv-btn-border);
     cursor: pointer; color: var(--easytv-text);
@@ -252,16 +246,17 @@ const CARD_STYLES = `
   .icon-btn:active { background: var(--easytv-btn-active); transform: scale(0.92); }
   .icon-btn ha-icon { --mdc-icon-size: 20px; }
 
+  /* ════ DOUBLE ROW ════ */
   .compact-double {
     display: flex; flex-direction: column;
-    padding: 14px 14px 0 16px; gap: 0;
+    padding: 14px 14px 14px 16px; gap: 0;
   }
   .d-top {
     display: flex; align-items: center;
     justify-content: space-between; gap: 10px; padding-bottom: 12px;
   }
   .d-top-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-  .d-actions { display: flex; gap: 6px; padding-bottom: 12px; }
+  .d-actions { display: flex; gap: 6px; }
   .d-qa-btn {
     flex: 1; height: 42px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
@@ -274,35 +269,7 @@ const CARD_STYLES = `
   .d-qa-btn:active { background: var(--easytv-btn-active); transform: scale(0.93); }
   .d-qa-btn ha-icon { --mdc-icon-size: 20px; }
 
-  .compact-app-row {
-    display: flex; gap: var(--easytv-app-gap); width: 100%;
-    overflow-x: auto; overflow-y: hidden;
-    -webkit-overflow-scrolling: touch; scrollbar-width: none;
-    scroll-snap-type: x mandatory;
-    padding: 2px 0 10px; box-sizing: border-box;
-    border-top: 1px solid var(--easytv-border); margin-top: 2px;
-  }
-  .compact-app-row::-webkit-scrollbar { display: none; }
-  .compact-app-btn {
-    flex: 0 0 calc((100% - (var(--easytv-app-cols) - 1) * var(--easytv-app-gap)) / var(--easytv-app-cols));
-    scroll-snap-align: start;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px; padding: 8px 4px; border-radius: 12px; cursor: pointer;
-    transition: transform 0.15s, filter 0.15s;
-    -webkit-tap-highlight-color: transparent; user-select: none;
-    border: 1px solid transparent;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10);
-    box-sizing: border-box;
-  }
-  .compact-app-btn:hover  { filter: brightness(1.18); }
-  .compact-app-btn:active { transform: scale(0.90); filter: brightness(0.88); }
-  .compact-app-btn ha-icon { --mdc-icon-size: 22px; }
-  .compact-app-btn span {
-    font-size: 9px; font-weight: 600; letter-spacing: 0.01em;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    max-width: 100%; text-align: center;
-  }
-
+  /* no-background / no-border overrides */
   .no-btn-bg  .qa-pill-btn, .no-btn-bg  .d-qa-btn, .no-btn-bg  .icon-btn { background: transparent !important; }
   .no-btn-border .qa-pill-btn, .no-btn-border .d-qa-btn, .no-btn-border .icon-btn,
   .no-btn-border .qa-pill { border-color: transparent !important; }
@@ -688,30 +655,11 @@ function buildAppRow(cfg, getHass) {
   return row;
 }
 
-// ── Compact app row builder (card) ────────────────────────────────────────────
-
-function buildCompactAppRow(cfg, getHass) {
-  const row = document.createElement('div');
-  row.className = 'compact-app-row';
-  const appIds = cfg.apps || DEFAULT_APPS;
-  appIds.forEach(id => {
-    const app = APP_SHORTCUT_MAP[id]; if (!app) return;
-    const btn = document.createElement('div'); btn.className = 'compact-app-btn';
-    btn.style.background = app.bg; btn.style.color = app.fg;
-    btn.style.borderColor = `color-mix(in srgb, ${app.bg} 55%, white)`;
-    btn.innerHTML = `<ha-icon icon="${app.icon}"></ha-icon><span>${app.label}</span>`;
-    btn.addEventListener('click', (e) => { e.stopPropagation(); sendApp(getHass(), cfg, id); });
-    row.appendChild(btn);
-  });
-  return row;
-}
-
 // ── Overlay Element ───────────────────────────────────────────────────────────
 
 class EasyTVOverlayEl extends HTMLElement {
   constructor() { super(); this.attachShadow({ mode: 'open' }); }
 
-  // Dispatch a composed event so the card element (outside shadow DOM) can hear it
   _requestClose() {
     this.dispatchEvent(new CustomEvent('etv-close', { bubbles: true, composed: true }));
   }
@@ -733,7 +681,6 @@ class EasyTVOverlayEl extends HTMLElement {
       <span class="overlay-version">v${CARD_VERSION}</span>
       <div class="close-btn" id="etv-close"><ha-icon icon="mdi:close"></ha-icon></div>`;
     sr.appendChild(header);
-    // ✕ button: request close via event (card calls _closeOverlay which resets flag)
     sr.querySelector('#etv-close').addEventListener('click', () => this._requestClose());
 
     const body = document.createElement('div');
@@ -891,7 +838,6 @@ class EasyTVCard extends HTMLElement {
     const stateObj = this._hass?.states[cfg.entity];
     const name     = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
     const state    = stateObj?.state || 'unknown';
-    const isOn     = state === 'on';
     const cardType = cfg.card_type || 'single';
     const getHass  = () => this._hass;
 
@@ -914,11 +860,9 @@ class EasyTVCard extends HTMLElement {
           <div class="c-left">
             <div class="tv-icon-wrap">
               <ha-icon class="tv-icon" icon="mdi:television"></ha-icon>
-              <span class="status-dot ${isOn ? 'on' : ''}"></span>
             </div>
             <div class="tv-info">
               <div class="tv-name">${name}</div>
-              <div class="tv-state">${state}</div>
             </div>
           </div>
           <div class="c-actions">
@@ -936,28 +880,22 @@ class EasyTVCard extends HTMLElement {
           : '';
       }).join('');
 
+      // No compact app row — removed per v1.0.5
       card.innerHTML = `
         <div class="etv-card compact-double ${extraCls}">
           <div class="d-top">
             <div class="d-top-left">
               <div class="tv-icon-wrap">
                 <ha-icon class="tv-icon" icon="mdi:television"></ha-icon>
-                <span class="status-dot ${isOn ? 'on' : ''}"></span>
               </div>
               <div class="tv-info">
                 <div class="tv-name">${name}</div>
-                <div class="tv-state">${state}</div>
               </div>
             </div>
             <button class="icon-btn" data-action="open-overlay" title="Open remote"><ha-icon icon="mdi:remote"></ha-icon></button>
           </div>
           <div class="d-actions">${qaRowBtns}</div>
         </div>`;
-
-      if (cfg.show_apps !== false) {
-        const shell = card.querySelector('.etv-card');
-        shell.appendChild(buildCompactAppRow(cfg, getHass));
-      }
     }
   }
 
@@ -972,10 +910,7 @@ class EasyTVCard extends HTMLElement {
     document.body.appendChild(overlay);
     overlay.open(cfg, getHass, name);
     this._overlayEl = overlay;
-
-    // ✕ button dispatches 'etv-close' (composed) — handle it here
     overlay.addEventListener('etv-close', () => this._closeOverlay());
-    // backdrop tap also closes
     overlay.addEventListener('click', e => {
       if (e.composedPath()[0] === overlay) this._closeOverlay();
     });
@@ -1036,14 +971,14 @@ class EasyTVCardEditor extends HTMLElement {
           <label>Card style</label>
           <select class="etv-select" data-key="card_type">
             <option value="single"${(cfg.card_type || 'single') === 'single' ? ' selected' : ''}>Single row</option>
-            <option value="double"${cfg.card_type === 'double' ? ' selected' : ''}>Double row + apps</option>
+            <option value="double"${cfg.card_type === 'double' ? ' selected' : ''}>Double row</option>
           </select>
         </div>
         <div class="row"><label>No button background</label><ha-switch data-key="no_button_background"></ha-switch></div>
         <div class="row"><label>No button border</label><ha-switch data-key="no_button_border"></ha-switch></div>
       </div>
       <div class="editor-panel">
-        <div class="panel-title">App Shortcuts</div>
+        <div class="panel-title">App Shortcuts (overlay)</div>
         <div class="row"><label>Show app shortcuts</label><ha-switch data-key="show_apps" data-default="true"></ha-switch></div>
         <div class="field-wrap">
           <label>Roku media player entity (Roku only)</label>
@@ -1100,6 +1035,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v1.0.4 ',
+  '%c EasyTV Card v1.0.5 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
