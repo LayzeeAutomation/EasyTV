@@ -1,18 +1,18 @@
-// EasyTV Card v0.7.5
+// EasyTV Card v0.7.6
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.7.5';
+const CARD_VERSION = '0.7.6';
 
-// ─── TV Presets ───────────────────────────────────────────────────────────────
+// ─── TV Presets ────────────────────────────────────────────────────────────────
 
 const TV_PRESETS = {
   roku:       { up:'up', down:'down', left:'left', right:'right', select:'select', back:'back', home:'home', play:'play', pause:'pause', stop:'stop', forward:'forward', reverse:'reverse', volume_up:'volume_up', volume_down:'volume_down', volume_mute:'volume_mute', power:'power', info:'info', replay:'replay', channel_up:'channel_up', channel_down:'channel_down' },
   google_tv:  { up:'DPAD_UP', down:'DPAD_DOWN', left:'DPAD_LEFT', right:'DPAD_RIGHT', select:'DPAD_CENTER', back:'BACK', home:'HOME', play:'MEDIA_PLAY_PAUSE', pause:'MEDIA_PAUSE', stop:'MEDIA_STOP', forward:'MEDIA_NEXT', reverse:'MEDIA_PREVIOUS', volume_up:'VOLUME_UP', volume_down:'VOLUME_DOWN', volume_mute:'VOLUME_MUTE', power:'POWER', info:'INFO', source:'TV', channel_up:'CHANNEL_UP', channel_down:'CHANNEL_DOWN' },
   samsung:    { up:'KEY_UP', down:'KEY_DOWN', left:'KEY_LEFT', right:'KEY_RIGHT', select:'KEY_ENTER', back:'KEY_RETURN', home:'KEY_HOME', play:'KEY_PLAY', pause:'KEY_PAUSE', stop:'KEY_STOP', forward:'KEY_FF', reverse:'KEY_REWIND', volume_up:'KEY_VOLUP', volume_down:'KEY_VOLDOWN', volume_mute:'KEY_MUTE', power:'KEY_POWER', info:'KEY_INFO', source:'KEY_SOURCE', channel_up:'KEY_CHUP', channel_down:'KEY_CHDOWN' },
-  generic:    { up:'up', down:'down', left:'left', right:'right', select:'select', back:'back', home:'home', play:'play', pause:'pause', stop:'stop', forward:'forward', reverse:'reverse', volume_up:'volume_up', volume_down:'volume_down', volume_mute:'volume_mute', channel_up:'channel_up', channel_down:'channel_down' },
+  generic:    { up:'up', down:'down', left:'left', right:'right', select:'select', back:'back', home:'home', play:'play', pause:'pause', stop:'stop', forward:'forward', reverse:'reverse', volume_up:'volume_up', volume_down:'volume_down', volume_mute:'volume_mute', power:'power', channel_up:'channel_up', channel_down:'channel_down' },
 };
 
-// ─── Quick Action Definitions ─────────────────────────────────────────────────
+// ─── Quick Action Definitions ──────────────────────────────────────────────────
 
 const QUICK_ACTION_DEFS = {
   volume_down:   { icon: 'mdi:volume-minus', title: 'Vol −',  cmd: (c) => c.volume_down },
@@ -32,7 +32,7 @@ const QUICK_ACTION_DEFS = {
 const DEFAULT_QUICK_SINGLE = ['volume_down', 'play_pause', 'volume_up'];
 const DEFAULT_QUICK_DOUBLE = ['volume_down', 'play_pause', 'volume_up', 'power', 'home', 'back'];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function resolveCmd(cfg, key) {
   if (cfg.commands && cfg.commands[key] !== undefined) return cfg.commands[key];
@@ -54,7 +54,7 @@ function sendCmd(hass, entityId, cmd) {
   hass.callService('remote', 'send_command', { entity_id: entityId, command: cmd });
 }
 
-// ─── Compact Card Styles ──────────────────────────────────────────────────────
+// ─── Compact Card Styles ───────────────────────────────────────────────────────
 
 const CARD_STYLES = `
   :host {
@@ -118,7 +118,7 @@ const CARD_STYLES = `
   .no-btn-border .icon-btn, .no-btn-border .qa-btn { border-color: transparent !important; }
 `;
 
-// ─── Overlay Styles ───────────────────────────────────────────────────────────
+// ─── Overlay Styles ────────────────────────────────────────────────────────────
 
 const OVERLAY_STYLES = `
   #easytv-overlay {
@@ -138,6 +138,11 @@ const OVERLAY_STYLES = `
     --etv-border:     rgba(255,255,255,0.13);
     --etv-accent:     #1976d2;
     --etv-radius-btn: 14px;
+    --etv-power-bg:      rgba(220,50,50,0.15);
+    --etv-power-border:  rgba(220,50,50,0.4);
+    --etv-power-hover:   rgba(220,50,50,0.28);
+    --etv-power-active:  rgba(220,50,50,0.42);
+    --etv-power-color:   rgba(255,100,100,1);
   }
   @keyframes etvFadeIn {
     from { opacity: 0; transform: translateY(16px) translateZ(0); }
@@ -167,8 +172,24 @@ const OVERLAY_STYLES = `
   #easytv-overlay .overlay-body {
     flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
     display: flex; flex-direction: column; align-items: center;
-    padding: 24px 20px 32px; gap: 20px;
+    padding: 20px 20px 32px; gap: 20px;
   }
+
+  /* ── Power row ── */
+  #easytv-overlay .power-row {
+    display: flex; justify-content: flex-start; width: 100%;
+  }
+  #easytv-overlay .power-btn {
+    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--etv-power-bg); border: 1px solid var(--etv-power-border);
+    cursor: pointer; color: var(--etv-power-color);
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #easytv-overlay .power-btn:hover  { background: var(--etv-power-hover); }
+  #easytv-overlay .power-btn:active { background: var(--etv-power-active); transform: scale(0.92); }
+  #easytv-overlay .power-btn ha-icon { --mdc-icon-size: 26px; }
 
   /* ── SVG D-pad ── */
   #easytv-overlay .dpad-wrap {
@@ -224,7 +245,6 @@ const OVERLAY_STYLES = `
     display: flex; gap: 12px; justify-content: center;
     align-items: center; width: 100%;
   }
-  /* Tall vertical pill — split top/bottom tap zones */
   #easytv-overlay .pill-wrap {
     display: flex; flex-direction: column;
     flex: 1; max-width: 100px;
@@ -248,7 +268,6 @@ const OVERLAY_STYLES = `
   #easytv-overlay .pill-divider {
     height: 1px; background: var(--etv-border); margin: 0 12px;
   }
-  /* Centre mute button */
   #easytv-overlay .pill-mute {
     width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
@@ -262,7 +281,7 @@ const OVERLAY_STYLES = `
   #easytv-overlay .pill-mute ha-icon { --mdc-icon-size: 26px; }
 `;
 
-// ─── Editor Styles ────────────────────────────────────────────────────────────
+// ─── Editor Styles ─────────────────────────────────────────────────────────────
 
 const EDITOR_STYLES = `
   .editor {
@@ -305,7 +324,7 @@ const EDITOR_STYLES = `
   }
 `;
 
-// ─── SVG D-pad builder ────────────────────────────────────────────────────────
+// ─── SVG D-pad builder ─────────────────────────────────────────────────────────
 
 function buildSvgDpad(cmds, getHass, entityId) {
   const cx = 120, cy = 120, R = 112, r = 40, gapDeg = 5;
@@ -362,7 +381,7 @@ function buildSvgDpad(cmds, getHass, entityId) {
   return svg;
 }
 
-// ─── Main Card ────────────────────────────────────────────────────────────────
+// ─── Main Card ─────────────────────────────────────────────────────────────────
 
 class EasyTVCard extends HTMLElement {
   constructor() {
@@ -486,6 +505,16 @@ class EasyTVCard extends HTMLElement {
     const body = document.createElement('div');
     body.className = 'overlay-body';
 
+    // Power row (top-left circle)
+    const powerRow = document.createElement('div');
+    powerRow.className = 'power-row';
+    const powerBtn = document.createElement('div');
+    powerBtn.className = 'power-btn';
+    powerBtn.innerHTML = `<ha-icon icon="mdi:power"></ha-icon>`;
+    powerBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.power));
+    powerRow.appendChild(powerBtn);
+    body.appendChild(powerRow);
+
     // D-pad
     const dpadWrap = document.createElement('div');
     dpadWrap.className = 'dpad-wrap';
@@ -589,7 +618,7 @@ class EasyTVCard extends HTMLElement {
   getCardSize() { return 1; }
 }
 
-// ─── Editor ───────────────────────────────────────────────────────────────────
+// ─── Editor ────────────────────────────────────────────────────────────────────
 
 class EasyTVCardEditor extends HTMLElement {
   constructor() {
@@ -701,7 +730,7 @@ class EasyTVCardEditor extends HTMLElement {
   }
 }
 
-// ─── Register ─────────────────────────────────────────────────────────────────
+// ─── Register ──────────────────────────────────────────────────────────────────
 
 customElements.define('easytv-card',        EasyTVCard);
 customElements.define('easytv-card-editor', EasyTVCardEditor);
@@ -715,6 +744,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.7.5 ',
+  '%c EasyTV Card v0.7.6 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
