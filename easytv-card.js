@@ -1,7 +1,7 @@
-// EasyTV Card v1.0.7
+// EasyTV Card v1.0.8
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '1.0.7';
+const CARD_VERSION = '1.0.8';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -151,13 +151,17 @@ function sendApp(hass, cfg, appId) {
 // ── Compact Card Styles ───────────────────────────────────────────────────────
 
 const CARD_STYLES = `
+  /*
+   * :host IS the card root. We style it directly so ha-card is never used
+   * and its theme-injected border/background can never bleed through.
+   */
   :host {
     display: block;
     --easytv-accent:        var(--primary-color, #1976d2);
     --easytv-text:          var(--primary-text-color, #fff);
     --easytv-muted:         var(--secondary-text-color, rgba(255,255,255,0.55));
     --easytv-bg:            rgba(255,255,255,0.04);
-    --easytv-border:        var(--divider-color, rgba(255,255,255,0.12));
+    --easytv-border:        rgba(255,255,255,0.10);
     --easytv-radius:        28px;
     --easytv-btn-bg:        rgba(255,255,255,0.07);
     --easytv-btn-hover:     rgba(255,255,255,0.14);
@@ -166,26 +170,16 @@ const CARD_STYLES = `
     --easytv-pill-bg:       rgba(255,255,255,0.06);
     --easytv-pill-border:   rgba(255,255,255,0.10);
     --easytv-tv-icon-color: #7DD3FC;
-  }
 
-  /*
-   * Fully suppress ha-card's own border/background/shadow.
-   * HA themes set these via CSS variables; we must override all of them
-   * so only our single .etv-card border is visible (no double-border).
-   */
-  ha-card {
-    background: transparent !important;
-    background-color: transparent !important;
-    box-shadow: none !important;
-    border: none !important;
-    border-width: 0 !important;
-    --ha-card-background: transparent;
-    --ha-card-box-shadow: none;
-    --ha-card-border-width: 0px;
-    --ha-card-border-color: transparent;
-    --ha-card-border-radius: 0px;
-    overflow: visible !important;
-    padding: 0 !important;
+    /* Apply card appearance directly to :host — no ha-card wrapper needed */
+    border-radius: var(--easytv-radius);
+    background: var(--easytv-bg);
+    border: 1px solid var(--easytv-border);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+    backdrop-filter: blur(24px) saturate(1.6);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    color: var(--easytv-text);
+    overflow: hidden;
   }
 
   @keyframes etvCardIn {
@@ -193,16 +187,7 @@ const CARD_STYLES = `
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* Single clean border lives here only */
   .etv-card {
-    border-radius: var(--easytv-radius);
-    background: var(--easytv-bg);
-    border: 1px solid var(--easytv-border);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.07);
-    backdrop-filter: blur(24px) saturate(1.6);
-    -webkit-backdrop-filter: blur(24px) saturate(1.6);
-    color: var(--easytv-text);
-    overflow: hidden;
     animation: etvCardIn 0.25s ease both;
   }
 
@@ -806,7 +791,7 @@ class EasyTVCard extends HTMLElement {
   set hass(hass) {
     this._hass = hass;
     if (!this._config) return;
-    if (!this.shadowRoot.querySelector('ha-card')) this._initialRender();
+    if (!this.shadowRoot.querySelector('.etv-card')) this._initialRender();
     this._updateCompact();
   }
 
@@ -823,9 +808,9 @@ class EasyTVCard extends HTMLElement {
     const s = document.createElement('style');
     s.textContent = CARD_STYLES;
     this.shadowRoot.appendChild(s);
-    const card = document.createElement('ha-card');
-    this.shadowRoot.appendChild(card);
-    card.addEventListener('click', e => {
+    // Render directly into shadow root — no ha-card wrapper so theme can't inject borders
+    const root = this.shadowRoot;
+    root.addEventListener('click', e => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
       const action = btn.dataset.action;
@@ -840,8 +825,8 @@ class EasyTVCard extends HTMLElement {
   }
 
   _updateCompact() {
-    const card = this.shadowRoot.querySelector('ha-card');
-    if (!card) return;
+    const sr = this.shadowRoot;
+    if (!sr) return;
     const cfg      = this._config;
     const stateObj = this._hass?.states[cfg.entity];
     const name     = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
@@ -852,6 +837,12 @@ class EasyTVCard extends HTMLElement {
       cfg.no_button_border     ? 'no-btn-border' : '',
     ].filter(Boolean).join(' ');
 
+    // Remove old card div if present, keep style element
+    const old = sr.querySelector('.etv-card');
+    if (old) old.remove();
+
+    const wrapper = document.createElement('div');
+
     if (cardType === 'single') {
       const qaKeys = cfg.quick_actions || DEFAULT_QUICK_SINGLE;
       const qaPillBtns = qaKeys.map(qa => {
@@ -861,7 +852,7 @@ class EasyTVCard extends HTMLElement {
           : '';
       }).join('');
 
-      card.innerHTML = `
+      wrapper.innerHTML = `
         <div class="etv-card compact-single ${extraCls}">
           <div class="c-left">
             <div class="tv-icon-wrap">
@@ -886,7 +877,7 @@ class EasyTVCard extends HTMLElement {
           : '';
       }).join('');
 
-      card.innerHTML = `
+      wrapper.innerHTML = `
         <div class="etv-card compact-double ${extraCls}">
           <div class="d-top">
             <div class="d-top-left">
@@ -902,6 +893,8 @@ class EasyTVCard extends HTMLElement {
           <div class="d-actions">${qaRowBtns}</div>
         </div>`;
     }
+
+    sr.appendChild(wrapper.firstElementChild);
   }
 
   _openOverlay() {
@@ -1040,6 +1033,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v1.0.7 ',
+  '%c EasyTV Card v1.0.8 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
