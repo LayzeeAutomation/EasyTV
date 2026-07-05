@@ -1,7 +1,7 @@
-// EasyTV Card v0.9.4
+// EasyTV Card v0.9.5
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.9.4';
+const CARD_VERSION = '0.9.5';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -269,7 +269,7 @@ const OVERLAY_STYLES = `
 
   /* ── Media section: [vol pill] [centre controls] [ch pill] ── */
   .media-section {
-    display: flex; align-items: stretch; gap: 12px; width: 100%;
+    display: flex; align-items: center; gap: 12px; width: 100%;
   }
 
   /* Side pills — vol & ch */
@@ -872,6 +872,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.9.4 ',
+  '%c EasyTV Card v0.9.5 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
