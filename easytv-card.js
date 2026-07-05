@@ -1,7 +1,7 @@
-// EasyTV Card v0.9.5
+// EasyTV Card v1.0.0
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.9.5';
+const CARD_VERSION = '1.0.0';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -11,6 +11,88 @@ const TV_PRESETS = {
   samsung:    { up:'KEY_UP', down:'KEY_DOWN', left:'KEY_LEFT', right:'KEY_RIGHT', select:'KEY_ENTER', back:'KEY_RETURN', home:'KEY_HOME', play:'KEY_PLAY', pause:'KEY_PAUSE', stop:'KEY_STOP', forward:'KEY_FF', reverse:'KEY_REWIND', volume_up:'KEY_VOLUP', volume_down:'KEY_VOLDOWN', volume_mute:'KEY_MUTE', power:'KEY_POWER', info:'KEY_INFO', source:'KEY_SOURCE', channel_up:'KEY_CHUP', channel_down:'KEY_CHDOWN' },
   generic:    { up:'up', down:'down', left:'left', right:'right', select:'select', back:'back', home:'home', play:'play', pause:'pause', stop:'stop', forward:'forward', reverse:'reverse', volume_up:'volume_up', volume_down:'volume_down', volume_mute:'volume_mute', power:'power', channel_up:'channel_up', channel_down:'channel_down' },
 };
+
+// ── App Shortcuts ────────────────────────────────────────────────────────────
+//
+// google_tv / generic: package name sent via remote.send_command
+// samsung:             KEY_ shortcut where available, else package name
+// roku:                numeric channel ID sent via media_player.select_source
+//                      (requires media_player_entity in card config)
+
+const APP_SHORTCUTS = [
+  {
+    id: 'netflix',
+    label: 'Netflix',
+    icon: 'mdi:netflix',
+    bg: '#E50914', fg: '#ffffff',
+    commands: { google_tv: 'com.netflix.atv', generic: 'com.netflix.atv', samsung: 'KEY_NETFLIX', roku: '12' },
+  },
+  {
+    id: 'youtube',
+    label: 'YouTube',
+    icon: 'mdi:youtube',
+    bg: '#FF0000', fg: '#ffffff',
+    commands: { google_tv: 'com.google.android.youtube.tv', generic: 'com.google.android.youtube.tv', samsung: 'com.google.android.youtube.tv', roku: '195316' },
+  },
+  {
+    id: 'bbc_iplayer',
+    label: 'iPlayer',
+    icon: 'mdi:television-play',
+    bg: '#FF6B00', fg: '#ffffff',
+    commands: { google_tv: 'bbc.iplayer.android', generic: 'bbc.iplayer.android', samsung: 'bbc.iplayer.android', roku: '2285' },
+  },
+  {
+    id: 'itvx',
+    label: 'ITVX',
+    icon: 'mdi:television-play',
+    bg: '#000000', fg: '#8B5CF6',
+    commands: { google_tv: 'air.ITVMobile', generic: 'air.ITVMobile', samsung: 'air.ITVMobile', roku: '65287' },
+  },
+  {
+    id: 'prime_video',
+    label: 'Prime',
+    icon: 'mdi:amazon',
+    bg: '#00A8E1', fg: '#ffffff',
+    commands: { google_tv: 'com.amazon.amazonvideo.livingroom', generic: 'com.amazon.amazonvideo.livingroom', samsung: 'KEY_PRIMEVIDEO', roku: '13' },
+  },
+  {
+    id: 'disney_plus',
+    label: 'Disney+',
+    icon: 'mdi:disney-plus',
+    bg: '#0A1931', fg: '#ffffff',
+    commands: { google_tv: 'com.disney.disneyplus', generic: 'com.disney.disneyplus', samsung: 'KEY_DISNEYPLUS', roku: '291097' },
+  },
+  {
+    id: 'all4',
+    label: 'All 4',
+    icon: 'mdi:television-play',
+    bg: '#8C1EFF', fg: '#ffffff',
+    commands: { google_tv: 'air.com.channel4.vodclient', generic: 'air.com.channel4.vodclient', samsung: 'air.com.channel4.vodclient', roku: '52305' },
+  },
+  {
+    id: 'spotify',
+    label: 'Spotify',
+    icon: 'mdi:spotify',
+    bg: '#1DB954', fg: '#ffffff',
+    commands: { google_tv: 'com.spotify.tv.android', generic: 'com.spotify.tv.android', samsung: 'com.spotify.tv.android', roku: '22297' },
+  },
+  {
+    id: 'apple_tv',
+    label: 'Apple TV+',
+    icon: 'mdi:apple',
+    bg: '#1C1C1E', fg: '#ffffff',
+    commands: { google_tv: 'com.apple.atve.amazon.appletv', generic: 'com.apple.atve.amazon.appletv', samsung: 'com.apple.atve.sony.appletv', roku: '551012' },
+  },
+  {
+    id: 'plex',
+    label: 'Plex',
+    icon: 'mdi:plex',
+    bg: '#E5A00D', fg: '#000000',
+    commands: { google_tv: 'com.plexapp.android', generic: 'com.plexapp.android', samsung: 'com.plexapp.android', roku: '13535' },
+  },
+];
+
+const APP_SHORTCUT_MAP = Object.fromEntries(APP_SHORTCUTS.map(a => [a.id, a]));
 
 // ── Quick Action Definitions ──────────────────────────────────────────────────
 
@@ -32,6 +114,7 @@ const QUICK_ACTION_DEFS = {
 
 const DEFAULT_QUICK_SINGLE = ['volume_down', 'play_pause', 'volume_up'];
 const DEFAULT_QUICK_DOUBLE = ['volume_down', 'play_pause', 'volume_up', 'power', 'home', 'back'];
+const DEFAULT_APPS = APP_SHORTCUTS.map(a => a.id);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -53,6 +136,26 @@ function buildCmds(cfg) {
 function sendCmd(hass, entityId, cmd) {
   if (!cmd || !hass || !entityId) return;
   hass.callService('remote', 'send_command', { entity_id: entityId, command: cmd });
+}
+
+function sendApp(hass, cfg, appId) {
+  const app      = APP_SHORTCUT_MAP[appId];
+  if (!app || !hass) return;
+  const tvType   = cfg.tv_type || 'generic';
+  const command  = app.commands[tvType] || app.commands.generic;
+  if (!command) return;
+
+  if (tvType === 'roku') {
+    // Roku launches apps via media_player.select_source
+    const mpEntity = cfg.media_player_entity;
+    if (!mpEntity) {
+      console.warn('EasyTV: media_player_entity required for Roku app launching');
+      return;
+    }
+    hass.callService('media_player', 'select_source', { entity_id: mpEntity, source: command });
+  } else {
+    hass.callService('remote', 'send_command', { entity_id: cfg.entity, command });
+  }
 }
 
 // ── Compact Card Styles ───────────────────────────────────────────────────────
@@ -171,7 +274,7 @@ const OVERLAY_STYLES = `
     padding: 20px 20px 32px; gap: 20px;
   }
 
-  /* ── Power row: power left, source right ── */
+  /* ── Power row ── */
   .power-row {
     display: flex; align-items: center; justify-content: space-between; width: 100%;
   }
@@ -267,12 +370,10 @@ const OVERLAY_STYLES = `
   .corner-home { bottom: 24px; right: 24px; transform: translate(50%, 50%); }
   .corner-home:active { background: var(--etv-btn-active); transform: translate(50%, 50%) scale(0.92); }
 
-  /* ── Media section: [vol pill] [centre controls] [ch pill] ── */
+  /* ── Media section ── */
   .media-section {
     display: flex; align-items: center; gap: 12px; width: 100%;
   }
-
-  /* Side pills — vol & ch */
   .pill-wrap {
     display: flex; flex-direction: column;
     background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
@@ -289,13 +390,7 @@ const OVERLAY_STYLES = `
   .pill-half ha-icon { --mdc-icon-size: 22px; }
   .pill-half span { font-size: 9px; color: var(--etv-muted); letter-spacing: 0.03em; }
   .pill-divider { height: 1px; background: var(--etv-border); margin: 0 8px; flex-shrink: 0; }
-
-  /* Centre controls: two rows stacked */
-  .centre-controls {
-    flex: 1; display: flex; flex-direction: column; gap: 8px;
-  }
-
-  /* Row 1: play/pause — full width */
+  .centre-controls { flex: 1; display: flex; flex-direction: column; gap: 8px; }
   .pb-btn-wide {
     display: flex; align-items: center; justify-content: center;
     background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
@@ -306,11 +401,7 @@ const OVERLAY_STYLES = `
   .pb-btn-wide:hover  { background: var(--etv-btn-hover); }
   .pb-btn-wide:active { background: var(--etv-btn-active); transform: scale(0.97); }
   .pb-btn-wide ha-icon { --mdc-icon-size: 26px; }
-
-  /* Row 2: rewind | mute | forward — 3 equal buttons */
-  .centre-row2 {
-    display: flex; gap: 8px;
-  }
+  .centre-row2 { display: flex; gap: 8px; }
   .pb-btn {
     flex: 1; display: flex; align-items: center; justify-content: center;
     background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
@@ -321,6 +412,31 @@ const OVERLAY_STYLES = `
   .pb-btn:hover  { background: var(--etv-btn-hover); }
   .pb-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
   .pb-btn ha-icon { --mdc-icon-size: 22px; }
+
+  /* ── App shortcuts row ── */
+  .app-row {
+    display: flex; gap: 10px; width: 100%;
+    overflow-x: auto; padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .app-row::-webkit-scrollbar { display: none; }
+  .app-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px; flex-shrink: 0; width: 68px; padding: 10px 6px;
+    border-radius: 14px; cursor: pointer;
+    transition: transform 0.15s, filter 0.15s;
+    -webkit-tap-highlight-color: transparent; user-select: none;
+    border: 1px solid transparent;
+  }
+  .app-btn:hover  { filter: brightness(1.15); }
+  .app-btn:active { transform: scale(0.91); filter: brightness(0.9); }
+  .app-btn ha-icon { --mdc-icon-size: 26px; }
+  .app-btn span {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+    text-align: center;
+  }
 
   /* Utility */
   .etv-hidden { visibility: hidden; pointer-events: none; height: 0 !important; overflow: hidden; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
@@ -471,6 +587,32 @@ function buildNumpad(getHass, entityId, onBack) {
   return grid;
 }
 
+// ── App row builder ───────────────────────────────────────────────────────────────
+
+function buildAppRow(cfg, getHass) {
+  const row = document.createElement('div');
+  row.className = 'app-row';
+
+  const appIds = cfg.apps || DEFAULT_APPS;
+
+  appIds.forEach(id => {
+    const app = APP_SHORTCUT_MAP[id];
+    if (!app) return;
+
+    const btn = document.createElement('div');
+    btn.className = 'app-btn';
+    btn.style.background = app.bg;
+    btn.style.color = app.fg;
+    // Subtle inner border: lighten the brand colour slightly
+    btn.style.borderColor = `color-mix(in srgb, ${app.bg} 60%, white)`;
+    btn.innerHTML = `<ha-icon icon="${app.icon}"></ha-icon><span>${app.label}</span>`;
+    btn.addEventListener('click', () => sendApp(getHass(), cfg, id));
+    row.appendChild(btn);
+  });
+
+  return row;
+}
+
 // ── Overlay Element ───────────────────────────────────────────────────────────
 
 class EasyTVOverlayEl extends HTMLElement {
@@ -502,23 +644,20 @@ class EasyTVOverlayEl extends HTMLElement {
     body.className = 'overlay-body';
     sr.appendChild(body);
 
-    // ── Power row: power left, source right ──
+    // ── Power row ──
     const powerRow = document.createElement('div');
     powerRow.className = 'power-row';
-
     const powerBtn = document.createElement('div');
     powerBtn.className = 'power-btn';
     powerBtn.innerHTML = `<ha-icon icon="mdi:power"></ha-icon>`;
     powerBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.power));
     powerRow.appendChild(powerBtn);
-
     const sourceBtn = document.createElement('div');
     sourceBtn.className = 'source-btn';
     sourceBtn.innerHTML = `<ha-icon icon="mdi:import"></ha-icon>`;
     sourceBtn.title = 'Source';
     sourceBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.source));
     powerRow.appendChild(sourceBtn);
-
     body.appendChild(powerRow);
 
     // ── Switch logic ──
@@ -530,8 +669,8 @@ class EasyTVOverlayEl extends HTMLElement {
       toggleBtn.classList.add('etv-hidden');
       cornerBtnEls.forEach(b => b.classList.add('etv-hidden'));
       mediaSection.classList.add('etv-hidden');
+      appRowEl && appRowEl.classList.add('etv-hidden');
     };
-
     const exitNumpad = () => {
       numpadMode = false;
       dpadWrap.innerHTML = '';
@@ -540,6 +679,7 @@ class EasyTVOverlayEl extends HTMLElement {
       toggleBtn.classList.remove('etv-hidden');
       cornerBtnEls.forEach(b => b.classList.remove('etv-hidden'));
       mediaSection.classList.remove('etv-hidden');
+      appRowEl && appRowEl.classList.remove('etv-hidden');
     };
 
     // ── D-pad scene ──
@@ -574,11 +714,10 @@ class EasyTVOverlayEl extends HTMLElement {
     });
     body.appendChild(dpadScene);
 
-    // ── Media section: [vol pill] [centre controls] [ch pill] ──
+    // ── Media section ──
     const mediaSection = document.createElement('div');
     mediaSection.className = 'media-section';
 
-    // Vol pill
     const volPill = document.createElement('div'); volPill.className = 'pill-wrap';
     const volUp   = document.createElement('div'); volUp.className   = 'pill-half';
     volUp.innerHTML = `<ha-icon icon="mdi:volume-plus"></ha-icon><span>VOL +</span>`;
@@ -590,36 +729,26 @@ class EasyTVOverlayEl extends HTMLElement {
     volPill.appendChild(volUp); volPill.appendChild(volDiv); volPill.appendChild(volDown);
     mediaSection.appendChild(volPill);
 
-    // Centre controls
     const centreControls = document.createElement('div');
     centreControls.className = 'centre-controls';
-
-    // Row 1: play/pause full width
     const playBtn = document.createElement('div');
     playBtn.className = 'pb-btn-wide';
     playBtn.innerHTML = `<ha-icon icon="mdi:play-pause"></ha-icon>`;
     playBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.play));
     centreControls.appendChild(playBtn);
-
-    // Row 2: rewind | mute | forward
     const centreRow2 = document.createElement('div');
     centreRow2.className = 'centre-row2';
-    [
-      { key: 'reverse',      icon: 'mdi:rewind' },
-      { key: 'volume_mute',  icon: 'mdi:volume-off' },
-      { key: 'forward',      icon: 'mdi:fast-forward' },
-    ].forEach(({ key, icon }) => {
-      const btn = document.createElement('div');
-      btn.className = 'pb-btn';
-      btn.innerHTML = `<ha-icon icon="${icon}"></ha-icon>`;
-      btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds[key]));
-      centreRow2.appendChild(btn);
-    });
+    [{ key:'reverse', icon:'mdi:rewind' }, { key:'volume_mute', icon:'mdi:volume-off' }, { key:'forward', icon:'mdi:fast-forward' }]
+      .forEach(({ key, icon }) => {
+        const btn = document.createElement('div');
+        btn.className = 'pb-btn';
+        btn.innerHTML = `<ha-icon icon="${icon}"></ha-icon>`;
+        btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds[key]));
+        centreRow2.appendChild(btn);
+      });
     centreControls.appendChild(centreRow2);
-
     mediaSection.appendChild(centreControls);
 
-    // Ch pill
     const chPill  = document.createElement('div'); chPill.className  = 'pill-wrap';
     const chUp    = document.createElement('div'); chUp.className    = 'pill-half';
     chUp.innerHTML = `<ha-icon icon="mdi:chevron-up"></ha-icon><span>CH +</span>`;
@@ -632,6 +761,13 @@ class EasyTVOverlayEl extends HTMLElement {
     mediaSection.appendChild(chPill);
 
     body.appendChild(mediaSection);
+
+    // ── App shortcuts row ──
+    let appRowEl = null;
+    if (cfg.show_apps !== false) {
+      appRowEl = buildAppRow(cfg, getHass);
+      body.appendChild(appRowEl);
+    }
   }
 }
 
@@ -739,12 +875,10 @@ class EasyTVCard extends HTMLElement {
     const stateObj = this._hass?.states[cfg.entity];
     const name     = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
     const getHass  = () => this._hass;
-
-    const overlay = document.createElement('easytv-overlay-el');
+    const overlay  = document.createElement('easytv-overlay-el');
     document.body.appendChild(overlay);
     overlay.open(cfg, getHass, name);
     this._overlayEl = overlay;
-
     overlay.addEventListener('click', e => {
       if (e.composedPath()[0] === overlay) this._closeOverlay();
     });
@@ -823,6 +957,15 @@ class EasyTVCardEditor extends HTMLElement {
         <div class="row"><label>No button border</label><ha-switch data-key="no_button_border"></ha-switch></div>
       </div>
 
+      <div class="editor-panel">
+        <div class="panel-title">App Shortcuts</div>
+        <div class="row"><label>Show app shortcuts</label><ha-switch data-key="show_apps" data-default="true"></ha-switch></div>
+        <div class="field-wrap">
+          <label>Roku media player entity (Roku only)</label>
+          <ha-entity-picker data-key="media_player_entity" allow-custom-entity></ha-entity-picker>
+        </div>
+      </div>
+
       <div class="version-badge">EasyTV Card v${CARD_VERSION}</div>
     `;
     sr.appendChild(editor);
@@ -836,7 +979,12 @@ class EasyTVCardEditor extends HTMLElement {
       });
     });
 
-    const switchKeys = { no_background: !!cfg.no_background, no_button_background: !!cfg.no_button_background, no_button_border: !!cfg.no_button_border };
+    const switchKeys = {
+      no_background:        !!cfg.no_background,
+      no_button_background: !!cfg.no_button_background,
+      no_button_border:     !!cfg.no_button_border,
+      show_apps:            cfg.show_apps !== false,
+    };
     editor.querySelectorAll('ha-switch[data-key]').forEach(sw => {
       sw.checked = !!switchKeys[sw.dataset.key];
       sw.addEventListener('change', () => {
@@ -872,6 +1020,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.9.5 ',
+  '%c EasyTV Card v1.0.0 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
