@@ -1,7 +1,7 @@
-// EasyTV Card v1.0.6
+// EasyTV Card v1.0.7
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '1.0.6';
+const CARD_VERSION = '1.0.7';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -156,10 +156,8 @@ const CARD_STYLES = `
     --easytv-accent:        var(--primary-color, #1976d2);
     --easytv-text:          var(--primary-text-color, #fff);
     --easytv-muted:         var(--secondary-text-color, rgba(255,255,255,0.55));
-    /* Transparent frosted-glass — no dark fill, blur does the work */
     --easytv-bg:            rgba(255,255,255,0.04);
-    --easytv-border:        var(--divider-color, rgba(255,255,255,0.10));
-    /* Larger corner radius */
+    --easytv-border:        var(--divider-color, rgba(255,255,255,0.12));
     --easytv-radius:        28px;
     --easytv-btn-bg:        rgba(255,255,255,0.07);
     --easytv-btn-hover:     rgba(255,255,255,0.14);
@@ -170,10 +168,24 @@ const CARD_STYLES = `
     --easytv-tv-icon-color: #7DD3FC;
   }
 
+  /*
+   * Fully suppress ha-card's own border/background/shadow.
+   * HA themes set these via CSS variables; we must override all of them
+   * so only our single .etv-card border is visible (no double-border).
+   */
   ha-card {
     background: transparent !important;
+    background-color: transparent !important;
     box-shadow: none !important;
-    overflow: visible;
+    border: none !important;
+    border-width: 0 !important;
+    --ha-card-background: transparent;
+    --ha-card-box-shadow: none;
+    --ha-card-border-width: 0px;
+    --ha-card-border-color: transparent;
+    --ha-card-border-radius: 0px;
+    overflow: visible !important;
+    padding: 0 !important;
   }
 
   @keyframes etvCardIn {
@@ -181,6 +193,7 @@ const CARD_STYLES = `
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  /* Single clean border lives here only */
   .etv-card {
     border-radius: var(--easytv-radius);
     background: var(--easytv-bg);
@@ -832,9 +845,7 @@ class EasyTVCard extends HTMLElement {
     const cfg      = this._config;
     const stateObj = this._hass?.states[cfg.entity];
     const name     = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
-    const state    = stateObj?.state || 'unknown';
     const cardType = cfg.card_type || 'single';
-    const getHass  = () => this._hass;
 
     const extraCls = [
       cfg.no_button_background ? 'no-btn-bg'    : '',
@@ -1029,6 +1040,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v1.0.6 ',
+  '%c EasyTV Card v1.0.7 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
