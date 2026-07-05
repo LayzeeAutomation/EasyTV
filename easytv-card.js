@@ -1,7 +1,7 @@
-// EasyTV Card v0.7.0
+// EasyTV Card v0.7.1
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.7.0';
+const CARD_VERSION = '0.7.1';
 
 // ─── TV Presets ───────────────────────────────────────────────────────────────
 
@@ -115,7 +115,7 @@ const CARD_STYLES = `
   .no-btn-border .icon-btn, .no-btn-border .qa-btn { border-color: transparent !important; }
 `;
 
-// ─── Overlay Styles (shell — sections added per feature) ──────────────────────
+// ─── Overlay Styles ───────────────────────────────────────────────────────────
 
 const OVERLAY_STYLES = `
   #easytv-overlay {
@@ -127,27 +127,29 @@ const OVERLAY_STYLES = `
     background: rgba(10,10,18,0.6);
     backdrop-filter: blur(32px) saturate(1.4);
     -webkit-backdrop-filter: blur(32px) saturate(1.4);
-    --etv-text:   #ffffff;
-    --etv-muted:  rgba(255,255,255,0.55);
-    --etv-btn-bg: rgba(255,255,255,0.10);
-    --etv-btn-hover: rgba(255,255,255,0.18);
-    --etv-btn-active: rgba(255,255,255,0.26);
-    --etv-border: rgba(255,255,255,0.13);
-    --etv-section-bg: rgba(255,255,255,0.07);
-    --etv-radius-btn: 14px;
+    --etv-text:         #ffffff;
+    --etv-muted:        rgba(255,255,255,0.55);
+    --etv-btn-bg:       rgba(255,255,255,0.10);
+    --etv-btn-hover:    rgba(255,255,255,0.18);
+    --etv-btn-active:   rgba(255,255,255,0.26);
+    --etv-border:       rgba(255,255,255,0.13);
+    --etv-section-bg:   rgba(255,255,255,0.07);
+    --etv-radius-btn:   14px;
     --etv-radius-section: 16px;
   }
   @keyframes etvFadeIn {
     from { opacity: 0; transform: translateY(16px) translateZ(0); }
     to   { opacity: 1; transform: translateY(0)    translateZ(0); }
   }
+
+  /* ── Header ── */
   #easytv-overlay .overlay-header {
     display: flex; align-items: center; gap: 12px;
     padding: 18px 20px 14px; flex-shrink: 0;
     border-bottom: 1px solid var(--etv-border);
   }
   #easytv-overlay .overlay-header ha-icon { --mdc-icon-size: 24px; color: var(--etv-text); }
-  #easytv-overlay .overlay-title { flex: 1; font-size: 18px; font-weight: 700; color: var(--etv-text); }
+  #easytv-overlay .overlay-title   { flex: 1; font-size: 18px; font-weight: 700; color: var(--etv-text); }
   #easytv-overlay .overlay-version { font-size: 11px; color: var(--etv-muted); }
   #easytv-overlay .close-btn {
     cursor: pointer; width: 40px; height: 40px; border-radius: 50%;
@@ -158,13 +160,63 @@ const OVERLAY_STYLES = `
   #easytv-overlay .close-btn:hover  { background: var(--etv-btn-hover); }
   #easytv-overlay .close-btn:active { background: var(--etv-btn-active); }
   #easytv-overlay .close-btn ha-icon { --mdc-icon-size: 20px; }
+
+  /* ── Body ── */
   #easytv-overlay .overlay-body {
-    flex: 1; overflow-y: auto;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 32px 20px;
-    color: var(--etv-muted); font-size: 14px; gap: 8px; text-align: center;
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px 20px 32px; gap: 20px;
   }
-  #easytv-overlay .overlay-body ha-icon { --mdc-icon-size: 48px; opacity: 0.3; }
+
+  /* ── SVG D-pad ── */
+  #easytv-overlay .dpad-wrap { position: relative; width: 220px; height: 220px; flex-shrink: 0; }
+  #easytv-overlay .dpad-wrap svg { width: 100%; height: 100%; overflow: visible; }
+  #easytv-overlay .dpad-petal {
+    fill: var(--etv-btn-bg); stroke: var(--etv-border); stroke-width: 1.5;
+    cursor: pointer; transition: fill 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #easytv-overlay .dpad-petal:hover  { fill: var(--etv-btn-hover); }
+  #easytv-overlay .dpad-petal:active { fill: var(--etv-btn-active); }
+  #easytv-overlay .dpad-center {
+    fill: var(--etv-btn-bg); stroke: var(--etv-border); stroke-width: 1.5;
+    cursor: pointer; transition: fill 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #easytv-overlay .dpad-center:hover  { fill: var(--etv-btn-hover); }
+  #easytv-overlay .dpad-center:active { fill: var(--etv-btn-active); }
+  #easytv-overlay .dpad-arrow { fill: var(--etv-muted); font-size: 18px; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
+
+  /* ── Utility row (Back / Home / Info) ── */
+  #easytv-overlay .util-row {
+    display: flex; gap: 12px; justify-content: center; width: 100%;
+  }
+  #easytv-overlay .util-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    border-radius: var(--etv-radius-btn); padding: 12px 0; flex: 1; max-width: 80px;
+    cursor: pointer; color: var(--etv-text); transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #easytv-overlay .util-btn:hover  { background: var(--etv-btn-hover); }
+  #easytv-overlay .util-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
+  #easytv-overlay .util-btn ha-icon { --mdc-icon-size: 22px; }
+  #easytv-overlay .util-btn span { font-size: 11px; color: var(--etv-muted); }
+
+  /* ── Playback row ── */
+  #easytv-overlay .playback-row {
+    display: flex; gap: 10px; justify-content: center; width: 100%;
+  }
+  #easytv-overlay .pb-btn {
+    display: flex; align-items: center; justify-content: center;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    border-radius: var(--etv-radius-btn); width: 56px; height: 56px;
+    cursor: pointer; color: var(--etv-text); transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #easytv-overlay .pb-btn:hover  { background: var(--etv-btn-hover); }
+  #easytv-overlay .pb-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
+  #easytv-overlay .pb-btn ha-icon { --mdc-icon-size: 24px; }
 `;
 
 // ─── Editor Styles ────────────────────────────────────────────────────────────
@@ -213,6 +265,63 @@ const EDITOR_STYLES = `
     text-align: center; padding-top: 4px;
   }
 `;
+
+// ─── SVG D-pad builder ────────────────────────────────────────────────────────
+
+function buildSvgDpad(cmds, hass, entityId) {
+  const cx = 110, cy = 110, R = 96, r = 36, gap = 4;
+
+  // Arc petal path between two angles, from inner radius r to outer R
+  function petalPath(a1, a2) {
+    const toR = (deg) => deg * Math.PI / 180;
+    const ag1 = toR(a1 + gap), ag2 = toR(a2 - gap);
+    const x1 = cx + r  * Math.cos(ag1), y1 = cy + r  * Math.sin(ag1);
+    const x2 = cx + R  * Math.cos(ag1), y2 = cy + R  * Math.sin(ag1);
+    const x3 = cx + R  * Math.cos(ag2), y3 = cy + R  * Math.sin(ag2);
+    const x4 = cx + r  * Math.cos(ag2), y4 = cy + r  * Math.sin(ag2);
+    return `M${x1},${y1} L${x2},${y2} A${R},${R} 0 0,1 ${x3},${y3} L${x4},${y4} A${r},${r} 0 0,0 ${x1},${y1} Z`;
+  }
+
+  const petals = [
+    { key: 'up',    a1: -120, a2: -60,  ax: cx,        ay: cy - 68, arrow: '▲' },
+    { key: 'right', a1: -30,  a2:  30,  ax: cx + 68,   ay: cy,      arrow: '▶' },
+    { key: 'down',  a1:  60,  a2: 120,  ax: cx,        ay: cy + 68, arrow: '▼' },
+    { key: 'left',  a1: 150,  a2: 210,  ax: cx - 68,   ay: cy,      arrow: '◀' },
+  ];
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', `0 0 220 220`);
+
+  petals.forEach(p => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', petalPath(p.a1, p.a2));
+    path.setAttribute('class', 'dpad-petal');
+    path.addEventListener('click', () => sendCmd(hass, entityId, cmds[p.key]));
+    svg.appendChild(path);
+
+    const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    txt.setAttribute('x', p.ax); txt.setAttribute('y', p.ay);
+    txt.setAttribute('class', 'dpad-arrow');
+    txt.textContent = p.arrow;
+    svg.appendChild(txt);
+  });
+
+  // Centre select button
+  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r - 4);
+  circle.setAttribute('class', 'dpad-center');
+  circle.addEventListener('click', () => sendCmd(hass, entityId, cmds.select));
+  svg.appendChild(circle);
+
+  const okTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  okTxt.setAttribute('x', cx); okTxt.setAttribute('y', cy + 1);
+  okTxt.setAttribute('class', 'dpad-arrow');
+  okTxt.style.fontSize = '13px';
+  okTxt.textContent = 'OK';
+  svg.appendChild(okTxt);
+
+  return svg;
+}
 
 // ─── Main Card ────────────────────────────────────────────────────────────────
 
@@ -268,9 +377,9 @@ class EasyTVCard extends HTMLElement {
     const name     = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
     const cardType = cfg.card_type || 'single';
     const cls = [
-      cfg.no_background      ? 'no-bg'         : '',
-      cfg.no_button_background ? 'no-btn-bg'  : '',
-      cfg.no_button_border   ? 'no-btn-border' : '',
+      cfg.no_background        ? 'no-bg'        : '',
+      cfg.no_button_background ? 'no-btn-bg'    : '',
+      cfg.no_button_border     ? 'no-btn-border' : '',
     ].filter(Boolean).join(' ');
 
     if (cardType === 'single') {
@@ -317,6 +426,7 @@ class EasyTVCard extends HTMLElement {
     const hass     = this._hass;
     const stateObj = hass?.states[cfg.entity];
     const name     = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
+    const cmds     = buildCmds(cfg);
 
     const overlay = document.createElement('div');
     overlay.id = 'easytv-overlay';
@@ -325,27 +435,64 @@ class EasyTVCard extends HTMLElement {
     style.textContent = OVERLAY_STYLES;
     overlay.appendChild(style);
 
-    overlay.innerHTML += `
-      <div class="overlay-header">
-        <ha-icon icon="mdi:television"></ha-icon>
-        <span class="overlay-title">${name}</span>
-        <span class="overlay-version">v${CARD_VERSION}</span>
-        <div class="close-btn" id="etv-close">
-          <ha-icon icon="mdi:close"></ha-icon>
-        </div>
-      </div>
-      <div class="overlay-body">
-        <ha-icon icon="mdi:remote"></ha-icon>
-        <span>Remote overlay coming soon</span>
-      </div>`;
+    // Header
+    const header = document.createElement('div');
+    header.className = 'overlay-header';
+    header.innerHTML = `
+      <ha-icon icon="mdi:television"></ha-icon>
+      <span class="overlay-title">${name}</span>
+      <span class="overlay-version">v${CARD_VERSION}</span>
+      <div class="close-btn" id="etv-close"><ha-icon icon="mdi:close"></ha-icon></div>`;
+    overlay.appendChild(header);
 
+    // Body
+    const body = document.createElement('div');
+    body.className = 'overlay-body';
+
+    // D-pad
+    const dpadWrap = document.createElement('div');
+    dpadWrap.className = 'dpad-wrap';
+    dpadWrap.appendChild(buildSvgDpad(cmds, hass, cfg.entity));
+    body.appendChild(dpadWrap);
+
+    // Utility row: Back / Home / Info
+    const utilRow = document.createElement('div');
+    utilRow.className = 'util-row';
+    [
+      { key: 'back', icon: 'mdi:arrow-left',   label: 'Back' },
+      { key: 'home', icon: 'mdi:home-outline',  label: 'Home' },
+      { key: 'info', icon: 'mdi:information-outline', label: 'Info' },
+    ].forEach(({ key, icon, label }) => {
+      const btn = document.createElement('div');
+      btn.className = 'util-btn';
+      btn.innerHTML = `<ha-icon icon="${icon}"></ha-icon><span>${label}</span>`;
+      btn.addEventListener('click', () => sendCmd(hass, cfg.entity, cmds[key]));
+      utilRow.appendChild(btn);
+    });
+    body.appendChild(utilRow);
+
+    // Playback row: Rewind / Play-Pause / Forward
+    const pbRow = document.createElement('div');
+    pbRow.className = 'playback-row';
+    [
+      { key: 'reverse', icon: 'mdi:rewind' },
+      { key: 'play',    icon: 'mdi:play-pause' },
+      { key: 'forward', icon: 'mdi:fast-forward' },
+    ].forEach(({ key, icon }) => {
+      const btn = document.createElement('div');
+      btn.className = 'pb-btn';
+      btn.innerHTML = `<ha-icon icon="${icon}"></ha-icon>`;
+      btn.addEventListener('click', () => sendCmd(hass, cfg.entity, cmds[key]));
+      pbRow.appendChild(btn);
+    });
+    body.appendChild(pbRow);
+
+    overlay.appendChild(body);
     document.body.appendChild(overlay);
     this._overlayEl = overlay;
 
     overlay.addEventListener('click', e => {
-      if (e.target === overlay || e.target.closest('#etv-close')) {
-        this._closeOverlay();
-      }
+      if (e.target === overlay || e.target.closest('#etv-close')) this._closeOverlay();
     });
   }
 
@@ -388,7 +535,6 @@ class EasyTVCardEditor extends HTMLElement {
     const editor = document.createElement('div');
     editor.className = 'editor';
     editor.innerHTML = `
-
       <div class="editor-panel">
         <div class="panel-title">Remote Entity</div>
         <div class="field-wrap">
@@ -446,7 +592,6 @@ class EasyTVCardEditor extends HTMLElement {
 
     sr.appendChild(editor);
 
-    // Set ha-entity-picker values + hass via JS
     editor.querySelectorAll('ha-entity-picker[data-key]').forEach(picker => {
       picker.hass  = this._hass;
       picker.value = cfg[picker.dataset.key] || '';
@@ -456,7 +601,6 @@ class EasyTVCardEditor extends HTMLElement {
       });
     });
 
-    // Set ha-switch checked via JS
     const switchKeys = { no_background: !!cfg.no_background, no_button_background: !!cfg.no_button_background, no_button_border: !!cfg.no_button_border };
     editor.querySelectorAll('ha-switch[data-key]').forEach(sw => {
       sw.checked = !!switchKeys[sw.dataset.key];
@@ -466,7 +610,6 @@ class EasyTVCardEditor extends HTMLElement {
       });
     });
 
-    // Standard inputs + selects
     editor.querySelectorAll('.etv-input[data-key], .etv-select[data-key]').forEach(el => {
       el.addEventListener('change', () => {
         this._config = { ...this._config, [el.dataset.key]: el.value || undefined };
@@ -496,6 +639,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.7.0 ',
+  '%c EasyTV Card v0.7.1 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
