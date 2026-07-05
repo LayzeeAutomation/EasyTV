@@ -1,7 +1,7 @@
-// EasyTV Card v1.0.1
+// EasyTV Card v1.0.2
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '1.0.1';
+const CARD_VERSION = '1.0.2';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -259,6 +259,9 @@ const OVERLAY_STYLES = `
     --etv-play-hover: rgba(255,255,255,0.22);
     --etv-play-active:rgba(255,255,255,0.32);
     --etv-play-glow:  0 0 10px rgba(255,255,255,0.12);
+    /* App row: 3 cards visible, gap 10px → card width = (100% - 2*10px) / 3 */
+    --etv-app-gap: 10px;
+    --etv-app-cols: 3;
   }
   @keyframes etvFadeIn {
     from { opacity: 0; transform: translateY(16px); }
@@ -473,22 +476,37 @@ const OVERLAY_STYLES = `
   .pb-btn:active { background: var(--etv-btn-active); transform: scale(0.93); box-shadow: none; }
   .pb-btn ha-icon { --mdc-icon-size: 22px; }
 
-  /* ── App shortcuts row ── */
+  /* ── App shortcuts row ──
+     Exactly --etv-app-cols complete cards visible at rest.
+     Cards are fluid: width = (100% - (cols-1)*gap) / cols
+     scroll-snap ensures scrolling always lands on a clean boundary.
+  */
   .app-row {
-    display: flex; gap: 10px; width: 100%;
-    overflow-x: auto; padding-bottom: 4px;
+    display: flex;
+    gap: var(--etv-app-gap);
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+    /* hide any fractional card bleed */
+    overflow: hidden;
+    overflow-x: auto;
   }
   .app-row::-webkit-scrollbar { display: none; }
   .app-btn {
+    /* fluid width: fills exactly 3 per row with 2 gaps between them */
+    flex: 0 0 calc((100% - (var(--etv-app-cols) - 1) * var(--etv-app-gap)) / var(--etv-app-cols));
+    scroll-snap-align: start;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 5px; flex-shrink: 0; width: 68px; padding: 10px 6px;
+    gap: 5px; padding: 10px 6px;
     border-radius: 14px; cursor: pointer;
     transition: transform 0.15s, filter 0.15s, box-shadow 0.15s;
     -webkit-tap-highlight-color: transparent; user-select: none;
     border: 1px solid transparent;
     box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
+    box-sizing: border-box;
   }
   .app-btn:hover  { filter: brightness(1.15); box-shadow: 0 4px 14px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.18); }
   .app-btn:active { transform: scale(0.91); filter: brightness(0.9); box-shadow: none; }
@@ -574,45 +592,38 @@ function buildSvgDpad(cmds, getHass, entityId) {
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', '0 0 240 240');
 
-  // Gradient defs
   const defs = document.createElementNS(NS, 'defs');
 
-  // Petal gradient (normal)
   const pg = document.createElementNS(NS, 'radialGradient');
   pg.setAttribute('id', 'petalGrad'); pg.setAttribute('cx','50%'); pg.setAttribute('cy','50%'); pg.setAttribute('r','70%');
   const ps1 = document.createElementNS(NS, 'stop'); ps1.setAttribute('offset','0%'); ps1.setAttribute('stop-color','rgba(255,255,255,0.14)');
   const ps2 = document.createElementNS(NS, 'stop'); ps2.setAttribute('offset','100%'); ps2.setAttribute('stop-color','rgba(255,255,255,0.05)');
   pg.appendChild(ps1); pg.appendChild(ps2); defs.appendChild(pg);
 
-  // Petal gradient (hover)
   const pgh = document.createElementNS(NS, 'radialGradient');
   pgh.setAttribute('id', 'petalGradHover'); pgh.setAttribute('cx','50%'); pgh.setAttribute('cy','50%'); pgh.setAttribute('r','70%');
   const ph1 = document.createElementNS(NS, 'stop'); ph1.setAttribute('offset','0%'); ph1.setAttribute('stop-color','rgba(255,255,255,0.24)');
   const ph2 = document.createElementNS(NS, 'stop'); ph2.setAttribute('offset','100%'); ph2.setAttribute('stop-color','rgba(255,255,255,0.12)');
   pgh.appendChild(ph1); pgh.appendChild(ph2); defs.appendChild(pgh);
 
-  // Petal gradient (active)
   const pga = document.createElementNS(NS, 'radialGradient');
   pga.setAttribute('id', 'petalGradActive'); pga.setAttribute('cx','50%'); pga.setAttribute('cy','50%'); pga.setAttribute('r','70%');
   const pa1 = document.createElementNS(NS, 'stop'); pa1.setAttribute('offset','0%'); pa1.setAttribute('stop-color','rgba(255,255,255,0.32)');
   const pa2 = document.createElementNS(NS, 'stop'); pa2.setAttribute('offset','100%'); pa2.setAttribute('stop-color','rgba(255,255,255,0.18)');
   pga.appendChild(pa1); pga.appendChild(pa2); defs.appendChild(pga);
 
-  // Centre gradient (normal)
   const cg = document.createElementNS(NS, 'radialGradient');
   cg.setAttribute('id', 'centerGrad'); cg.setAttribute('cx','40%'); cg.setAttribute('cy','35%'); cg.setAttribute('r','65%');
   const cs1 = document.createElementNS(NS, 'stop'); cs1.setAttribute('offset','0%'); cs1.setAttribute('stop-color','rgba(255,255,255,0.18)');
   const cs2 = document.createElementNS(NS, 'stop'); cs2.setAttribute('offset','100%'); cs2.setAttribute('stop-color','rgba(255,255,255,0.07)');
   cg.appendChild(cs1); cg.appendChild(cs2); defs.appendChild(cg);
 
-  // Centre gradient (hover)
   const cgh = document.createElementNS(NS, 'radialGradient');
   cgh.setAttribute('id', 'centerGradHover'); cgh.setAttribute('cx','40%'); cgh.setAttribute('cy','35%'); cgh.setAttribute('r','65%');
   const ch1 = document.createElementNS(NS, 'stop'); ch1.setAttribute('offset','0%'); ch1.setAttribute('stop-color','rgba(255,255,255,0.28)');
   const ch2 = document.createElementNS(NS, 'stop'); ch2.setAttribute('offset','100%'); ch2.setAttribute('stop-color','rgba(255,255,255,0.14)');
   cgh.appendChild(ch1); cgh.appendChild(ch2); defs.appendChild(cgh);
 
-  // Centre gradient (active)
   const cga = document.createElementNS(NS, 'radialGradient');
   cga.setAttribute('id', 'centerGradActive'); cga.setAttribute('cx','40%'); cga.setAttribute('cy','35%'); cga.setAttribute('r','65%');
   const ca1 = document.createElementNS(NS, 'stop'); ca1.setAttribute('offset','0%'); ca1.setAttribute('stop-color','rgba(255,255,255,0.38)');
@@ -695,7 +706,7 @@ function buildNumpad(getHass, entityId, onBack) {
   return grid;
 }
 
-// ── App row builder ───────────────────────────────────────────────────────────────
+// ── App row builder ───────────────────────────────────────────────────────────
 
 function buildAppRow(cfg, getHass) {
   const row = document.createElement('div');
@@ -825,7 +836,6 @@ class EasyTVOverlayEl extends HTMLElement {
     const mediaSection = document.createElement('div');
     mediaSection.className = 'media-section';
 
-    // Vol pill (blue tint)
     const volPill = document.createElement('div'); volPill.className = 'pill-wrap-vol';
     const volUp   = document.createElement('div'); volUp.className   = 'pill-half';
     volUp.innerHTML = `<ha-icon icon="mdi:volume-plus"></ha-icon><span>VOL +</span>`;
@@ -857,7 +867,6 @@ class EasyTVOverlayEl extends HTMLElement {
     centreControls.appendChild(centreRow2);
     mediaSection.appendChild(centreControls);
 
-    // CH pill (teal/green tint)
     const chPill  = document.createElement('div'); chPill.className  = 'pill-wrap-ch';
     const chUp    = document.createElement('div'); chUp.className    = 'pill-half';
     chUp.innerHTML = `<ha-icon icon="mdi:chevron-up"></ha-icon><span>CH +</span>`;
@@ -1129,6 +1138,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v1.0.1 ',
+  '%c EasyTV Card v1.0.2 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
