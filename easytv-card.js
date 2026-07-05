@@ -1,7 +1,7 @@
-// EasyTV Card v1.0.0
+// EasyTV Card v1.0.1
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '1.0.0';
+const CARD_VERSION = '1.0.1';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -13,11 +13,6 @@ const TV_PRESETS = {
 };
 
 // ── App Shortcuts ────────────────────────────────────────────────────────────
-//
-// google_tv / generic: package name sent via remote.send_command
-// samsung:             KEY_ shortcut where available, else package name
-// roku:                numeric channel ID sent via media_player.select_source
-//                      (requires media_player_entity in card config)
 
 const APP_SHORTCUTS = [
   {
@@ -146,7 +141,6 @@ function sendApp(hass, cfg, appId) {
   if (!command) return;
 
   if (tvType === 'roku') {
-    // Roku launches apps via media_player.select_source
     const mpEntity = cfg.media_player_entity;
     if (!mpEntity) {
       console.warn('EasyTV: media_player_entity required for Roku app launching');
@@ -230,22 +224,41 @@ const OVERLAY_STYLES = `
     display: flex; flex-direction: column;
     font-family: var(--paper-font-body1_-_font-family, sans-serif);
     animation: etvFadeIn 0.2s ease;
-    background: rgba(10,10,18,0.6);
+    background: rgba(10,10,18,0.65);
     backdrop-filter: blur(32px) saturate(1.4);
     -webkit-backdrop-filter: blur(32px) saturate(1.4);
     --etv-text:       #ffffff;
     --etv-muted:      rgba(255,255,255,0.55);
-    --etv-btn-bg:     rgba(255,255,255,0.10);
-    --etv-btn-hover:  rgba(255,255,255,0.18);
-    --etv-btn-active: rgba(255,255,255,0.26);
+    --etv-btn-bg:     rgba(255,255,255,0.08);
+    --etv-btn-hover:  rgba(255,255,255,0.16);
+    --etv-btn-active: rgba(255,255,255,0.24);
     --etv-border:     rgba(255,255,255,0.13);
+    --etv-highlight:  rgba(255,255,255,0.18);
     --etv-accent:     #1976d2;
     --etv-radius-btn: 14px;
-    --etv-power-bg:      rgba(220,50,50,0.15);
-    --etv-power-border:  rgba(220,50,50,0.4);
-    --etv-power-hover:   rgba(220,50,50,0.28);
-    --etv-power-active:  rgba(220,50,50,0.42);
+    /* Power */
+    --etv-power-bg:      rgba(220,50,50,0.18);
+    --etv-power-border:  rgba(220,50,50,0.5);
+    --etv-power-hover:   rgba(220,50,50,0.32);
+    --etv-power-active:  rgba(220,50,50,0.46);
     --etv-power-color:   rgba(255,100,100,1);
+    --etv-power-glow:    0 0 14px rgba(220,50,50,0.45);
+    /* Vol pill accent – blue tint */
+    --etv-vol-bg:     rgba(30,100,220,0.15);
+    --etv-vol-border: rgba(60,140,255,0.35);
+    --etv-vol-hover:  rgba(30,100,220,0.26);
+    --etv-vol-active: rgba(30,100,220,0.38);
+    /* CH pill accent – teal/green tint */
+    --etv-ch-bg:      rgba(20,160,100,0.15);
+    --etv-ch-border:  rgba(40,200,130,0.35);
+    --etv-ch-hover:   rgba(20,160,100,0.26);
+    --etv-ch-active:  rgba(20,160,100,0.38);
+    /* Play/pause accent – slight white glow */
+    --etv-play-bg:    rgba(255,255,255,0.13);
+    --etv-play-border:rgba(255,255,255,0.28);
+    --etv-play-hover: rgba(255,255,255,0.22);
+    --etv-play-active:rgba(255,255,255,0.32);
+    --etv-play-glow:  0 0 10px rgba(255,255,255,0.12);
   }
   @keyframes etvFadeIn {
     from { opacity: 0; transform: translateY(16px); }
@@ -262,7 +275,9 @@ const OVERLAY_STYLES = `
   .close-btn {
     cursor: pointer; width: 40px; height: 40px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    background: var(--etv-btn-bg);
+    border: 1px solid var(--etv-border);
+    box-shadow: inset 0 1px 0 var(--etv-highlight);
     transition: background 0.15s; flex-shrink: 0; color: var(--etv-text);
   }
   .close-btn:hover  { background: var(--etv-btn-hover); }
@@ -281,17 +296,25 @@ const OVERLAY_STYLES = `
   .power-btn {
     width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    background: var(--etv-power-bg); border: 1px solid var(--etv-power-border);
+    background: var(--etv-power-bg);
+    border: 1px solid var(--etv-power-border);
+    box-shadow: inset 0 1px 0 rgba(255,120,120,0.2), var(--etv-power-glow);
     cursor: pointer; color: var(--etv-power-color);
-    transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
   }
-  .power-btn:hover  { background: var(--etv-power-hover); }
-  .power-btn:active { background: var(--etv-power-active); transform: scale(0.92); }
+  .power-btn:hover  {
+    background: var(--etv-power-hover);
+    box-shadow: inset 0 1px 0 rgba(255,120,120,0.2), 0 0 20px rgba(220,50,50,0.6);
+  }
+  .power-btn:active { background: var(--etv-power-active); transform: scale(0.92); box-shadow: none; }
   .power-btn ha-icon { --mdc-icon-size: 26px; }
   .source-btn {
     width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    background: var(--etv-btn-bg);
+    border: 1px solid var(--etv-border);
+    box-shadow: inset 0 1px 0 var(--etv-highlight);
     cursor: pointer; color: var(--etv-text);
     transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent;
   }
@@ -308,20 +331,26 @@ const OVERLAY_STYLES = `
   .dpad-scene.numpad-mode { padding: 0; }
   .dpad-wrap { position: relative; width: 100%; aspect-ratio: 1; }
   .dpad-wrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+  /* Petals: gradient fill + top highlight */
   .dpad-petal {
-    fill: var(--etv-btn-bg); stroke: var(--etv-border); stroke-width: 1;
+    fill: url(#petalGrad); stroke: rgba(255,255,255,0.18); stroke-width: 1;
     cursor: pointer; transition: fill 0.15s; -webkit-tap-highlight-color: transparent;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
   }
-  .dpad-petal:hover  { fill: var(--etv-btn-hover); }
-  .dpad-petal:active { fill: var(--etv-btn-active); }
+  .dpad-petal:hover  { fill: url(#petalGradHover); }
+  .dpad-petal:active { fill: url(#petalGradActive); }
+
+  /* Centre circle */
   .dpad-center {
-    fill: var(--etv-btn-bg); stroke: var(--etv-border); stroke-width: 1;
+    fill: url(#centerGrad); stroke: rgba(255,255,255,0.2); stroke-width: 1.5;
     cursor: pointer; transition: fill 0.15s; -webkit-tap-highlight-color: transparent;
   }
-  .dpad-center:hover  { fill: var(--etv-btn-hover); }
-  .dpad-center:active { fill: var(--etv-btn-active); }
-  .dpad-arrow-icon { fill: rgba(255,255,255,0.7); pointer-events: none; }
-  .dpad-ok { fill: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
+  .dpad-center:hover  { fill: url(#centerGradHover); }
+  .dpad-center:active { fill: url(#centerGradActive); }
+
+  .dpad-arrow-icon { fill: rgba(255,255,255,0.75); pointer-events: none; }
+  .dpad-ok { fill: rgba(255,255,255,0.85); font-size: 14px; font-weight: 700; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
 
   /* ── Number pad ── */
   .numpad-grid {
@@ -330,18 +359,22 @@ const OVERLAY_STYLES = `
   }
   .num-btn {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    background: var(--etv-btn-bg);
+    border: 1px solid var(--etv-border);
+    box-shadow: inset 0 1px 0 var(--etv-highlight), 0 2px 6px rgba(0,0,0,0.3);
     border-radius: 14px; cursor: pointer; color: var(--etv-text);
     transition: background 0.15s, transform 0.1s;
     -webkit-tap-highlight-color: transparent; aspect-ratio: 1; user-select: none;
   }
   .num-btn:hover  { background: var(--etv-btn-hover); }
-  .num-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
+  .num-btn:active { background: var(--etv-btn-active); transform: scale(0.93); box-shadow: none; }
   .num-btn .num-digit  { font-size: 20px; font-weight: 700; line-height: 1; }
   .num-btn .num-label  { font-size: 8px; letter-spacing: 0.12em; color: var(--etv-muted); margin-top: 2px; }
   .num-back {
     display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    background: var(--etv-btn-bg);
+    border: 1px solid var(--etv-border);
+    box-shadow: inset 0 1px 0 var(--etv-highlight), 0 2px 6px rgba(0,0,0,0.3);
     border-radius: 50%; cursor: pointer; color: var(--etv-text);
     transition: background 0.15s, transform 0.1s;
     -webkit-tap-highlight-color: transparent; aspect-ratio: 1; user-select: none;
@@ -355,28 +388,43 @@ const OVERLAY_STYLES = `
   .corner-btn {
     position: absolute; width: 48px; height: 48px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    background: var(--etv-btn-bg);
+    border: 1px solid var(--etv-border);
+    box-shadow: inset 0 1px 0 var(--etv-highlight), 0 2px 8px rgba(0,0,0,0.35);
     cursor: pointer; color: var(--etv-text);
-    transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
   }
-  .corner-btn:hover  { background: var(--etv-btn-hover); }
+  .corner-btn:hover  { background: var(--etv-btn-hover); box-shadow: inset 0 1px 0 var(--etv-highlight), 0 0 12px rgba(255,255,255,0.08); }
   .corner-btn ha-icon { --mdc-icon-size: 22px; }
   .corner-toggle { top: 24px; left: 24px; transform: translate(-50%, -50%); }
-  .corner-toggle:active { background: var(--etv-btn-active); transform: translate(-50%, -50%) scale(0.92); }
+  .corner-toggle:active { background: var(--etv-btn-active); box-shadow: none; transform: translate(-50%, -50%) scale(0.92); }
   .corner-info { top: 24px; right: 24px; transform: translate(50%, -50%); }
-  .corner-info:active { background: var(--etv-btn-active); transform: translate(50%, -50%) scale(0.92); }
+  .corner-info:active { background: var(--etv-btn-active); box-shadow: none; transform: translate(50%, -50%) scale(0.92); }
   .corner-back { bottom: 24px; left: 24px; transform: translate(-50%, 50%); }
-  .corner-back:active { background: var(--etv-btn-active); transform: translate(-50%, 50%) scale(0.92); }
+  .corner-back:active { background: var(--etv-btn-active); box-shadow: none; transform: translate(-50%, 50%) scale(0.92); }
   .corner-home { bottom: 24px; right: 24px; transform: translate(50%, 50%); }
-  .corner-home:active { background: var(--etv-btn-active); transform: translate(50%, 50%) scale(0.92); }
+  .corner-home:active { background: var(--etv-btn-active); box-shadow: none; transform: translate(50%, 50%) scale(0.92); }
 
   /* ── Media section ── */
   .media-section {
     display: flex; align-items: center; gap: 12px; width: 100%;
   }
-  .pill-wrap {
+
+  /* Vol pill – blue tint */
+  .pill-wrap-vol {
     display: flex; flex-direction: column;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    background: var(--etv-vol-bg);
+    border: 1px solid var(--etv-vol-border);
+    box-shadow: inset 0 1px 0 rgba(100,180,255,0.15), 0 2px 8px rgba(0,0,0,0.3);
+    border-radius: 32px; overflow: hidden; flex-shrink: 0; width: 52px;
+  }
+  /* CH pill – teal/green tint */
+  .pill-wrap-ch {
+    display: flex; flex-direction: column;
+    background: var(--etv-ch-bg);
+    border: 1px solid var(--etv-ch-border);
+    box-shadow: inset 0 1px 0 rgba(60,210,150,0.15), 0 2px 8px rgba(0,0,0,0.3);
     border-radius: 32px; overflow: hidden; flex-shrink: 0; width: 52px;
   }
   .pill-half {
@@ -385,32 +433,44 @@ const OVERLAY_STYLES = `
     cursor: pointer; color: var(--etv-text);
     transition: background 0.15s; -webkit-tap-highlight-color: transparent; user-select: none;
   }
-  .pill-half:hover  { background: var(--etv-btn-hover); }
-  .pill-half:active { background: var(--etv-btn-active); }
+  .pill-wrap-vol .pill-half:hover  { background: var(--etv-vol-hover); }
+  .pill-wrap-vol .pill-half:active { background: var(--etv-vol-active); }
+  .pill-wrap-ch  .pill-half:hover  { background: var(--etv-ch-hover); }
+  .pill-wrap-ch  .pill-half:active { background: var(--etv-ch-active); }
   .pill-half ha-icon { --mdc-icon-size: 22px; }
   .pill-half span { font-size: 9px; color: var(--etv-muted); letter-spacing: 0.03em; }
   .pill-divider { height: 1px; background: var(--etv-border); margin: 0 8px; flex-shrink: 0; }
+
   .centre-controls { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+  /* Play/pause – primary accent */
   .pb-btn-wide {
     display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    background: var(--etv-play-bg);
+    border: 1px solid var(--etv-play-border);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), var(--etv-play-glow);
     border-radius: var(--etv-radius-btn); height: 52px; width: 100%;
-    cursor: pointer; color: var(--etv-text); transition: background 0.15s, transform 0.1s;
+    cursor: pointer; color: var(--etv-text);
+    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
   }
-  .pb-btn-wide:hover  { background: var(--etv-btn-hover); }
-  .pb-btn-wide:active { background: var(--etv-btn-active); transform: scale(0.97); }
-  .pb-btn-wide ha-icon { --mdc-icon-size: 26px; }
+  .pb-btn-wide:hover  { background: var(--etv-play-hover); box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 0 16px rgba(255,255,255,0.18); }
+  .pb-btn-wide:active { background: var(--etv-play-active); transform: scale(0.97); box-shadow: none; }
+  .pb-btn-wide ha-icon { --mdc-icon-size: 28px; }
+
   .centre-row2 { display: flex; gap: 8px; }
   .pb-btn {
     flex: 1; display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    background: var(--etv-btn-bg);
+    border: 1px solid var(--etv-border);
+    box-shadow: inset 0 1px 0 var(--etv-highlight), 0 2px 6px rgba(0,0,0,0.25);
     border-radius: var(--etv-radius-btn); height: 52px;
-    cursor: pointer; color: var(--etv-text); transition: background 0.15s, transform 0.1s;
+    cursor: pointer; color: var(--etv-text);
+    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
   }
-  .pb-btn:hover  { background: var(--etv-btn-hover); }
-  .pb-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
+  .pb-btn:hover  { background: var(--etv-btn-hover); box-shadow: inset 0 1px 0 var(--etv-highlight), 0 0 10px rgba(255,255,255,0.07); }
+  .pb-btn:active { background: var(--etv-btn-active); transform: scale(0.93); box-shadow: none; }
   .pb-btn ha-icon { --mdc-icon-size: 22px; }
 
   /* ── App shortcuts row ── */
@@ -425,12 +485,13 @@ const OVERLAY_STYLES = `
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 5px; flex-shrink: 0; width: 68px; padding: 10px 6px;
     border-radius: 14px; cursor: pointer;
-    transition: transform 0.15s, filter 0.15s;
+    transition: transform 0.15s, filter 0.15s, box-shadow 0.15s;
     -webkit-tap-highlight-color: transparent; user-select: none;
     border: 1px solid transparent;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
   }
-  .app-btn:hover  { filter: brightness(1.15); }
-  .app-btn:active { transform: scale(0.91); filter: brightness(0.9); }
+  .app-btn:hover  { filter: brightness(1.15); box-shadow: 0 4px 14px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.18); }
+  .app-btn:active { transform: scale(0.91); filter: brightness(0.9); box-shadow: none; }
   .app-btn ha-icon { --mdc-icon-size: 26px; }
   .app-btn span {
     font-size: 10px; font-weight: 600; letter-spacing: 0.01em;
@@ -512,6 +573,53 @@ function buildSvgDpad(cmds, getHass, entityId) {
   const NS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', '0 0 240 240');
+
+  // Gradient defs
+  const defs = document.createElementNS(NS, 'defs');
+
+  // Petal gradient (normal)
+  const pg = document.createElementNS(NS, 'radialGradient');
+  pg.setAttribute('id', 'petalGrad'); pg.setAttribute('cx','50%'); pg.setAttribute('cy','50%'); pg.setAttribute('r','70%');
+  const ps1 = document.createElementNS(NS, 'stop'); ps1.setAttribute('offset','0%'); ps1.setAttribute('stop-color','rgba(255,255,255,0.14)');
+  const ps2 = document.createElementNS(NS, 'stop'); ps2.setAttribute('offset','100%'); ps2.setAttribute('stop-color','rgba(255,255,255,0.05)');
+  pg.appendChild(ps1); pg.appendChild(ps2); defs.appendChild(pg);
+
+  // Petal gradient (hover)
+  const pgh = document.createElementNS(NS, 'radialGradient');
+  pgh.setAttribute('id', 'petalGradHover'); pgh.setAttribute('cx','50%'); pgh.setAttribute('cy','50%'); pgh.setAttribute('r','70%');
+  const ph1 = document.createElementNS(NS, 'stop'); ph1.setAttribute('offset','0%'); ph1.setAttribute('stop-color','rgba(255,255,255,0.24)');
+  const ph2 = document.createElementNS(NS, 'stop'); ph2.setAttribute('offset','100%'); ph2.setAttribute('stop-color','rgba(255,255,255,0.12)');
+  pgh.appendChild(ph1); pgh.appendChild(ph2); defs.appendChild(pgh);
+
+  // Petal gradient (active)
+  const pga = document.createElementNS(NS, 'radialGradient');
+  pga.setAttribute('id', 'petalGradActive'); pga.setAttribute('cx','50%'); pga.setAttribute('cy','50%'); pga.setAttribute('r','70%');
+  const pa1 = document.createElementNS(NS, 'stop'); pa1.setAttribute('offset','0%'); pa1.setAttribute('stop-color','rgba(255,255,255,0.32)');
+  const pa2 = document.createElementNS(NS, 'stop'); pa2.setAttribute('offset','100%'); pa2.setAttribute('stop-color','rgba(255,255,255,0.18)');
+  pga.appendChild(pa1); pga.appendChild(pa2); defs.appendChild(pga);
+
+  // Centre gradient (normal)
+  const cg = document.createElementNS(NS, 'radialGradient');
+  cg.setAttribute('id', 'centerGrad'); cg.setAttribute('cx','40%'); cg.setAttribute('cy','35%'); cg.setAttribute('r','65%');
+  const cs1 = document.createElementNS(NS, 'stop'); cs1.setAttribute('offset','0%'); cs1.setAttribute('stop-color','rgba(255,255,255,0.18)');
+  const cs2 = document.createElementNS(NS, 'stop'); cs2.setAttribute('offset','100%'); cs2.setAttribute('stop-color','rgba(255,255,255,0.07)');
+  cg.appendChild(cs1); cg.appendChild(cs2); defs.appendChild(cg);
+
+  // Centre gradient (hover)
+  const cgh = document.createElementNS(NS, 'radialGradient');
+  cgh.setAttribute('id', 'centerGradHover'); cgh.setAttribute('cx','40%'); cgh.setAttribute('cy','35%'); cgh.setAttribute('r','65%');
+  const ch1 = document.createElementNS(NS, 'stop'); ch1.setAttribute('offset','0%'); ch1.setAttribute('stop-color','rgba(255,255,255,0.28)');
+  const ch2 = document.createElementNS(NS, 'stop'); ch2.setAttribute('offset','100%'); ch2.setAttribute('stop-color','rgba(255,255,255,0.14)');
+  cgh.appendChild(ch1); cgh.appendChild(ch2); defs.appendChild(cgh);
+
+  // Centre gradient (active)
+  const cga = document.createElementNS(NS, 'radialGradient');
+  cga.setAttribute('id', 'centerGradActive'); cga.setAttribute('cx','40%'); cga.setAttribute('cy','35%'); cga.setAttribute('r','65%');
+  const ca1 = document.createElementNS(NS, 'stop'); ca1.setAttribute('offset','0%'); ca1.setAttribute('stop-color','rgba(255,255,255,0.38)');
+  const ca2 = document.createElementNS(NS, 'stop'); ca2.setAttribute('offset','100%'); ca2.setAttribute('stop-color','rgba(255,255,255,0.22)');
+  cga.appendChild(ca1); cga.appendChild(ca2); defs.appendChild(cga);
+
+  svg.appendChild(defs);
 
   [{ key:'up', mid:270 }, { key:'right', mid:0 }, { key:'down', mid:90 }, { key:'left', mid:180 }]
     .forEach(p => {
@@ -603,8 +711,7 @@ function buildAppRow(cfg, getHass) {
     btn.className = 'app-btn';
     btn.style.background = app.bg;
     btn.style.color = app.fg;
-    // Subtle inner border: lighten the brand colour slightly
-    btn.style.borderColor = `color-mix(in srgb, ${app.bg} 60%, white)`;
+    btn.style.borderColor = `color-mix(in srgb, ${app.bg} 55%, white)`;
     btn.innerHTML = `<ha-icon icon="${app.icon}"></ha-icon><span>${app.label}</span>`;
     btn.addEventListener('click', () => sendApp(getHass(), cfg, id));
     row.appendChild(btn);
@@ -718,7 +825,8 @@ class EasyTVOverlayEl extends HTMLElement {
     const mediaSection = document.createElement('div');
     mediaSection.className = 'media-section';
 
-    const volPill = document.createElement('div'); volPill.className = 'pill-wrap';
+    // Vol pill (blue tint)
+    const volPill = document.createElement('div'); volPill.className = 'pill-wrap-vol';
     const volUp   = document.createElement('div'); volUp.className   = 'pill-half';
     volUp.innerHTML = `<ha-icon icon="mdi:volume-plus"></ha-icon><span>VOL +</span>`;
     volUp.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_up));
@@ -749,7 +857,8 @@ class EasyTVOverlayEl extends HTMLElement {
     centreControls.appendChild(centreRow2);
     mediaSection.appendChild(centreControls);
 
-    const chPill  = document.createElement('div'); chPill.className  = 'pill-wrap';
+    // CH pill (teal/green tint)
+    const chPill  = document.createElement('div'); chPill.className  = 'pill-wrap-ch';
     const chUp    = document.createElement('div'); chUp.className    = 'pill-half';
     chUp.innerHTML = `<ha-icon icon="mdi:chevron-up"></ha-icon><span>CH +</span>`;
     chUp.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.channel_up));
@@ -1020,6 +1129,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v1.0.0 ',
+  '%c EasyTV Card v1.0.1 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
