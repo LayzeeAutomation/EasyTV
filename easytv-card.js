@@ -1,7 +1,7 @@
-// EasyTV Card v0.8.7
+// EasyTV Card v0.8.8
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.8.7';
+const CARD_VERSION = '0.8.8';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -173,7 +173,7 @@ const OVERLAY_STYLES = `
   /* ── Power + Source row ── */
   .power-row {
     display: flex; align-items: center; justify-content: space-between;
-    width: 100%; gap: 10px;
+    width: 100%;
   }
   .power-btn {
     width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
@@ -198,20 +198,6 @@ const OVERLAY_STYLES = `
   .source-btn:active { background: var(--etv-btn-active); transform: scale(0.95); }
   .source-btn ha-icon { --mdc-icon-size: 20px; }
   .source-btn span { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
-
-  /* Toggle button lives in the power row */
-  .toggle-btn {
-    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    cursor: pointer; color: var(--etv-text);
-    transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .toggle-btn:hover  { background: var(--etv-btn-hover); }
-  .toggle-btn:active { background: var(--etv-btn-active); transform: scale(0.92); }
-  .toggle-btn ha-icon { --mdc-icon-size: 24px; }
-  .toggle-btn.numpad-active { background: rgba(25,118,210,0.25); border-color: rgba(25,118,210,0.6); color: #64b5f6; }
 
   /* ── D-pad scene ── */
   .dpad-scene {
@@ -265,7 +251,7 @@ const OVERLAY_STYLES = `
   .num-btn .num-digit  { font-size: 20px; font-weight: 700; line-height: 1; }
   .num-btn .num-label  { font-size: 8px; letter-spacing: 0.12em; color: var(--etv-muted); margin-top: 2px; }
 
-  /* ── Corner circular buttons (nav mode only) ── */
+  /* ── Corner circular buttons ── */
   .corner-btn {
     position: absolute;
     width: 48px; height: 48px; border-radius: 50%;
@@ -277,12 +263,33 @@ const OVERLAY_STYLES = `
   }
   .corner-btn:hover  { background: var(--etv-btn-hover); }
   .corner-btn ha-icon { --mdc-icon-size: 22px; }
+  /* top-left → Mode toggle */
+  .corner-toggle { top: 24px; left: 24px; transform: translate(-50%, -50%); }
+  .corner-toggle:active { background: var(--etv-btn-active); transform: translate(-50%, -50%) scale(0.92); }
+  .corner-toggle.numpad-active { background: rgba(25,118,210,0.25); border-color: rgba(25,118,210,0.6); color: #64b5f6; }
+  /* top-right → Info */
   .corner-info { top: 24px; right: 24px; transform: translate(50%, -50%); }
   .corner-info:active { background: var(--etv-btn-active); transform: translate(50%, -50%) scale(0.92); }
+  /* bottom-left → Back */
   .corner-back { bottom: 24px; left: 24px; transform: translate(-50%, 50%); }
   .corner-back:active { background: var(--etv-btn-active); transform: translate(-50%, 50%) scale(0.92); }
+  /* bottom-right → Home */
   .corner-home { bottom: 24px; right: 24px; transform: translate(50%, 50%); }
   .corner-home:active { background: var(--etv-btn-active); transform: translate(50%, 50%) scale(0.92); }
+
+  /* ── Wide back bar — shown only in numpad mode ── */
+  .numpad-back-bar {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; height: 52px; border-radius: 26px;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    cursor: pointer; color: var(--etv-text);
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    font-size: 14px; font-weight: 600; letter-spacing: 0.02em;
+  }
+  .numpad-back-bar:hover  { background: var(--etv-btn-hover); }
+  .numpad-back-bar:active { background: var(--etv-btn-active); transform: scale(0.98); }
+  .numpad-back-bar ha-icon { --mdc-icon-size: 22px; }
 
   .playback-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
   .pb-btn {
@@ -330,7 +337,7 @@ const OVERLAY_STYLES = `
   .pill-mute:active { background: var(--etv-btn-active); transform: scale(0.92); }
   .pill-mute ha-icon { --mdc-icon-size: 26px; }
 
-  /* Utility: collapse a row without layout shift */
+  /* Utility: collapse without layout shift */
   .etv-hidden { visibility: hidden; pointer-events: none; height: 0 !important; overflow: hidden; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
 `;
 
@@ -495,27 +502,15 @@ class EasyTVOverlayEl extends HTMLElement {
     body.className = 'overlay-body';
     sr.appendChild(body);
 
-    // ── Power row: [toggle] [power] [spacer flex] [source] ──
+    // ── Power + Source row (no toggle here) ──
     const powerRow = document.createElement('div');
     powerRow.className = 'power-row';
-
-    // Toggle button — lives in the power row, never overlaps the grid
-    const toggleBtn = document.createElement('div');
-    toggleBtn.className = 'toggle-btn';
-    toggleBtn.innerHTML = `<ha-icon icon="mdi:numeric"></ha-icon>`;
-    toggleBtn.title = 'Switch to number pad';
-    powerRow.appendChild(toggleBtn);
 
     const powerBtn = document.createElement('div');
     powerBtn.className = 'power-btn';
     powerBtn.innerHTML = `<ha-icon icon="mdi:power"></ha-icon>`;
     powerBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.power));
     powerRow.appendChild(powerBtn);
-
-    // Flexible spacer pushes source to the right
-    const spacer = document.createElement('div');
-    spacer.style.flex = '1';
-    powerRow.appendChild(spacer);
 
     const sourceBtn = document.createElement('div');
     sourceBtn.className = 'source-btn';
@@ -525,7 +520,7 @@ class EasyTVOverlayEl extends HTMLElement {
 
     body.appendChild(powerRow);
 
-    // ── D-pad scene (no toggle button inside) ──
+    // ── D-pad scene ──
     const dpadScene = document.createElement('div');
     dpadScene.className = 'dpad-scene';
 
@@ -536,7 +531,14 @@ class EasyTVOverlayEl extends HTMLElement {
     dpadWrap.appendChild(navSvg);
     dpadScene.appendChild(dpadWrap);
 
-    // Corner buttons (info, back, home) — nav mode only
+    // Toggle button — top-left corner of dpad (original position)
+    const toggleBtn = document.createElement('div');
+    toggleBtn.className = 'corner-btn corner-toggle';
+    toggleBtn.innerHTML = `<ha-icon icon="mdi:numeric"></ha-icon>`;
+    toggleBtn.title = 'Switch to number pad';
+    dpadScene.appendChild(toggleBtn);
+
+    // Info, Back, Home corners
     const cornerBtnsData = [
       { cls: 'corner-btn corner-info', icon: 'mdi:information-outline', key: 'info' },
       { cls: 'corner-btn corner-back', icon: 'mdi:arrow-left',          key: 'back' },
@@ -552,6 +554,12 @@ class EasyTVOverlayEl extends HTMLElement {
     });
 
     body.appendChild(dpadScene);
+
+    // ── Wide back bar — hidden in nav mode, shown in numpad mode ──
+    const backBar = document.createElement('div');
+    backBar.className = 'numpad-back-bar etv-hidden';
+    backBar.innerHTML = `<ha-icon icon="mdi:gamepad-variant-outline"></ha-icon><span>Back to remote</span>`;
+    body.appendChild(backBar);
 
     // ── Playback row ──
     const pbRow = document.createElement('div');
@@ -602,38 +610,40 @@ class EasyTVOverlayEl extends HTMLElement {
 
     body.appendChild(pillRow);
 
-    // ── Toggle handler ──
+    // ── Shared switch logic ──
+    const enterNumpad = () => {
+      numpadMode = true;
+      dpadWrap.innerHTML = '';
+      dpadWrap.appendChild(numGrid);
+      dpadScene.classList.add('numpad-mode');
+      toggleBtn.classList.add('numpad-active');
+      // Hide corner nav buttons and bottom rows
+      cornerBtnEls.forEach(b => b.classList.add('etv-hidden'));
+      pbRow.classList.add('etv-hidden');
+      pillRow.classList.add('etv-hidden');
+      // Show wide back bar
+      backBar.classList.remove('etv-hidden');
+    };
+
+    const exitNumpad = () => {
+      numpadMode = false;
+      dpadWrap.innerHTML = '';
+      dpadWrap.appendChild(navSvg);
+      dpadScene.classList.remove('numpad-mode');
+      toggleBtn.classList.remove('numpad-active');
+      // Restore nav elements
+      cornerBtnEls.forEach(b => b.classList.remove('etv-hidden'));
+      pbRow.classList.remove('etv-hidden');
+      pillRow.classList.remove('etv-hidden');
+      // Hide back bar
+      backBar.classList.add('etv-hidden');
+    };
+
     toggleBtn.addEventListener('click', () => {
-      numpadMode = !numpadMode;
-      if (numpadMode) {
-        // Swap content
-        dpadWrap.innerHTML = '';
-        dpadWrap.appendChild(numGrid);
-        // Remove padding so numpad fills flush (no corner-btn dead zones)
-        dpadScene.classList.add('numpad-mode');
-        // Hide corner buttons and rows below
-        cornerBtnEls.forEach(b => b.classList.add('etv-hidden'));
-        pbRow.classList.add('etv-hidden');
-        pillRow.classList.add('etv-hidden');
-        // Update toggle appearance
-        toggleBtn.innerHTML = `<ha-icon icon="mdi:gamepad-variant-outline"></ha-icon>`;
-        toggleBtn.title = 'Switch to navigation';
-        toggleBtn.classList.add('numpad-active');
-      } else {
-        // Swap content back
-        dpadWrap.innerHTML = '';
-        dpadWrap.appendChild(navSvg);
-        dpadScene.classList.remove('numpad-mode');
-        // Restore
-        cornerBtnEls.forEach(b => b.classList.remove('etv-hidden'));
-        pbRow.classList.remove('etv-hidden');
-        pillRow.classList.remove('etv-hidden');
-        // Update toggle appearance
-        toggleBtn.innerHTML = `<ha-icon icon="mdi:numeric"></ha-icon>`;
-        toggleBtn.title = 'Switch to number pad';
-        toggleBtn.classList.remove('numpad-active');
-      }
+      if (numpadMode) exitNumpad(); else enterNumpad();
     });
+
+    backBar.addEventListener('click', () => exitNumpad());
   }
 }
 
@@ -874,6 +884,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.8.7 ',
+  '%c EasyTV Card v0.8.8 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
