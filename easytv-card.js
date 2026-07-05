@@ -1,7 +1,7 @@
-// EasyTV Card v0.8.4
+// EasyTV Card v0.8.5
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.8.4';
+const CARD_VERSION = '0.8.5';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -199,7 +199,7 @@ const OVERLAY_STYLES = `
   .source-btn ha-icon { --mdc-icon-size: 20px; }
   .source-btn span { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
 
-  /* ── D-pad + corner buttons container ── */
+  /* ── D-pad scene ── */
   .dpad-scene {
     position: relative;
     width: min(300px, calc(100vw - 40px));
@@ -228,6 +228,28 @@ const OVERLAY_STYLES = `
   .dpad-arrow-icon { fill: rgba(255,255,255,0.7); pointer-events: none; }
   .dpad-ok { fill: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
 
+  /* ── Number pad ── */
+  .numpad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: 100%; height: 100%;
+    box-sizing: border-box;
+  }
+  .num-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    border-radius: 14px; cursor: pointer; color: var(--etv-text);
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    aspect-ratio: 1;
+    user-select: none;
+  }
+  .num-btn:hover  { background: var(--etv-btn-hover); }
+  .num-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
+  .num-btn .num-digit  { font-size: 20px; font-weight: 700; line-height: 1; }
+  .num-btn .num-label  { font-size: 8px; letter-spacing: 0.12em; color: var(--etv-muted); margin-top: 2px; }
+
   /* ── Corner circular buttons ── */
   .corner-btn {
     position: absolute;
@@ -240,6 +262,10 @@ const OVERLAY_STYLES = `
   }
   .corner-btn:hover  { background: var(--etv-btn-hover); }
   .corner-btn ha-icon { --mdc-icon-size: 22px; }
+  /* top-left → Mode toggle */
+  .corner-toggle { top: 24px; left: 24px; transform: translate(-50%, -50%); }
+  .corner-toggle:active { background: var(--etv-btn-active); transform: translate(-50%, -50%) scale(0.92); }
+  .corner-toggle.numpad-active { background: rgba(25,118,210,0.25); border-color: rgba(25,118,210,0.6); color: #64b5f6; }
   /* top-right → Info */
   .corner-info { top: 24px; right: 24px; transform: translate(50%, -50%); }
   .corner-info:active { background: var(--etv-btn-active); transform: translate(50%, -50%) scale(0.92); }
@@ -262,12 +288,12 @@ const OVERLAY_STYLES = `
   .pb-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
   .pb-btn ha-icon { --mdc-icon-size: 24px; }
   .pill-row {
-    display: flex; gap: 12px; justify-content: center;
+    display: flex; gap: 16px; justify-content: center;
     align-items: center; width: 100%;
   }
   .pill-wrap {
     display: flex; flex-direction: column;
-    flex: 1; max-width: 100px;
+    flex: 1; max-width: 80px;
     background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
     border-radius: 32px; overflow: hidden;
   }
@@ -397,6 +423,36 @@ function buildSvgDpad(cmds, getHass, entityId) {
   return svg;
 }
 
+// ── Number pad builder ──────────────────────────────────────────────────────
+
+const NUM_KEYS = [
+  { digit: '1', label: '',    cmd: '1' },
+  { digit: '2', label: 'ABC', cmd: '2' },
+  { digit: '3', label: 'DEF', cmd: '3' },
+  { digit: '4', label: 'GHI', cmd: '4' },
+  { digit: '5', label: 'JKL', cmd: '5' },
+  { digit: '6', label: 'MNO', cmd: '6' },
+  { digit: '7', label: 'PQRS', cmd: '7' },
+  { digit: '8', label: 'TUV', cmd: '8' },
+  { digit: '9', label: 'WXYZ', cmd: '9' },
+  { digit: '*', label: '',    cmd: '*' },
+  { digit: '0', label: '+',   cmd: '0' },
+  { digit: '#', label: '',    cmd: '#' },
+];
+
+function buildNumpad(getHass, entityId) {
+  const grid = document.createElement('div');
+  grid.className = 'numpad-grid';
+  NUM_KEYS.forEach(({ digit, label, cmd }) => {
+    const btn = document.createElement('div');
+    btn.className = 'num-btn';
+    btn.innerHTML = `<span class="num-digit">${digit}</span>${label ? `<span class="num-label">${label}</span>` : ''}`;
+    btn.addEventListener('click', () => sendCmd(getHass(), entityId, cmd));
+    grid.appendChild(btn);
+  });
+  return grid;
+}
+
 // ── Overlay Element ───────────────────────────────────────────────────────────
 
 class EasyTVOverlayEl extends HTMLElement {
@@ -408,6 +464,7 @@ class EasyTVOverlayEl extends HTMLElement {
   open(cfg, getHass, name) {
     const sr   = this.shadowRoot;
     const cmds = buildCmds(cfg);
+    let numpadMode = false;
 
     const style = document.createElement('style');
     style.textContent = OVERLAY_STYLES;
@@ -430,37 +487,58 @@ class EasyTVOverlayEl extends HTMLElement {
     // Power + Source row
     const powerRow = document.createElement('div');
     powerRow.className = 'power-row';
-
     const powerBtn = document.createElement('div');
     powerBtn.className = 'power-btn';
     powerBtn.innerHTML = `<ha-icon icon="mdi:power"></ha-icon>`;
     powerBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.power));
     powerRow.appendChild(powerBtn);
-
     const sourceBtn = document.createElement('div');
     sourceBtn.className = 'source-btn';
     sourceBtn.innerHTML = `<ha-icon icon="mdi:import"></ha-icon><span>Source</span>`;
     sourceBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.source));
     powerRow.appendChild(sourceBtn);
-
     body.appendChild(powerRow);
 
-    // D-pad scene: outer container with padding for corner buttons
+    // D-pad scene
     const dpadScene = document.createElement('div');
     dpadScene.className = 'dpad-scene';
 
     const dpadWrap = document.createElement('div');
     dpadWrap.className = 'dpad-wrap';
-    dpadWrap.appendChild(buildSvgDpad(cmds, getHass, cfg.entity));
+    const navSvg  = buildSvgDpad(cmds, getHass, cfg.entity);
+    const numGrid = buildNumpad(getHass, cfg.entity);
+    dpadWrap.appendChild(navSvg);
     dpadScene.appendChild(dpadWrap);
 
-    // Corner buttons — absolutely positioned within dpadScene
-    const corners = [
+    // Mode toggle — top-left corner
+    const toggleBtn = document.createElement('div');
+    toggleBtn.className = 'corner-btn corner-toggle';
+    toggleBtn.innerHTML = `<ha-icon icon="mdi:numeric"></ha-icon>`;
+    toggleBtn.title = 'Switch to number pad';
+    toggleBtn.addEventListener('click', () => {
+      numpadMode = !numpadMode;
+      if (numpadMode) {
+        dpadWrap.innerHTML = '';
+        dpadWrap.appendChild(numGrid);
+        toggleBtn.innerHTML = `<ha-icon icon="mdi:gamepad-variant-outline"></ha-icon>`;
+        toggleBtn.title = 'Switch to navigation';
+        toggleBtn.classList.add('numpad-active');
+      } else {
+        dpadWrap.innerHTML = '';
+        dpadWrap.appendChild(navSvg);
+        toggleBtn.innerHTML = `<ha-icon icon="mdi:numeric"></ha-icon>`;
+        toggleBtn.title = 'Switch to number pad';
+        toggleBtn.classList.remove('numpad-active');
+      }
+    });
+    dpadScene.appendChild(toggleBtn);
+
+    // Remaining corner buttons
+    [
       { cls: 'corner-btn corner-info', icon: 'mdi:information-outline', key: 'info' },
       { cls: 'corner-btn corner-back', icon: 'mdi:arrow-left',          key: 'back' },
       { cls: 'corner-btn corner-home', icon: 'mdi:home-outline',        key: 'home' },
-    ];
-    corners.forEach(({ cls, icon, key }) => {
+    ].forEach(({ cls, icon, key }) => {
       const btn = document.createElement('div');
       btn.className = cls;
       btn.innerHTML = `<ha-icon icon="${icon}"></ha-icon>`;
@@ -486,20 +564,19 @@ class EasyTVOverlayEl extends HTMLElement {
     });
     body.appendChild(pbRow);
 
-    // Pill controls: [Vol pill] [Mute] [Ch pill]
+    // Pill controls
     const pillRow = document.createElement('div');
     pillRow.className = 'pill-row';
 
-    const volPill = document.createElement('div');
-    volPill.className = 'pill-wrap';
-    const volUp = document.createElement('div'); volUp.className = 'pill-half';
+    const volPill = document.createElement('div'); volPill.className = 'pill-wrap';
+    const volUp   = document.createElement('div'); volUp.className   = 'pill-half';
     volUp.innerHTML = `<ha-icon icon="mdi:volume-plus"></ha-icon><span>VOL +</span>`;
     volUp.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_up));
-    const volDivider = document.createElement('div'); volDivider.className = 'pill-divider';
+    const volDiv  = document.createElement('div'); volDiv.className  = 'pill-divider';
     const volDown = document.createElement('div'); volDown.className = 'pill-half';
     volDown.innerHTML = `<ha-icon icon="mdi:volume-minus"></ha-icon><span>VOL −</span>`;
     volDown.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_down));
-    volPill.appendChild(volUp); volPill.appendChild(volDivider); volPill.appendChild(volDown);
+    volPill.appendChild(volUp); volPill.appendChild(volDiv); volPill.appendChild(volDown);
     pillRow.appendChild(volPill);
 
     const muteBtn = document.createElement('div'); muteBtn.className = 'pill-mute';
@@ -507,15 +584,15 @@ class EasyTVOverlayEl extends HTMLElement {
     muteBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_mute));
     pillRow.appendChild(muteBtn);
 
-    const chPill = document.createElement('div'); chPill.className = 'pill-wrap';
-    const chUp = document.createElement('div'); chUp.className = 'pill-half';
+    const chPill  = document.createElement('div'); chPill.className  = 'pill-wrap';
+    const chUp    = document.createElement('div'); chUp.className    = 'pill-half';
     chUp.innerHTML = `<ha-icon icon="mdi:chevron-up"></ha-icon><span>CH +</span>`;
     chUp.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.channel_up));
-    const chDivider = document.createElement('div'); chDivider.className = 'pill-divider';
-    const chDown = document.createElement('div'); chDown.className = 'pill-half';
+    const chDiv   = document.createElement('div'); chDiv.className   = 'pill-divider';
+    const chDown  = document.createElement('div'); chDown.className  = 'pill-half';
     chDown.innerHTML = `<ha-icon icon="mdi:chevron-down"></ha-icon><span>CH −</span>`;
     chDown.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.channel_down));
-    chPill.appendChild(chUp); chPill.appendChild(chDivider); chPill.appendChild(chDown);
+    chPill.appendChild(chUp); chPill.appendChild(chDiv); chPill.appendChild(chDown);
     pillRow.appendChild(chPill);
 
     body.appendChild(pillRow);
@@ -759,6 +836,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.8.4 ',
+  '%c EasyTV Card v0.8.5 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
