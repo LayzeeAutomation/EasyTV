@@ -1,7 +1,7 @@
-// EasyTV Card v0.6.4
+// EasyTV Card v0.6.5
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.6.4';
+const CARD_VERSION = '0.6.5';
 
 const TV_PRESETS = {
   roku: { up:'up',down:'down',left:'left',right:'right',select:'select',back:'back',home:'home',play:'play',pause:'pause',stop:'stop',forward:'forward',reverse:'reverse',volume_up:'volume_up',volume_down:'volume_down',volume_mute:'volume_mute',power:'power',info:'info',replay:'replay' },
@@ -899,7 +899,11 @@ class EasyTVCard extends HTMLElement {
 class EasyTVCardEditor extends HTMLElement {
   constructor() { super(); this.attachShadow({ mode: 'open' }); this._config = {}; this._activeTab = 'basic'; }
 
-  set hass(hass) { this._hass = hass; }
+  set hass(hass) {
+    this._hass = hass;
+    // Update ha-entity-picker hass references after render
+    this.shadowRoot.querySelectorAll('ha-entity-picker').forEach(p => { p.hass = hass; });
+  }
 
   setConfig(config) {
     this._config = { ...config };
@@ -935,7 +939,11 @@ class EasyTVCardEditor extends HTMLElement {
           </div>
           <div class="field-wrap">
             <label>Remote entity (required)</label>
-            <input class="etv-input" data-key="entity" value="${cfg.entity||''}" placeholder="remote.bedroom_tv">
+            <ha-entity-picker
+              data-key="entity"
+              allow-custom-entity
+              domain-filter="remote"
+            ></ha-entity-picker>
           </div>
           <div class="field-wrap">
             <label>Display name (optional)</label>
@@ -962,7 +970,11 @@ class EasyTVCardEditor extends HTMLElement {
           </div>
           <div class="field-wrap">
             <label>Media player entity</label>
-            <input class="etv-input" data-key="media_player_entity" value="${cfg.media_player_entity||''}" placeholder="media_player.bedroom_tv">
+            <ha-entity-picker
+              data-key="media_player_entity"
+              allow-custom-entity
+              domain-filter="media_player"
+            ></ha-entity-picker>
           </div>
         </div>
       </div>
@@ -977,11 +989,11 @@ class EasyTVCardEditor extends HTMLElement {
             ${sectionsArr.map((s,i) => `
               <div class="section-item${s.enabled===false?' disabled':''}" data-idx="${i}">
                 <div class="section-row1">
-                  <button class="section-handle" title="Drag">⠿</button>
+                  <button class="section-handle" title="Drag">&#10783;</button>
                   <span class="section-name">${SECTION_LABELS[s.key]||s.key}</span>
-                  <button class="section-move" data-idx="${i}" data-dir="up" title="Move up">↑</button>
-                  <button class="section-move" data-idx="${i}" data-dir="down" title="Move down">↓</button>
-                  <ha-switch ?checked="${s.enabled!==false}" data-idx="${i}" data-field="enabled"></ha-switch>
+                  <button class="section-move" data-idx="${i}" data-dir="up" title="Move up">&uarr;</button>
+                  <button class="section-move" data-idx="${i}" data-dir="down" title="Move down">&darr;</button>
+                  <ha-switch data-idx="${i}" data-field="enabled"></ha-switch>
                 </div>
                 <div class="section-row2${s._open?' open':''}">
                   <select class="section-width" data-idx="${i}" data-field="width">
@@ -1001,7 +1013,7 @@ class EasyTVCardEditor extends HTMLElement {
                 <select data-idx="${i}">
                   ${Object.keys(QUICK_ACTION_DEFS).map(k => `<option value="${k}"${k===qa?' selected':''}>${QUICK_ACTION_DEFS[k].title}</option>`).join('')}
                 </select>
-                <button class="qa-remove" data-idx="${i}">×</button>
+                <button class="qa-remove" data-idx="${i}">&times;</button>
               </div>`).join('')}
           </div>
           <button class="add-btn" id="qa-add-btn">+ Add button</button>
@@ -1024,15 +1036,15 @@ class EasyTVCardEditor extends HTMLElement {
               ${GAP_OPTIONS.map(([v,l]) => `<option value="${v}"${String(cfg.gap||DEFAULT_GAP)===v?' selected':''}>${l}</option>`).join('')}
             </select>
           </div>
-          <div class="row"><label>Show overlay header</label><ha-switch data-key="show_header" ?checked="${cfg.show_header!==false}"></ha-switch></div>
-          <div class="row"><label>Show section labels</label><ha-switch data-key="show_section_labels" ?checked="${cfg.show_section_labels!==false}"></ha-switch></div>
-          <div class="row"><label>Show Back/Home under d-pad</label><ha-switch data-key="show_back_home" ?checked="${cfg.show_back_home!==false}"></ha-switch></div>
+          <div class="row"><label>Show overlay header</label><ha-switch data-key="show_header"></ha-switch></div>
+          <div class="row"><label>Show section labels</label><ha-switch data-key="show_section_labels"></ha-switch></div>
+          <div class="row"><label>Show Back/Home under d-pad</label><ha-switch data-key="show_back_home"></ha-switch></div>
         </div>
         <div class="editor-panel">
           <div class="editor-panel-header"><div class="editor-panel-title">Card Appearance</div></div>
-          <div class="row"><label>No background</label><ha-switch data-key="no_background" ?checked="${!!cfg.no_background}"></ha-switch></div>
-          <div class="row"><label>No button background</label><ha-switch data-key="no_button_background" ?checked="${!!cfg.no_button_background}"></ha-switch></div>
-          <div class="row"><label>No button border</label><ha-switch data-key="no_button_border" ?checked="${!!cfg.no_button_border}"></ha-switch></div>
+          <div class="row"><label>No background</label><ha-switch data-key="no_background"></ha-switch></div>
+          <div class="row"><label>No button background</label><ha-switch data-key="no_button_background"></ha-switch></div>
+          <div class="row"><label>No button border</label><ha-switch data-key="no_button_border"></ha-switch></div>
         </div>
       </div>
 
@@ -1056,6 +1068,37 @@ class EasyTVCardEditor extends HTMLElement {
     `;
 
     sr.appendChild(editor);
+
+    // ── Set ha-switch .checked via JS (not ?checked attribute) ──
+    // Section enabled toggles
+    editor.querySelectorAll('ha-switch[data-field="enabled"]').forEach(sw => {
+      const idx = parseInt(sw.dataset.idx);
+      sw.checked = sectionsArr[idx].enabled !== false;
+    });
+    // Appearance/key toggles
+    const switchDefaults = {
+      show_header: cfg.show_header !== false,
+      show_section_labels: cfg.show_section_labels !== false,
+      show_back_home: cfg.show_back_home !== false,
+      no_background: !!cfg.no_background,
+      no_button_background: !!cfg.no_button_background,
+      no_button_border: !!cfg.no_button_border,
+    };
+    editor.querySelectorAll('ha-switch[data-key]').forEach(sw => {
+      sw.checked = !!switchDefaults[sw.dataset.key];
+    });
+
+    // ── Set ha-entity-picker values and hass via JS ──
+    editor.querySelectorAll('ha-entity-picker[data-key]').forEach(picker => {
+      picker.hass = this._hass;
+      picker.value = cfg[picker.dataset.key] || '';
+      picker.addEventListener('value-changed', e => {
+        const val = e.detail.value;
+        this._config = { ...this._config, [picker.dataset.key]: val || undefined };
+        this._fireChange();
+      });
+    });
+
     this._attachListeners(editor, sectionsArr, qaKeys);
   }
 
@@ -1186,4 +1229,4 @@ customElements.define('easytv-card-editor', EasyTVCardEditor);
 window.customCards = window.customCards || [];
 window.customCards.push({ type: 'easytv-card', name: 'EasyTV Card', description: 'Sleek TV remote overlay card', preview: false });
 
-console.info('%c EasyTV Card v0.6.4 ', 'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;');
+console.info('%c EasyTV Card v0.6.5 ', 'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;');
