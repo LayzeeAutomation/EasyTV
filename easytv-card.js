@@ -1,9 +1,9 @@
-// EasyTV Card v0.7.7
+// EasyTV Card v0.7.8
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.7.7';
+const CARD_VERSION = '0.7.8';
 
-// ─── TV Presets ────────────────────────────────────────────────────────────────
+// ── TV Presets ────────────────────────────────────────────────────────────────
 
 const TV_PRESETS = {
   roku:       { up:'up', down:'down', left:'left', right:'right', select:'select', back:'back', home:'home', play:'play', pause:'pause', stop:'stop', forward:'forward', reverse:'reverse', volume_up:'volume_up', volume_down:'volume_down', volume_mute:'volume_mute', power:'power', info:'info', replay:'replay', channel_up:'channel_up', channel_down:'channel_down' },
@@ -12,14 +12,28 @@ const TV_PRESETS = {
   generic:    { up:'up', down:'down', left:'left', right:'right', select:'select', back:'back', home:'home', play:'play', pause:'pause', stop:'stop', forward:'forward', reverse:'reverse', volume_up:'volume_up', volume_down:'volume_down', volume_mute:'volume_mute', power:'power', channel_up:'channel_up', channel_down:'channel_down' },
 };
 
-// ─── Default Sources ───────────────────────────────────────────────────────────
+// ── Default Sources ───────────────────────────────────────────────────────────
+// 'netflix' and 'youtube' work on both Google TV and Roku out of the box.
+// Users can override via sources: in their card config.
 
 const DEFAULT_SOURCES = [
   { name: 'Netflix',  icon: 'mdi:netflix',  command: 'netflix'  },
   { name: 'YouTube',  icon: 'mdi:youtube',  command: 'youtube'  },
 ];
 
-// ─── Quick Action Definitions ──────────────────────────────────────────────────
+// MDI SVG paths for source icons (inline, no ha-icon needed in overlay)
+const MDI_PATHS = {
+  'mdi:netflix':          'M6 2l3.5 10L13 2h3v20h-3V12l-3.5 10L6 12v10H3V2h3z',
+  'mdi:youtube':          'M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z',
+  'mdi:television-play':  'M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zm-10-3.5l6-3.5-6-3.5v7z',
+};
+
+function sourceSvg(icon, color) {
+  const path = MDI_PATHS[icon] || MDI_PATHS['mdi:television-play'];
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="26" height="26" style="display:block;flex-shrink:0"><path fill="${color || 'rgba(255,255,255,0.85)'}" d="${path}"/></svg>`;
+}
+
+// ── Quick Action Definitions ──────────────────────────────────────────────────
 
 const QUICK_ACTION_DEFS = {
   volume_down:   { icon: 'mdi:volume-minus', title: 'Vol −',  cmd: (c) => c.volume_down },
@@ -39,7 +53,7 @@ const QUICK_ACTION_DEFS = {
 const DEFAULT_QUICK_SINGLE = ['volume_down', 'play_pause', 'volume_up'];
 const DEFAULT_QUICK_DOUBLE = ['volume_down', 'play_pause', 'volume_up', 'power', 'home', 'back'];
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function resolveCmd(cfg, key) {
   if (cfg.commands && cfg.commands[key] !== undefined) return cfg.commands[key];
@@ -61,7 +75,7 @@ function sendCmd(hass, entityId, cmd) {
   hass.callService('remote', 'send_command', { entity_id: entityId, command: cmd });
 }
 
-// ─── Compact Card Styles ───────────────────────────────────────────────────────
+// ── Compact Card Styles ───────────────────────────────────────────────────────
 
 const CARD_STYLES = `
   :host {
@@ -125,7 +139,7 @@ const CARD_STYLES = `
   .no-btn-border .icon-btn, .no-btn-border .qa-btn { border-color: transparent !important; }
 `;
 
-// ─── Overlay Styles ────────────────────────────────────────────────────────────
+// ── Overlay Styles ────────────────────────────────────────────────────────────
 
 const OVERLAY_STYLES = `
   #easytv-overlay {
@@ -207,18 +221,17 @@ const OVERLAY_STYLES = `
   }
   #easytv-overlay .sources-row::-webkit-scrollbar { display: none; }
   #easytv-overlay .source-btn {
-    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
     background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    border-radius: 16px; padding: 12px 16px; flex-shrink: 0;
+    border-radius: 16px; padding: 14px 20px; flex-shrink: 0;
     cursor: pointer; color: var(--etv-text);
     transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent; min-width: 64px;
+    -webkit-tap-highlight-color: transparent; min-width: 72px;
   }
   #easytv-overlay .source-btn:hover  { background: var(--etv-btn-hover); }
   #easytv-overlay .source-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
-  #easytv-overlay .source-btn ha-icon { --mdc-icon-size: 26px; }
-  #easytv-overlay .source-btn span {
-    font-size: 11px; color: var(--etv-muted); white-space: nowrap;
+  #easytv-overlay .source-btn .src-label {
+    font-size: 12px; color: var(--etv-muted); white-space: nowrap;
   }
 
   /* ── SVG D-pad ── */
@@ -311,7 +324,7 @@ const OVERLAY_STYLES = `
   #easytv-overlay .pill-mute ha-icon { --mdc-icon-size: 26px; }
 `;
 
-// ─── Editor Styles ─────────────────────────────────────────────────────────────
+// ── Editor Styles ─────────────────────────────────────────────────────────────
 
 const EDITOR_STYLES = `
   .editor {
@@ -358,7 +371,7 @@ const EDITOR_STYLES = `
   }
 `;
 
-// ─── SVG D-pad builder ─────────────────────────────────────────────────────────
+// ── SVG D-pad builder ─────────────────────────────────────────────────────────
 
 function buildSvgDpad(cmds, getHass, entityId) {
   const cx = 120, cy = 120, R = 112, r = 40, gapDeg = 5;
@@ -415,7 +428,7 @@ function buildSvgDpad(cmds, getHass, entityId) {
   return svg;
 }
 
-// ─── Main Card ─────────────────────────────────────────────────────────────────
+// ── Main Card ─────────────────────────────────────────────────────────────────
 
 class EasyTVCard extends HTMLElement {
   constructor() {
@@ -539,7 +552,7 @@ class EasyTVCard extends HTMLElement {
     const body = document.createElement('div');
     body.className = 'overlay-body';
 
-    // Power row (top-left circle)
+    // Power row
     const powerRow = document.createElement('div');
     powerRow.className = 'power-row';
     const powerBtn = document.createElement('div');
@@ -549,7 +562,7 @@ class EasyTVCard extends HTMLElement {
     powerRow.appendChild(powerBtn);
     body.appendChild(powerRow);
 
-    // Sources row — default or user-defined, hidden if explicitly set to []
+    // Sources row — use inline SVG instead of ha-icon so icons always render
     const sources = cfg.sources !== undefined ? cfg.sources : DEFAULT_SOURCES;
     if (sources && sources.length > 0) {
       const sourcesRow = document.createElement('div');
@@ -557,7 +570,7 @@ class EasyTVCard extends HTMLElement {
       sources.forEach(src => {
         const btn = document.createElement('div');
         btn.className = 'source-btn';
-        btn.innerHTML = `<ha-icon icon="${src.icon || 'mdi:television-play'}"></ha-icon><span>${src.name || ''}</span>`;
+        btn.innerHTML = `${sourceSvg(src.icon)}<span class="src-label">${src.name || ''}</span>`;
         btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, src.command));
         sourcesRow.appendChild(btn);
       });
@@ -664,7 +677,7 @@ class EasyTVCard extends HTMLElement {
   getCardSize() { return 1; }
 }
 
-// ─── Editor ────────────────────────────────────────────────────────────────────
+// ── Editor ────────────────────────────────────────────────────────────────────
 
 class EasyTVCardEditor extends HTMLElement {
   constructor() {
@@ -784,7 +797,7 @@ class EasyTVCardEditor extends HTMLElement {
   }
 }
 
-// ─── Register ──────────────────────────────────────────────────────────────────
+// ── Register ──────────────────────────────────────────────────────────────────
 
 customElements.define('easytv-card',        EasyTVCard);
 customElements.define('easytv-card-editor', EasyTVCardEditor);
@@ -798,6 +811,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.7.7 ',
+  '%c EasyTV Card v0.7.8 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
