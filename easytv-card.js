@@ -1,7 +1,7 @@
-// EasyTV Card v1.0.12
+// EasyTV Card v1.0.13
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '1.0.12';
+const CARD_VERSION = '1.0.13';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -112,15 +112,19 @@ const DEFAULT_QUICK_DOUBLE = ['volume_down', 'play_pause', 'volume_up', 'power',
 const DEFAULT_APPS = APP_SHORTCUTS.map(a => a.id);
 
 const COMPACT_BUTTON_DEFS = [
-  { key: 'power',       label: 'Power',      icon: 'mdi:power' },
-  { key: 'source',      label: 'Source',     icon: 'mdi:import' },
-  { key: 'back',        label: 'Back',       icon: 'mdi:arrow-left' },
-  { key: 'home',        label: 'Home',       icon: 'mdi:home-outline' },
-  { key: 'play_pause',  label: 'Play/Pause', icon: 'mdi:play-pause' },
-  { key: 'rewind',      label: 'Rewind',     icon: 'mdi:rewind' },
-  { key: 'volume_mute', label: 'Mute',       icon: 'mdi:volume-off' },
-  { key: 'forward',     label: 'Forward',    icon: 'mdi:fast-forward' },
-  { key: 'info',        label: 'Info',       icon: 'mdi:information-outline' },
+  { key: 'power',        label: 'Power',      icon: 'mdi:power' },
+  { key: 'source',       label: 'Source',     icon: 'mdi:import' },
+  { key: 'back',         label: 'Back',       icon: 'mdi:arrow-left' },
+  { key: 'home',         label: 'Home',       icon: 'mdi:home-outline' },
+  { key: 'play_pause',   label: 'Play/Pause', icon: 'mdi:play-pause' },
+  { key: 'rewind',       label: 'Rewind',     icon: 'mdi:rewind' },
+  { key: 'volume_mute',  label: 'Mute',       icon: 'mdi:volume-off' },
+  { key: 'forward',      label: 'Forward',    icon: 'mdi:fast-forward' },
+  { key: 'info',         label: 'Info',       icon: 'mdi:information-outline' },
+  { key: 'volume_up',    label: 'Vol +',      icon: 'mdi:volume-plus' },
+  { key: 'volume_down',  label: 'Vol −',      icon: 'mdi:volume-minus' },
+  { key: 'channel_up',   label: 'Ch +',       icon: 'mdi:chevron-up' },
+  { key: 'channel_down', label: 'Ch −',       icon: 'mdi:chevron-down' },
 ];
 const DEFAULT_COMPACT_BUTTONS = COMPACT_BUTTON_DEFS.map(b => b.key);
 
@@ -1246,6 +1250,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v1.0.12 ',
+  '%c EasyTV Card v1.0.13 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
