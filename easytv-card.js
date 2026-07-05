@@ -1,76 +1,51 @@
-// EasyTV Card v0.8.0
+// EasyTV Card v0.7.8
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.8.0';
+const CARD_VERSION = '0.7.8';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
 const TV_PRESETS = {
-  roku:      { up:'up', down:'down', left:'left', right:'right', select:'select', back:'back', home:'home', play:'play', pause:'pause', stop:'stop', forward:'forward', reverse:'reverse', volume_up:'volume_up', volume_down:'volume_down', volume_mute:'volume_mute', power:'power', info:'info', replay:'replay', channel_up:'channel_up', channel_down:'channel_down' },
-  google_tv: { up:'DPAD_UP', down:'DPAD_DOWN', left:'DPAD_LEFT', right:'DPAD_RIGHT', select:'DPAD_CENTER', back:'BACK', home:'HOME', play:'MEDIA_PLAY_PAUSE', pause:'MEDIA_PAUSE', stop:'MEDIA_STOP', forward:'MEDIA_NEXT', reverse:'MEDIA_PREVIOUS', volume_up:'VOLUME_UP', volume_down:'VOLUME_DOWN', volume_mute:'VOLUME_MUTE', power:'POWER', info:'INFO', source:'TV', channel_up:'CHANNEL_UP', channel_down:'CHANNEL_DOWN' },
-  samsung:   { up:'KEY_UP', down:'KEY_DOWN', left:'KEY_LEFT', right:'KEY_RIGHT', select:'KEY_ENTER', back:'KEY_RETURN', home:'KEY_HOME', play:'KEY_PLAY', pause:'KEY_PAUSE', stop:'KEY_STOP', forward:'KEY_FF', reverse:'KEY_REWIND', volume_up:'KEY_VOLUP', volume_down:'KEY_VOLDOWN', volume_mute:'KEY_MUTE', power:'KEY_POWER', info:'KEY_INFO', source:'KEY_SOURCE', channel_up:'KEY_CHUP', channel_down:'KEY_CHDOWN' },
-  generic:   { up:'up', down:'down', left:'left', right:'right', select:'select', back:'back', home:'home', play:'play', pause:'pause', stop:'stop', forward:'forward', reverse:'reverse', volume_up:'volume_up', volume_down:'volume_down', volume_mute:'volume_mute', power:'power', channel_up:'channel_up', channel_down:'channel_down' },
+  roku:       { up:'up', down:'down', left:'left', right:'right', select:'select', back:'back', home:'home', play:'play', pause:'pause', stop:'stop', forward:'forward', reverse:'reverse', volume_up:'volume_up', volume_down:'volume_down', volume_mute:'volume_mute', power:'power', info:'info', replay:'replay', channel_up:'channel_up', channel_down:'channel_down' },
+  google_tv:  { up:'DPAD_UP', down:'DPAD_DOWN', left:'DPAD_LEFT', right:'DPAD_RIGHT', select:'DPAD_CENTER', back:'BACK', home:'HOME', play:'MEDIA_PLAY_PAUSE', pause:'MEDIA_PAUSE', stop:'MEDIA_STOP', forward:'MEDIA_NEXT', reverse:'MEDIA_PREVIOUS', volume_up:'VOLUME_UP', volume_down:'VOLUME_DOWN', volume_mute:'VOLUME_MUTE', power:'POWER', info:'INFO', source:'TV', channel_up:'CHANNEL_UP', channel_down:'CHANNEL_DOWN' },
+  samsung:    { up:'KEY_UP', down:'KEY_DOWN', left:'KEY_LEFT', right:'KEY_RIGHT', select:'KEY_ENTER', back:'KEY_RETURN', home:'KEY_HOME', play:'KEY_PLAY', pause:'KEY_PAUSE', stop:'KEY_STOP', forward:'KEY_FF', reverse:'KEY_REWIND', volume_up:'KEY_VOLUP', volume_down:'KEY_VOLDOWN', volume_mute:'KEY_MUTE', power:'KEY_POWER', info:'KEY_INFO', source:'KEY_SOURCE', channel_up:'KEY_CHUP', channel_down:'KEY_CHDOWN' },
+  generic:    { up:'up', down:'down', left:'left', right:'right', select:'select', back:'back', home:'home', play:'play', pause:'pause', stop:'stop', forward:'forward', reverse:'reverse', volume_up:'volume_up', volume_down:'volume_down', volume_mute:'volume_mute', power:'power', channel_up:'channel_up', channel_down:'channel_down' },
 };
 
 // ── Default Sources ───────────────────────────────────────────────────────────
 
 const DEFAULT_SOURCES = [
-  { name: 'Netflix', icon: 'mdi:netflix', command: 'netflix' },
-  { name: 'YouTube', icon: 'mdi:youtube', command: 'youtube' },
+  { name: 'Netflix',  icon: 'mdi:netflix',  command: 'netflix'  },
+  { name: 'YouTube',  icon: 'mdi:youtube',  command: 'youtube'  },
 ];
 
+// MDI SVG paths for source icons (inline, no ha-icon needed in overlay)
 const MDI_PATHS = {
-  'mdi:netflix':         'M6 2l3.5 10L13 2h3v20h-3V12l-3.5 10L6 12v10H3V2h3z',
-  'mdi:youtube':         'M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z',
-  'mdi:television-play': 'M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zm-10-3.5l6-3.5-6-3.5v7z',
+  'mdi:netflix':          'M6 2l3.5 10L13 2h3v20h-3V12l-3.5 10L6 12v10H3V2h3z',
+  'mdi:youtube':          'M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z',
+  'mdi:television-play':  'M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zm-10-3.5l6-3.5-6-3.5v7z',
 };
 
-function sourceSvg(icon) {
+function sourceSvg(icon, color) {
   const path = MDI_PATHS[icon] || MDI_PATHS['mdi:television-play'];
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="26" height="26" style="display:block"><path fill="rgba(255,255,255,0.85)" d="${path}"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="26" height="26" style="display:block;flex-shrink:0"><path fill="${color || 'rgba(255,255,255,0.85)'}" d="${path}"/></svg>`;
 }
-
-// Inline SVG arrows for d-pad (no ha-icon needed)
-const ARROW_SVG = {
-  up:    `<svg viewBox="0 0 24 24" width="20" height="20"><path fill="rgba(255,255,255,0.7)" d="M7 14l5-5 5 5z"/></svg>`,
-  down:  `<svg viewBox="0 0 24 24" width="20" height="20"><path fill="rgba(255,255,255,0.7)" d="M7 10l5 5 5-5z"/></svg>`,
-  left:  `<svg viewBox="0 0 24 24" width="20" height="20"><path fill="rgba(255,255,255,0.7)" d="M14 7l-5 5 5 5z"/></svg>`,
-  right: `<svg viewBox="0 0 24 24" width="20" height="20"><path fill="rgba(255,255,255,0.7)" d="M10 17l5-5-5-5z"/></svg>`,
-};
-
-// Inline SVGs for utility/playback/pill buttons
-const BTN_SVG = {
-  power:       `<svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A6.92 6.92 0 0 1 19 12c0 3.87-3.13 7-7 7A7 7 0 0 1 5 12c0-2.28 1.09-4.3 2.58-5.42L6.17 5.17A8.93 8.93 0 0 0 3 12a9 9 0 0 0 18 0c0-2.74-1.23-5.18-3.17-6.83z"/></svg>`,
-  close:       `<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`,
-  tv:          `<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>`,
-  back:        `<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>`,
-  home:        `<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>`,
-  info:        `<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>`,
-  rewind:      `<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>`,
-  play_pause:  `<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`,
-  forward:     `<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>`,
-  vol_up:      `<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`,
-  vol_down:    `<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/></svg>`,
-  mute:        `<svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`,
-  ch_up:       `<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7 14l5-5 5 5z"/></svg>`,
-  ch_down:     `<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M7 10l5 5 5-5z"/></svg>`,
-};
 
 // ── Quick Action Definitions ──────────────────────────────────────────────────
 
 const QUICK_ACTION_DEFS = {
-  volume_down:  { icon: 'mdi:volume-minus', title: 'Vol −',      cmd: (c) => c.volume_down },
-  volume_up:    { icon: 'mdi:volume-plus',  title: 'Vol +',      cmd: (c) => c.volume_up },
-  volume_mute:  { icon: 'mdi:volume-off',   title: 'Mute',       cmd: (c) => c.volume_mute },
-  play_pause:   { icon: 'mdi:play-pause',   title: 'Play/Pause', cmd: (c) => c.play },
-  power:        { icon: 'mdi:power',        title: 'Power',      cmd: (c) => c.power || 'power' },
-  back:         { icon: 'mdi:arrow-left',   title: 'Back',       cmd: (c) => c.back },
-  home:         { icon: 'mdi:home-outline', title: 'Home',       cmd: (c) => c.home },
-  source:       { icon: 'mdi:import',       title: 'Source',     cmd: (c) => c.source || 'input_av1' },
-  forward:      { icon: 'mdi:fast-forward', title: 'Forward',    cmd: (c) => c.forward },
-  rewind:       { icon: 'mdi:rewind',       title: 'Rewind',     cmd: (c) => c.reverse },
-  channel_up:   { icon: 'mdi:chevron-up',   title: 'Ch +',       cmd: (c) => c.channel_up },
-  channel_down: { icon: 'mdi:chevron-down', title: 'Ch −',       cmd: (c) => c.channel_down },
+  volume_down:   { icon: 'mdi:volume-minus', title: 'Vol −',  cmd: (c) => c.volume_down },
+  volume_up:     { icon: 'mdi:volume-plus',  title: 'Vol +',   cmd: (c) => c.volume_up },
+  volume_mute:   { icon: 'mdi:volume-off',   title: 'Mute',    cmd: (c) => c.volume_mute },
+  play_pause:    { icon: 'mdi:play-pause',   title: 'Play/Pause', cmd: (c) => c.play },
+  power:         { icon: 'mdi:power',        title: 'Power',   cmd: (c) => c.power || 'power' },
+  back:          { icon: 'mdi:arrow-left',   title: 'Back',    cmd: (c) => c.back },
+  home:          { icon: 'mdi:home-outline', title: 'Home',    cmd: (c) => c.home },
+  source:        { icon: 'mdi:import',       title: 'Source',  cmd: (c) => c.source || 'input_av1' },
+  forward:       { icon: 'mdi:fast-forward', title: 'Forward', cmd: (c) => c.forward },
+  rewind:        { icon: 'mdi:rewind',       title: 'Rewind',  cmd: (c) => c.reverse },
+  channel_up:    { icon: 'mdi:chevron-up',   title: 'Ch +',    cmd: (c) => c.channel_up },
+  channel_down:  { icon: 'mdi:chevron-down', title: 'Ch −',    cmd: (c) => c.channel_down },
 };
 
 const DEFAULT_QUICK_SINGLE = ['volume_down', 'play_pause', 'volume_up'];
@@ -98,257 +73,435 @@ function sendCmd(hass, entityId, cmd) {
   hass.callService('remote', 'send_command', { entity_id: entityId, command: cmd });
 }
 
-// ── Overlay Custom Element (self-contained shadow DOM) ────────────────────────
+// ── Compact Card Styles ───────────────────────────────────────────────────────
 
-const OVERLAY_CSS = `
+const CARD_STYLES = `
   :host {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 999999; display: flex; flex-direction: column;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 14px; color: #fff;
-    background: rgba(10,10,18,0.65);
+    display: block;
+    --easytv-card-background:      var(--ha-card-background, var(--card-background-color, #1c1c1c));
+    --easytv-card-border-radius:   var(--ha-card-border-radius, 16px);
+    --easytv-card-border:          1px solid var(--divider-color, rgba(255,255,255,0.12));
+    --easytv-card-box-shadow:      var(--ha-card-box-shadow, none);
+    --easytv-card-backdrop-filter: none;
+    --easytv-text-color:           var(--primary-text-color, #fff);
+    --easytv-muted-color:          var(--secondary-text-color, rgba(255,255,255,0.6));
+    --easytv-accent-color:         var(--primary-color, #1976d2);
+    --easytv-button-background:    var(--secondary-background-color, var(--card-background-color, #2a2a2a));
+    --easytv-button-border-radius: 50%;
+    --easytv-button-border:        1px solid var(--divider-color, rgba(255,255,255,0.12));
+    --easytv-button-background-hover:  color-mix(in srgb, var(--easytv-button-background) 82%, white);
+    --easytv-button-background-active: color-mix(in srgb, var(--easytv-button-background) 72%, white);
+  }
+  ha-card { background: transparent !important; box-shadow: none !important; overflow: visible; }
+  .compact-single {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-radius: var(--easytv-card-border-radius);
+    background: var(--easytv-card-background); border: var(--easytv-card-border);
+    box-shadow: var(--easytv-card-box-shadow);
+    backdrop-filter: var(--easytv-card-backdrop-filter); -webkit-backdrop-filter: var(--easytv-card-backdrop-filter);
+    color: var(--easytv-text-color); gap: 10px;
+  }
+  .compact-single .c-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+  .compact-single .c-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .compact-double {
+    display: flex; flex-direction: column; padding: 14px 14px 12px;
+    border-radius: var(--easytv-card-border-radius); background: var(--easytv-card-background);
+    border: var(--easytv-card-border); box-shadow: var(--easytv-card-box-shadow);
+    backdrop-filter: var(--easytv-card-backdrop-filter); -webkit-backdrop-filter: var(--easytv-card-backdrop-filter);
+    color: var(--easytv-text-color); gap: 12px;
+  }
+  .compact-double .d-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .compact-double .d-top-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+  .compact-double .d-bottom { display: flex; align-items: center; gap: 8px; }
+  .compact-double .d-bottom .qa-btn {
+    flex: 1; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    background: var(--easytv-button-background); border: var(--easytv-button-border);
+    color: var(--easytv-text-color); cursor: pointer; transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent; padding: 0;
+  }
+  .compact-double .d-bottom .qa-btn:hover  { background: var(--easytv-button-background-hover); }
+  .compact-double .d-bottom .qa-btn:active { background: var(--easytv-button-background-active); transform: scale(0.93); }
+  .compact-double .d-bottom .qa-btn ha-icon { --mdc-icon-size: 22px; }
+  .tv-icon { --mdc-icon-size: 26px; color: var(--easytv-accent-color); }
+  .tv-name { font-weight: 600; font-size: 15px; color: var(--easytv-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .icon-btn {
+    background: var(--easytv-button-background); border: var(--easytv-button-border);
+    cursor: pointer; color: var(--easytv-text-color); width: 40px; height: 40px;
+    border-radius: var(--easytv-button-border-radius); display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+  }
+  .icon-btn:hover  { background: var(--easytv-button-background-hover); }
+  .icon-btn:active { background: var(--easytv-button-background-active); transform: scale(0.92); }
+  .icon-btn ha-icon { --mdc-icon-size: 20px; }
+  .no-btn-bg .icon-btn, .no-btn-bg .qa-btn   { background: transparent !important; }
+  .no-btn-border .icon-btn, .no-btn-border .qa-btn { border-color: transparent !important; }
+`;
+
+// ── Overlay Styles (scoped inside shadow root — guaranteed to apply) ─────────
+// The overlay is a custom element with its own shadow root, so these styles
+// use :host and simple class selectors — no external scoping needed.
+
+const OVERLAY_STYLES = `
+  :host {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999;
+    display: flex; flex-direction: column;
+    font-family: var(--paper-font-body1_-_font-family, sans-serif);
+    animation: etvFadeIn 0.2s ease;
+    background: rgba(10,10,18,0.6);
     backdrop-filter: blur(32px) saturate(1.4);
     -webkit-backdrop-filter: blur(32px) saturate(1.4);
-    animation: fadeIn 0.2s ease;
+    --etv-text:       #ffffff;
+    --etv-muted:      rgba(255,255,255,0.55);
+    --etv-btn-bg:     rgba(255,255,255,0.10);
+    --etv-btn-hover:  rgba(255,255,255,0.18);
+    --etv-btn-active: rgba(255,255,255,0.26);
+    --etv-border:     rgba(255,255,255,0.13);
+    --etv-accent:     #1976d2;
+    --etv-radius-btn: 14px;
+    --etv-power-bg:      rgba(220,50,50,0.15);
+    --etv-power-border:  rgba(220,50,50,0.4);
+    --etv-power-hover:   rgba(220,50,50,0.28);
+    --etv-power-active:  rgba(220,50,50,0.42);
+    --etv-power-color:   rgba(255,100,100,1);
   }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(14px); }
+  @keyframes etvFadeIn {
+    from { opacity: 0; transform: translateY(16px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* ── variables ── */
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  .btn-bg   { background: rgba(255,255,255,0.10); }
-  .btn-bdr  { border: 1px solid rgba(255,255,255,0.13); }
-
   /* ── Header ── */
-  .hdr {
+  .overlay-header {
     display: flex; align-items: center; gap: 12px;
     padding: 18px 20px 14px; flex-shrink: 0;
-    border-bottom: 1px solid rgba(255,255,255,0.13);
+    border-bottom: 1px solid var(--etv-border);
   }
-  .hdr-title { flex: 1; font-size: 18px; font-weight: 700; }
-  .hdr-ver   { font-size: 11px; color: rgba(255,255,255,0.45); }
+  .overlay-header ha-icon { --mdc-icon-size: 24px; color: var(--etv-text); }
+  .overlay-title   { flex: 1; font-size: 18px; font-weight: 700; color: var(--etv-text); }
+  .overlay-version { font-size: 11px; color: var(--etv-muted); }
   .close-btn {
-    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    cursor: pointer; width: 40px; height: 40px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
-    cursor: pointer; transition: background 0.15s;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    transition: background 0.15s; flex-shrink: 0; color: var(--etv-text);
   }
-  .close-btn:hover  { background: rgba(255,255,255,0.18); }
-  .close-btn:active { background: rgba(255,255,255,0.28); }
+  .close-btn:hover  { background: var(--etv-btn-hover); }
+  .close-btn:active { background: var(--etv-btn-active); }
+  .close-btn ha-icon { --mdc-icon-size: 20px; }
 
   /* ── Body ── */
-  .body {
+  .overlay-body {
     flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
     display: flex; flex-direction: column; align-items: center;
     padding: 20px 20px 32px; gap: 20px;
   }
 
-  /* ── Power ── */
-  .power-row { display: flex; justify-content: flex-start; width: 100%; }
-  .power-btn {
-    width: 52px; height: 52px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(220,50,50,0.15); border: 1px solid rgba(220,50,50,0.4);
-    cursor: pointer; color: rgba(255,110,110,1);
-    transition: background 0.15s, transform 0.1s;
+  /* ── Power row ── */
+  .power-row {
+    display: flex; justify-content: flex-start; width: 100%;
   }
-  .power-btn:hover  { background: rgba(220,50,50,0.28); }
-  .power-btn:active { background: rgba(220,50,50,0.42); transform: scale(0.92); }
+  .power-btn {
+    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--etv-power-bg); border: 1px solid var(--etv-power-border);
+    cursor: pointer; color: var(--etv-power-color);
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .power-btn:hover  { background: var(--etv-power-hover); }
+  .power-btn:active { background: var(--etv-power-active); transform: scale(0.92); }
+  .power-btn ha-icon { --mdc-icon-size: 26px; }
 
-  /* ── Sources ── */
+  /* ── Sources row ── */
   .sources-row {
     display: flex; gap: 10px; width: 100%;
     overflow-x: auto; -webkit-overflow-scrolling: touch;
-    padding-bottom: 2px; scrollbar-width: none;
+    padding-bottom: 4px;
+    scrollbar-width: none;
   }
   .sources-row::-webkit-scrollbar { display: none; }
   .source-btn {
     display: flex; flex-direction: column; align-items: center; gap: 6px;
-    background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
-    border-radius: 16px; padding: 14px 20px; flex-shrink: 0; min-width: 72px;
-    cursor: pointer; transition: background 0.15s, transform 0.1s;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    border-radius: 16px; padding: 14px 20px; flex-shrink: 0;
+    cursor: pointer; color: var(--etv-text);
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent; min-width: 72px;
   }
-  .source-btn:hover  { background: rgba(255,255,255,0.18); }
-  .source-btn:active { background: rgba(255,255,255,0.28); transform: scale(0.93); }
-  .source-label { font-size: 12px; color: rgba(255,255,255,0.65); white-space: nowrap; }
+  .source-btn:hover  { background: var(--etv-btn-hover); }
+  .source-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
+  .source-btn .src-label {
+    font-size: 12px; color: var(--etv-muted); white-space: nowrap;
+  }
 
-  /* ── D-pad ── */
+  /* ── SVG D-pad ── */
   .dpad-wrap {
-    width: min(280px, calc(100vw - 40px)); aspect-ratio: 1; flex-shrink: 0;
-    display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr;
-    gap: 6px;
+    position: relative;
+    width: min(280px, calc(100vw - 40px));
+    aspect-ratio: 1; flex-shrink: 0;
   }
-  .dpad-btn {
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
-    border-radius: 14px; cursor: pointer; transition: background 0.15s, transform 0.1s;
+  .dpad-wrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .dpad-petal {
+    fill: var(--etv-btn-bg); stroke: var(--etv-border); stroke-width: 1;
+    cursor: pointer; transition: fill 0.15s; -webkit-tap-highlight-color: transparent;
   }
-  .dpad-btn:hover  { background: rgba(255,255,255,0.18); }
-  .dpad-btn:active { background: rgba(255,255,255,0.28); transform: scale(0.93); }
+  .dpad-petal:hover  { fill: var(--etv-btn-hover); }
+  .dpad-petal:active { fill: var(--etv-btn-active); }
   .dpad-center {
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
-    border-radius: 14px; cursor: pointer; transition: background 0.15s, transform 0.1s;
-    font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.8);
+    fill: var(--etv-btn-bg); stroke: var(--etv-border); stroke-width: 1;
+    cursor: pointer; transition: fill 0.15s; -webkit-tap-highlight-color: transparent;
   }
-  .dpad-center:hover  { background: rgba(255,255,255,0.18); }
-  .dpad-center:active { background: rgba(255,255,255,0.28); transform: scale(0.93); }
-  .dpad-empty { background: transparent; border: none; pointer-events: none; }
+  .dpad-center:hover  { fill: var(--etv-btn-hover); }
+  .dpad-center:active { fill: var(--etv-btn-active); }
+  .dpad-arrow-icon { fill: rgba(255,255,255,0.7); pointer-events: none; }
+  .dpad-ok { fill: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
 
   /* ── Utility row ── */
   .util-row { display: flex; gap: 12px; justify-content: center; width: 100%; }
   .util-btn {
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
-    border-radius: 14px; padding: 14px 0; flex: 1; max-width: 80px;
-    cursor: pointer; color: #fff; transition: background 0.15s, transform 0.1s;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    border-radius: var(--etv-radius-btn); padding: 12px 0; flex: 1; max-width: 80px;
+    cursor: pointer; color: var(--etv-text); transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
   }
-  .util-btn:hover  { background: rgba(255,255,255,0.18); }
-  .util-btn:active { background: rgba(255,255,255,0.28); transform: scale(0.93); }
-  .util-label { font-size: 11px; color: rgba(255,255,255,0.55); }
+  .util-btn:hover  { background: var(--etv-btn-hover); }
+  .util-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
+  .util-btn ha-icon { --mdc-icon-size: 22px; }
+  .util-btn span { font-size: 11px; color: var(--etv-muted); }
 
-  /* ── Playback ── */
+  /* ── Playback row ── */
   .playback-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
   .pb-btn {
     display: flex; align-items: center; justify-content: center;
-    background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
-    border-radius: 14px; width: 56px; height: 56px;
-    cursor: pointer; color: #fff; transition: background 0.15s, transform 0.1s;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    border-radius: var(--etv-radius-btn); width: 56px; height: 56px;
+    cursor: pointer; color: var(--etv-text); transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
   }
-  .pb-btn:hover  { background: rgba(255,255,255,0.18); }
-  .pb-btn:active { background: rgba(255,255,255,0.28); transform: scale(0.93); }
+  .pb-btn:hover  { background: var(--etv-btn-hover); }
+  .pb-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
+  .pb-btn ha-icon { --mdc-icon-size: 24px; }
 
-  /* ── Pill controls ── */
-  .pill-row { display: flex; gap: 12px; justify-content: center; align-items: center; width: 100%; }
+  /* ── Pill controls row (vol | mute | ch) ── */
+  .pill-row {
+    display: flex; gap: 12px; justify-content: center;
+    align-items: center; width: 100%;
+  }
   .pill-wrap {
-    display: flex; flex-direction: column; flex: 1; max-width: 100px;
-    background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
+    display: flex; flex-direction: column;
+    flex: 1; max-width: 100px;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
     border-radius: 32px; overflow: hidden;
   }
   .pill-half {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px; padding: 18px 0; cursor: pointer; color: #fff;
-    transition: background 0.15s; user-select: none;
+    gap: 4px; padding: 18px 0;
+    cursor: pointer; color: var(--etv-text);
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
   }
-  .pill-half:hover  { background: rgba(255,255,255,0.18); }
-  .pill-half:active { background: rgba(255,255,255,0.28); }
-  .pill-label { font-size: 10px; color: rgba(255,255,255,0.55); letter-spacing: 0.03em; }
-  .pill-divider { height: 1px; background: rgba(255,255,255,0.13); margin: 0 12px; }
+  .pill-half:hover  { background: var(--etv-btn-hover); }
+  .pill-half:active { background: var(--etv-btn-active); }
+  .pill-half ha-icon { --mdc-icon-size: 24px; }
+  .pill-half span {
+    font-size: 10px; color: var(--etv-muted); letter-spacing: 0.03em;
+  }
+  .pill-divider {
+    height: 1px; background: var(--etv-border); margin: 0 12px;
+  }
   .pill-mute {
     width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
-    cursor: pointer; color: #fff; transition: background 0.15s, transform 0.1s;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    cursor: pointer; color: var(--etv-text);
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
   }
-  .pill-mute:hover  { background: rgba(255,255,255,0.18); }
-  .pill-mute:active { background: rgba(255,255,255,0.28); transform: scale(0.92); }
+  .pill-mute:hover  { background: var(--etv-btn-hover); }
+  .pill-mute:active { background: var(--etv-btn-active); transform: scale(0.92); }
+  .pill-mute ha-icon { --mdc-icon-size: 26px; }
 `;
 
-class EasyTVOverlay extends HTMLElement {
+// ── Editor Styles ─────────────────────────────────────────────────────────────
+
+const EDITOR_STYLES = `
+  .editor {
+    display: flex; flex-direction: column; gap: 16px; padding: 16px;
+    font-family: var(--paper-font-body1_-_font-family, sans-serif);
+  }
+  .editor-panel {
+    display: flex; flex-direction: column; gap: 12px; padding: 14px;
+    border-radius: 14px;
+    background: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.03)));
+    border: 1px solid var(--divider-color, rgba(255,255,255,0.12));
+  }
+  .panel-title {
+    font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--primary-color, #1976d2); margin-bottom: 2px;
+  }
+  .panel-hint {
+    font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.5));
+    line-height: 1.5; padding: 0 2px;
+  }
+  .field-wrap { display: flex; flex-direction: column; gap: 4px; }
+  .field-wrap label {
+    font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.6)); padding-left: 2px;
+  }
+  ha-entity-picker { width: 100%; display: block; }
+  .etv-input, .etv-select {
+    width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px;
+    border: 1px solid var(--divider-color, rgba(255,255,255,0.15));
+    background: var(--secondary-background-color, #2a2a2a);
+    color: var(--primary-text-color, #fff);
+    font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s;
+  }
+  .etv-input:focus, .etv-select:focus { border-color: var(--primary-color, #1976d2); }
+  .etv-select {
+    appearance: none; -webkit-appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23888' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+  }
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px; gap: 12px; }
+  .row label { font-size: 14px; color: var(--primary-text-color, #fff); }
+  .version-badge {
+    font-size: 11px; color: var(--secondary-text-color, rgba(255,255,255,0.5));
+    text-align: center; padding-top: 4px;
+  }
+`;
+
+// ── SVG D-pad builder (original) ───────────────────────────────────────────────
+
+function buildSvgDpad(cmds, getHass, entityId) {
+  const cx = 120, cy = 120, R = 112, r = 40, gapDeg = 5;
+  const toRad = d => d * Math.PI / 180;
+
+  function petalPath(mid) {
+    const half = 45 - gapDeg / 2;
+    const a1 = toRad(mid - half), a2 = toRad(mid + half);
+    const x1 = cx+r*Math.cos(a1), y1 = cy+r*Math.sin(a1);
+    const x2 = cx+R*Math.cos(a1), y2 = cy+R*Math.sin(a1);
+    const x3 = cx+R*Math.cos(a2), y3 = cy+R*Math.sin(a2);
+    const x4 = cx+r*Math.cos(a2), y4 = cy+r*Math.sin(a2);
+    return `M${x1},${y1} L${x2},${y2} A${R},${R} 0 0,1 ${x3},${y3} L${x4},${y4} A${r},${r} 0 0,0 ${x1},${y1} Z`;
+  }
+
+  function arrowPoly(mid, dist) {
+    const rad = toRad(mid), px = cx+dist*Math.cos(rad), py = cy+dist*Math.sin(rad), s = 9;
+    const tx = px+s*Math.cos(rad), ty = py+s*Math.sin(rad);
+    const b1x = px-s*Math.cos(rad)+s*Math.cos(rad+Math.PI/2), b1y = py-s*Math.sin(rad)+s*Math.sin(rad+Math.PI/2);
+    const b2x = px-s*Math.cos(rad)+s*Math.cos(rad-Math.PI/2), b2y = py-s*Math.sin(rad)+s*Math.sin(rad-Math.PI/2);
+    return `${tx},${ty} ${b1x},${b1y} ${b2x},${b2y}`;
+  }
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 240 240');
+
+  [{ key:'up', mid:270 }, { key:'right', mid:0 }, { key:'down', mid:90 }, { key:'left', mid:180 }]
+    .forEach(p => {
+      const dist = (r + R) / 2;
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', petalPath(p.mid));
+      path.setAttribute('class', 'dpad-petal');
+      path.addEventListener('click', () => sendCmd(getHass(), entityId, cmds[p.key]));
+      svg.appendChild(path);
+      const arrow = document.createElementNS(NS, 'polygon');
+      arrow.setAttribute('points', arrowPoly(p.mid, dist));
+      arrow.setAttribute('class', 'dpad-arrow-icon');
+      svg.appendChild(arrow);
+    });
+
+  const circle = document.createElementNS(NS, 'circle');
+  circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r - 2);
+  circle.setAttribute('class', 'dpad-center');
+  circle.addEventListener('click', () => sendCmd(getHass(), entityId, cmds.select));
+  svg.appendChild(circle);
+
+  const okTxt = document.createElementNS(NS, 'text');
+  okTxt.setAttribute('x', cx); okTxt.setAttribute('y', cy);
+  okTxt.setAttribute('class', 'dpad-ok');
+  okTxt.textContent = 'OK';
+  svg.appendChild(okTxt);
+
+  return svg;
+}
+
+// ── Overlay Element (shadow root ensures styles always apply) ─────────────────
+
+class EasyTVOverlayEl extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
   }
 
-  init(cfg, hass, name) {
-    this._cfg  = cfg;
-    this._hass = hass;
-    this._name = name;
-    this._build();
-  }
-
-  _send(cmd) { sendCmd(this._hass, this._cfg.entity, cmd); }
-
-  _build() {
+  open(cfg, getHass, name) {
     const sr   = this.shadowRoot;
-    const cfg  = this._cfg;
     const cmds = buildCmds(cfg);
 
-    // Styles
     const style = document.createElement('style');
-    style.textContent = OVERLAY_CSS;
+    style.textContent = OVERLAY_STYLES;
     sr.appendChild(style);
 
     // Header
-    const hdr = document.createElement('div');
-    hdr.className = 'hdr';
-    hdr.innerHTML = `${BTN_SVG.tv}<span class="hdr-title">${this._name}</span><span class="hdr-ver">v${CARD_VERSION}</span>`;
-    const closeBtn = document.createElement('div');
-    closeBtn.className = 'close-btn';
-    closeBtn.innerHTML = BTN_SVG.close;
-    closeBtn.addEventListener('click', () => this.remove());
-    hdr.appendChild(closeBtn);
-    sr.appendChild(hdr);
+    const header = document.createElement('div');
+    header.className = 'overlay-header';
+    header.innerHTML = `
+      <ha-icon icon="mdi:television"></ha-icon>
+      <span class="overlay-title">${name}</span>
+      <span class="overlay-version">v${CARD_VERSION}</span>
+      <div class="close-btn" id="etv-close"><ha-icon icon="mdi:close"></ha-icon></div>`;
+    sr.appendChild(header);
+    sr.querySelector('#etv-close').addEventListener('click', () => this.remove());
 
     // Body
     const body = document.createElement('div');
-    body.className = 'body';
+    body.className = 'overlay-body';
     sr.appendChild(body);
 
-    // Power
+    // Power row
     const powerRow = document.createElement('div');
     powerRow.className = 'power-row';
     const powerBtn = document.createElement('div');
     powerBtn.className = 'power-btn';
-    powerBtn.innerHTML = BTN_SVG.power;
-    powerBtn.addEventListener('click', () => this._send(cmds.power));
+    powerBtn.innerHTML = `<ha-icon icon="mdi:power"></ha-icon>`;
+    powerBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.power));
     powerRow.appendChild(powerBtn);
     body.appendChild(powerRow);
 
-    // Sources
+    // Sources row
     const sources = cfg.sources !== undefined ? cfg.sources : DEFAULT_SOURCES;
     if (sources && sources.length > 0) {
-      const row = document.createElement('div');
-      row.className = 'sources-row';
+      const sourcesRow = document.createElement('div');
+      sourcesRow.className = 'sources-row';
       sources.forEach(src => {
         const btn = document.createElement('div');
         btn.className = 'source-btn';
-        btn.innerHTML = `${sourceSvg(src.icon)}<span class="source-label">${src.name || ''}</span>`;
-        btn.addEventListener('click', () => this._send(src.command));
-        row.appendChild(btn);
+        btn.innerHTML = `${sourceSvg(src.icon)}<span class="src-label">${src.name || ''}</span>`;
+        btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, src.command));
+        sourcesRow.appendChild(btn);
       });
-      body.appendChild(row);
+      body.appendChild(sourcesRow);
     }
 
-    // D-pad (grid layout — no SVG path math, no ha-icon)
-    const dpad = document.createElement('div');
-    dpad.className = 'dpad-wrap';
-    const dpadCells = [
-      { type: 'empty' }, { key: 'up',    svg: ARROW_SVG.up    }, { type: 'empty' },
-      { key: 'left',   svg: ARROW_SVG.left  }, { type: 'center' }, { key: 'right', svg: ARROW_SVG.right },
-      { type: 'empty' }, { key: 'down',  svg: ARROW_SVG.down  }, { type: 'empty' },
-    ];
-    dpadCells.forEach(cell => {
-      const el = document.createElement('div');
-      if (cell.type === 'empty') {
-        el.className = 'dpad-empty';
-      } else if (cell.type === 'center') {
-        el.className = 'dpad-center';
-        el.textContent = 'OK';
-        el.addEventListener('click', () => this._send(cmds.select));
-      } else {
-        el.className = 'dpad-btn';
-        el.innerHTML = cell.svg;
-        el.addEventListener('click', () => this._send(cmds[cell.key]));
-      }
-      dpad.appendChild(el);
-    });
-    body.appendChild(dpad);
+    // D-pad (original SVG)
+    const dpadWrap = document.createElement('div');
+    dpadWrap.className = 'dpad-wrap';
+    dpadWrap.appendChild(buildSvgDpad(cmds, getHass, cfg.entity));
+    body.appendChild(dpadWrap);
 
-    // Utility row
+    // Utility row: Back / Home / Info
     const utilRow = document.createElement('div');
     utilRow.className = 'util-row';
     [
-      { key: 'back', svg: BTN_SVG.back, label: 'Back' },
-      { key: 'home', svg: BTN_SVG.home, label: 'Home' },
-      { key: 'info', svg: BTN_SVG.info, label: 'Info' },
-    ].forEach(({ key, svg, label }) => {
+      { key: 'back', icon: 'mdi:arrow-left',         label: 'Back' },
+      { key: 'home', icon: 'mdi:home-outline',        label: 'Home' },
+      { key: 'info', icon: 'mdi:information-outline', label: 'Info' },
+    ].forEach(({ key, icon, label }) => {
       const btn = document.createElement('div');
       btn.className = 'util-btn';
-      btn.innerHTML = `${svg}<span class="util-label">${label}</span>`;
-      btn.addEventListener('click', () => this._send(cmds[key]));
+      btn.innerHTML = `<ha-icon icon="${icon}"></ha-icon><span>${label}</span>`;
+      btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds[key]));
       utilRow.appendChild(btn);
     });
     body.appendChild(utilRow);
@@ -357,143 +510,55 @@ class EasyTVOverlay extends HTMLElement {
     const pbRow = document.createElement('div');
     pbRow.className = 'playback-row';
     [
-      { key: 'reverse', svg: BTN_SVG.rewind     },
-      { key: 'play',    svg: BTN_SVG.play_pause  },
-      { key: 'forward', svg: BTN_SVG.forward      },
-    ].forEach(({ key, svg }) => {
+      { key: 'reverse', icon: 'mdi:rewind'      },
+      { key: 'play',    icon: 'mdi:play-pause'  },
+      { key: 'forward', icon: 'mdi:fast-forward' },
+    ].forEach(({ key, icon }) => {
       const btn = document.createElement('div');
       btn.className = 'pb-btn';
-      btn.innerHTML = svg;
-      btn.addEventListener('click', () => this._send(cmds[key]));
+      btn.innerHTML = `<ha-icon icon="${icon}"></ha-icon>`;
+      btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds[key]));
       pbRow.appendChild(btn);
     });
     body.appendChild(pbRow);
 
-    // Pill controls
+    // Pill controls: [Vol pill] [Mute] [Ch pill]
     const pillRow = document.createElement('div');
     pillRow.className = 'pill-row';
 
-    const mkPill = (topSvg, topLabel, topCmd, botSvg, botLabel, botCmd) => {
-      const wrap = document.createElement('div');
-      wrap.className = 'pill-wrap';
-      const top = document.createElement('div'); top.className = 'pill-half';
-      top.innerHTML = `${topSvg}<span class="pill-label">${topLabel}</span>`;
-      top.addEventListener('click', () => this._send(topCmd));
-      const div = document.createElement('div'); div.className = 'pill-divider';
-      const bot = document.createElement('div'); bot.className = 'pill-half';
-      bot.innerHTML = `${botSvg}<span class="pill-label">${botLabel}</span>`;
-      bot.addEventListener('click', () => this._send(botCmd));
-      wrap.appendChild(top); wrap.appendChild(div); wrap.appendChild(bot);
-      return wrap;
-    };
+    const volPill = document.createElement('div');
+    volPill.className = 'pill-wrap';
+    const volUp = document.createElement('div'); volUp.className = 'pill-half';
+    volUp.innerHTML = `<ha-icon icon="mdi:volume-plus"></ha-icon><span>VOL +</span>`;
+    volUp.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_up));
+    const volDivider = document.createElement('div'); volDivider.className = 'pill-divider';
+    const volDown = document.createElement('div'); volDown.className = 'pill-half';
+    volDown.innerHTML = `<ha-icon icon="mdi:volume-minus"></ha-icon><span>VOL −</span>`;
+    volDown.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_down));
+    volPill.appendChild(volUp); volPill.appendChild(volDivider); volPill.appendChild(volDown);
+    pillRow.appendChild(volPill);
 
-    pillRow.appendChild(mkPill(BTN_SVG.vol_up, 'VOL +', cmds.volume_up, BTN_SVG.vol_down, 'VOL −', cmds.volume_down));
-
-    const muteBtn = document.createElement('div');
-    muteBtn.className = 'pill-mute';
-    muteBtn.innerHTML = BTN_SVG.mute;
-    muteBtn.addEventListener('click', () => this._send(cmds.volume_mute));
+    const muteBtn = document.createElement('div'); muteBtn.className = 'pill-mute';
+    muteBtn.innerHTML = `<ha-icon icon="mdi:volume-off"></ha-icon>`;
+    muteBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_mute));
     pillRow.appendChild(muteBtn);
 
-    pillRow.appendChild(mkPill(BTN_SVG.ch_up, 'CH +', cmds.channel_up, BTN_SVG.ch_down, 'CH −', cmds.channel_down));
+    const chPill = document.createElement('div'); chPill.className = 'pill-wrap';
+    const chUp = document.createElement('div'); chUp.className = 'pill-half';
+    chUp.innerHTML = `<ha-icon icon="mdi:chevron-up"></ha-icon><span>CH +</span>`;
+    chUp.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.channel_up));
+    const chDivider = document.createElement('div'); chDivider.className = 'pill-divider';
+    const chDown = document.createElement('div'); chDown.className = 'pill-half';
+    chDown.innerHTML = `<ha-icon icon="mdi:chevron-down"></ha-icon><span>CH −</span>`;
+    chDown.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.channel_down));
+    chPill.appendChild(chUp); chPill.appendChild(chDivider); chPill.appendChild(chDown);
+    pillRow.appendChild(chPill);
 
     body.appendChild(pillRow);
-
-    // Close on backdrop tap
-    sr.addEventListener('click', e => { if (e.target === sr.host) this.remove(); });
   }
 }
 
-customElements.define('easytv-overlay', EasyTVOverlay);
-
-// ── Compact Card Styles ───────────────────────────────────────────────────────
-
-const CARD_STYLES = `
-  :host {
-    display: block;
-    --easytv-bg:         var(--ha-card-background, var(--card-background-color, #1c1c1c));
-    --easytv-radius:     var(--ha-card-border-radius, 16px);
-    --easytv-border:     1px solid var(--divider-color, rgba(255,255,255,0.12));
-    --easytv-shadow:     var(--ha-card-box-shadow, none);
-    --easytv-text:       var(--primary-text-color, #fff);
-    --easytv-accent:     var(--primary-color, #1976d2);
-    --easytv-btn-bg:     var(--secondary-background-color, #2a2a2a);
-    --easytv-btn-radius: 50%;
-    --easytv-btn-border: 1px solid var(--divider-color, rgba(255,255,255,0.12));
-    --easytv-btn-hover:  color-mix(in srgb, var(--easytv-btn-bg) 82%, white);
-    --easytv-btn-active: color-mix(in srgb, var(--easytv-btn-bg) 72%, white);
-  }
-  ha-card { background: transparent !important; box-shadow: none !important; overflow: visible; }
-  .compact-single {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 14px; border-radius: var(--easytv-radius);
-    background: var(--easytv-bg); border: var(--easytv-border);
-    box-shadow: var(--easytv-shadow); color: var(--easytv-text); gap: 10px;
-  }
-  .c-left  { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-  .c-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-  .compact-double {
-    display: flex; flex-direction: column; padding: 14px 14px 12px;
-    border-radius: var(--easytv-radius); background: var(--easytv-bg);
-    border: var(--easytv-border); box-shadow: var(--easytv-shadow);
-    color: var(--easytv-text); gap: 12px;
-  }
-  .d-top      { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .d-top-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-  .d-bottom   { display: flex; align-items: center; gap: 8px; }
-  .qa-btn {
-    flex: 1; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-    background: var(--easytv-btn-bg); border: var(--easytv-btn-border);
-    color: var(--easytv-text); cursor: pointer; transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .qa-btn:hover  { background: var(--easytv-btn-hover); }
-  .qa-btn:active { background: var(--easytv-btn-active); transform: scale(0.93); }
-  .qa-btn ha-icon { --mdc-icon-size: 22px; }
-  .tv-icon { --mdc-icon-size: 26px; color: var(--easytv-accent); }
-  .tv-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .icon-btn {
-    background: var(--easytv-btn-bg); border: var(--easytv-btn-border);
-    cursor: pointer; color: var(--easytv-text); width: 40px; height: 40px;
-    border-radius: var(--easytv-btn-radius); display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
-  }
-  .icon-btn:hover  { background: var(--easytv-btn-hover); }
-  .icon-btn:active { background: var(--easytv-btn-active); transform: scale(0.92); }
-  .icon-btn ha-icon { --mdc-icon-size: 20px; }
-  .no-btn-bg .icon-btn, .no-btn-bg .qa-btn     { background: transparent !important; }
-  .no-btn-border .icon-btn, .no-btn-border .qa-btn { border-color: transparent !important; }
-`;
-
-// ── Editor Styles ─────────────────────────────────────────────────────────────
-
-const EDITOR_STYLES = `
-  .editor { display: flex; flex-direction: column; gap: 16px; padding: 16px; font-family: inherit; }
-  .editor-panel {
-    display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 14px;
-    background: var(--ha-card-background, rgba(255,255,255,0.03));
-    border: 1px solid var(--divider-color, rgba(255,255,255,0.12));
-  }
-  .panel-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--primary-color, #1976d2); }
-  .panel-hint  { font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.5)); line-height: 1.5; }
-  .field-wrap  { display: flex; flex-direction: column; gap: 4px; }
-  .field-wrap label { font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.6)); padding-left: 2px; }
-  ha-entity-picker { width: 100%; display: block; }
-  .etv-input, .etv-select {
-    width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px;
-    border: 1px solid var(--divider-color, rgba(255,255,255,0.15));
-    background: var(--secondary-background-color, #2a2a2a);
-    color: var(--primary-text-color, #fff); font-size: 14px; font-family: inherit; outline: none;
-  }
-  .etv-select {
-    appearance: none; -webkit-appearance: none; cursor: pointer;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23888' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
-  }
-  .row { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px; gap: 12px; }
-  .row label { font-size: 14px; color: var(--primary-text-color, #fff); }
-  .version-badge { font-size: 11px; color: var(--secondary-text-color, rgba(255,255,255,0.5)); text-align: center; padding-top: 4px; }
-`;
+customElements.define('easytv-overlay-el', EasyTVOverlayEl);
 
 // ── Main Card ─────────────────────────────────────────────────────────────────
 
@@ -501,6 +566,7 @@ class EasyTVCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    this._overlayOpen = false;
   }
 
   set hass(hass) {
@@ -513,6 +579,7 @@ class EasyTVCard extends HTMLElement {
   setConfig(config) {
     if (!config.entity) throw new Error('EasyTV: entity is required');
     this._config = config;
+    this._overlayOpen = false;
   }
 
   static getConfigElement() { return document.createElement('easytv-card-editor'); }
@@ -546,6 +613,7 @@ class EasyTVCard extends HTMLElement {
     const name     = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
     const cardType = cfg.card_type || 'single';
     const cls = [
+      cfg.no_background        ? 'no-bg'        : '',
       cfg.no_button_background ? 'no-btn-bg'    : '',
       cfg.no_button_border     ? 'no-btn-border' : '',
     ].filter(Boolean).join(' ');
@@ -562,7 +630,7 @@ class EasyTVCard extends HTMLElement {
             <ha-icon class="tv-icon" icon="mdi:television"></ha-icon>
             <span class="tv-name">${name}</span>
           </div>
-          <div class="c-right">
+          <div class="c-actions">
             ${qaBtns}
             <button class="icon-btn" data-action="open-overlay" title="Open remote"><ha-icon icon="mdi:remote"></ha-icon></button>
           </div>
@@ -588,13 +656,27 @@ class EasyTVCard extends HTMLElement {
   }
 
   _openOverlay() {
-    if (document.querySelector('easytv-overlay')) return;
+    if (this._overlayOpen) return;
+    this._overlayOpen = true;
     const cfg      = this._config;
     const stateObj = this._hass?.states[cfg.entity];
     const name     = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
-    const overlay  = document.createElement('easytv-overlay');
+    const getHass  = () => this._hass;
+
+    const overlay = document.createElement('easytv-overlay-el');
     document.body.appendChild(overlay);
-    overlay.init(cfg, this._hass, name);
+    overlay.open(cfg, getHass, name);
+    this._overlayEl = overlay;
+
+    // Close on backdrop tap (clicking the host element itself)
+    overlay.addEventListener('click', e => {
+      if (e.composedPath()[0] === overlay) this._closeOverlay();
+    });
+  }
+
+  _closeOverlay() {
+    if (this._overlayEl) { this._overlayEl.remove(); this._overlayEl = null; }
+    this._overlayOpen = false;
   }
 
   getCardSize() { return 1; }
@@ -642,6 +724,7 @@ class EasyTVCardEditor extends HTMLElement {
           <input class="etv-input" data-key="name" value="${cfg.name || ''}" placeholder="Living Room TV">
         </div>
       </div>
+
       <div class="editor-panel">
         <div class="panel-title">Card</div>
         <div class="field-wrap">
@@ -659,9 +742,11 @@ class EasyTVCardEditor extends HTMLElement {
             <option value="double"${cfg.card_type === 'double' ? ' selected' : ''}>Double row</option>
           </select>
         </div>
+        <div class="row"><label>No card background</label><ha-switch data-key="no_background"></ha-switch></div>
         <div class="row"><label>No button background</label><ha-switch data-key="no_button_background"></ha-switch></div>
         <div class="row"><label>No button border</label><ha-switch data-key="no_button_border"></ha-switch></div>
       </div>
+
       <div class="editor-panel">
         <div class="panel-title">Source Shortcuts</div>
         <p class="panel-hint">
@@ -669,6 +754,7 @@ class EasyTVCardEditor extends HTMLElement {
           Override with <code>sources:</code> in YAML. Samsung users: use commands like <code>KEY_APP_NETFLIX</code>.
         </p>
       </div>
+
       <div class="version-badge">EasyTV Card v${CARD_VERSION}</div>
     `;
     sr.appendChild(editor);
@@ -682,7 +768,7 @@ class EasyTVCardEditor extends HTMLElement {
       });
     });
 
-    const switchKeys = { no_button_background: !!cfg.no_button_background, no_button_border: !!cfg.no_button_border };
+    const switchKeys = { no_background: !!cfg.no_background, no_button_background: !!cfg.no_button_background, no_button_border: !!cfg.no_button_border };
     editor.querySelectorAll('ha-switch[data-key]').forEach(sw => {
       sw.checked = !!switchKeys[sw.dataset.key];
       sw.addEventListener('change', () => {
@@ -720,6 +806,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.8.0 ',
+  '%c EasyTV Card v0.7.8 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
