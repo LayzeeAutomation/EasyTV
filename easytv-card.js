@@ -1,7 +1,7 @@
-// EasyTV Card v0.7.8
+// EasyTV Card v0.7.9
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.7.8';
+const CARD_VERSION = '0.7.9';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -13,41 +13,38 @@ const TV_PRESETS = {
 };
 
 // ── Default Sources ───────────────────────────────────────────────────────────
-// 'netflix' and 'youtube' work on both Google TV and Roku out of the box.
-// Users can override via sources: in their card config.
 
 const DEFAULT_SOURCES = [
   { name: 'Netflix',  icon: 'mdi:netflix',  command: 'netflix'  },
   { name: 'YouTube',  icon: 'mdi:youtube',  command: 'youtube'  },
 ];
 
-// MDI SVG paths for source icons (inline, no ha-icon needed in overlay)
 const MDI_PATHS = {
-  'mdi:netflix':          'M6 2l3.5 10L13 2h3v20h-3V12l-3.5 10L6 12v10H3V2h3z',
-  'mdi:youtube':          'M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z',
-  'mdi:television-play':  'M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zm-10-3.5l6-3.5-6-3.5v7z',
+  'mdi:netflix':         'M6 2l3.5 10L13 2h3v20h-3V12l-3.5 10L6 12v10H3V2h3z',
+  'mdi:youtube':         'M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z',
+  'mdi:television-play': 'M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zm-10-3.5l6-3.5-6-3.5v7z',
 };
 
-function sourceSvg(icon, color) {
+function sourceSvg(icon) {
   const path = MDI_PATHS[icon] || MDI_PATHS['mdi:television-play'];
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="26" height="26" style="display:block;flex-shrink:0"><path fill="${color || 'rgba(255,255,255,0.85)'}" d="${path}"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="26" height="26" style="display:block"><path fill="rgba(255,255,255,0.85)" d="${path}"/></svg>`;
 }
 
 // ── Quick Action Definitions ──────────────────────────────────────────────────
 
 const QUICK_ACTION_DEFS = {
-  volume_down:   { icon: 'mdi:volume-minus', title: 'Vol −',  cmd: (c) => c.volume_down },
-  volume_up:     { icon: 'mdi:volume-plus',  title: 'Vol +',   cmd: (c) => c.volume_up },
-  volume_mute:   { icon: 'mdi:volume-off',   title: 'Mute',    cmd: (c) => c.volume_mute },
-  play_pause:    { icon: 'mdi:play-pause',   title: 'Play/Pause', cmd: (c) => c.play },
-  power:         { icon: 'mdi:power',        title: 'Power',   cmd: (c) => c.power || 'power' },
-  back:          { icon: 'mdi:arrow-left',   title: 'Back',    cmd: (c) => c.back },
-  home:          { icon: 'mdi:home-outline', title: 'Home',    cmd: (c) => c.home },
-  source:        { icon: 'mdi:import',       title: 'Source',  cmd: (c) => c.source || 'input_av1' },
-  forward:       { icon: 'mdi:fast-forward', title: 'Forward', cmd: (c) => c.forward },
-  rewind:        { icon: 'mdi:rewind',       title: 'Rewind',  cmd: (c) => c.reverse },
-  channel_up:    { icon: 'mdi:chevron-up',   title: 'Ch +',    cmd: (c) => c.channel_up },
-  channel_down:  { icon: 'mdi:chevron-down', title: 'Ch −',    cmd: (c) => c.channel_down },
+  volume_down:  { icon: 'mdi:volume-minus', title: 'Vol −',     cmd: (c) => c.volume_down },
+  volume_up:    { icon: 'mdi:volume-plus',  title: 'Vol +',     cmd: (c) => c.volume_up },
+  volume_mute:  { icon: 'mdi:volume-off',   title: 'Mute',      cmd: (c) => c.volume_mute },
+  play_pause:   { icon: 'mdi:play-pause',   title: 'Play/Pause',cmd: (c) => c.play },
+  power:        { icon: 'mdi:power',        title: 'Power',     cmd: (c) => c.power || 'power' },
+  back:         { icon: 'mdi:arrow-left',   title: 'Back',      cmd: (c) => c.back },
+  home:         { icon: 'mdi:home-outline', title: 'Home',      cmd: (c) => c.home },
+  source:       { icon: 'mdi:import',       title: 'Source',    cmd: (c) => c.source || 'input_av1' },
+  forward:      { icon: 'mdi:fast-forward', title: 'Forward',   cmd: (c) => c.forward },
+  rewind:       { icon: 'mdi:rewind',       title: 'Rewind',    cmd: (c) => c.reverse },
+  channel_up:   { icon: 'mdi:chevron-up',   title: 'Ch +',      cmd: (c) => c.channel_up },
+  channel_down: { icon: 'mdi:chevron-down', title: 'Ch −',      cmd: (c) => c.channel_down },
 };
 
 const DEFAULT_QUICK_SINGLE = ['volume_down', 'play_pause', 'volume_up'];
@@ -75,6 +72,175 @@ function sendCmd(hass, entityId, cmd) {
   hass.callService('remote', 'send_command', { entity_id: entityId, command: cmd });
 }
 
+// ── Inject overlay CSS into document.head once ───────────────────────────────
+// Styles must live in <head> so #easytv-overlay selectors resolve against
+// elements appended to document.body. A <style> tag inside the overlay div
+// itself does NOT scope correctly in all browsers/HA versions.
+
+function ensureOverlayStyles() {
+  if (document.getElementById('easytv-overlay-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'easytv-overlay-styles';
+  s.textContent = `
+    #easytv-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999;
+      display: flex; flex-direction: column;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      animation: etvFadeIn 0.2s ease;
+      background: rgba(10,10,18,0.65);
+      backdrop-filter: blur(32px) saturate(1.4);
+      -webkit-backdrop-filter: blur(32px) saturate(1.4);
+      color: #fff;
+    }
+    @keyframes etvFadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header */
+    #easytv-overlay .overlay-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 18px 20px 14px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.13);
+    }
+    #easytv-overlay .overlay-header ha-icon { --mdc-icon-size: 24px; color: #fff; }
+    #easytv-overlay .overlay-title  { flex: 1; font-size: 18px; font-weight: 700; color: #fff; }
+    #easytv-overlay .overlay-version { font-size: 11px; color: rgba(255,255,255,0.45); }
+    #easytv-overlay .close-btn {
+      cursor: pointer; width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
+      transition: background 0.15s; flex-shrink: 0; color: #fff;
+    }
+    #easytv-overlay .close-btn:hover  { background: rgba(255,255,255,0.18); }
+    #easytv-overlay .close-btn:active { background: rgba(255,255,255,0.26); }
+    #easytv-overlay .close-btn ha-icon { --mdc-icon-size: 20px; }
+
+    /* Body */
+    #easytv-overlay .overlay-body {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 20px 20px 32px; gap: 20px;
+    }
+
+    /* Power row */
+    #easytv-overlay .power-row { display: flex; justify-content: flex-start; width: 100%; }
+    #easytv-overlay .power-btn {
+      width: 52px; height: 52px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(220,50,50,0.15); border: 1px solid rgba(220,50,50,0.4);
+      cursor: pointer; color: rgba(255,100,100,1);
+      transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #easytv-overlay .power-btn:hover  { background: rgba(220,50,50,0.28); }
+    #easytv-overlay .power-btn:active { background: rgba(220,50,50,0.42); transform: scale(0.92); }
+    #easytv-overlay .power-btn ha-icon { --mdc-icon-size: 26px; }
+
+    /* Sources row */
+    #easytv-overlay .sources-row {
+      display: flex; gap: 10px; width: 100%;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px; scrollbar-width: none;
+    }
+    #easytv-overlay .sources-row::-webkit-scrollbar { display: none; }
+    #easytv-overlay .source-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 16px; padding: 14px 20px; flex-shrink: 0;
+      cursor: pointer; min-width: 72px;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #easytv-overlay .source-btn:hover  { background: rgba(255,255,255,0.18); }
+    #easytv-overlay .source-btn:active { background: rgba(255,255,255,0.26); transform: scale(0.93); }
+    #easytv-overlay .source-btn .src-label {
+      font-size: 12px; color: rgba(255,255,255,0.6); white-space: nowrap;
+    }
+
+    /* D-pad */
+    #easytv-overlay .dpad-wrap {
+      width: min(280px, calc(100vw - 40px)); aspect-ratio: 1; flex-shrink: 0;
+    }
+    #easytv-overlay .dpad-wrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    #easytv-overlay .dpad-petal {
+      fill: rgba(255,255,255,0.10); stroke: rgba(255,255,255,0.13); stroke-width: 1;
+      cursor: pointer; transition: fill 0.15s;
+    }
+    #easytv-overlay .dpad-petal:hover  { fill: rgba(255,255,255,0.18); }
+    #easytv-overlay .dpad-petal:active { fill: rgba(255,255,255,0.26); }
+    #easytv-overlay .dpad-center {
+      fill: rgba(255,255,255,0.10); stroke: rgba(255,255,255,0.13); stroke-width: 1;
+      cursor: pointer; transition: fill 0.15s;
+    }
+    #easytv-overlay .dpad-center:hover  { fill: rgba(255,255,255,0.18); }
+    #easytv-overlay .dpad-center:active { fill: rgba(255,255,255,0.26); }
+    #easytv-overlay .dpad-arrow-icon { fill: rgba(255,255,255,0.7); pointer-events: none; }
+    #easytv-overlay .dpad-ok {
+      fill: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600;
+      pointer-events: none; dominant-baseline: middle; text-anchor: middle;
+    }
+
+    /* Utility row */
+    #easytv-overlay .util-row { display: flex; gap: 12px; justify-content: center; width: 100%; }
+    #easytv-overlay .util-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 14px; padding: 12px 0; flex: 1; max-width: 80px;
+      cursor: pointer; color: #fff; transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #easytv-overlay .util-btn:hover  { background: rgba(255,255,255,0.18); }
+    #easytv-overlay .util-btn:active { background: rgba(255,255,255,0.26); transform: scale(0.93); }
+    #easytv-overlay .util-btn ha-icon { --mdc-icon-size: 22px; }
+    #easytv-overlay .util-btn span { font-size: 11px; color: rgba(255,255,255,0.55); }
+
+    /* Playback row */
+    #easytv-overlay .playback-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
+    #easytv-overlay .pb-btn {
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 14px; width: 56px; height: 56px;
+      cursor: pointer; color: #fff; transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #easytv-overlay .pb-btn:hover  { background: rgba(255,255,255,0.18); }
+    #easytv-overlay .pb-btn:active { background: rgba(255,255,255,0.26); transform: scale(0.93); }
+    #easytv-overlay .pb-btn ha-icon { --mdc-icon-size: 24px; }
+
+    /* Pill controls */
+    #easytv-overlay .pill-row {
+      display: flex; gap: 12px; justify-content: center; align-items: center; width: 100%;
+    }
+    #easytv-overlay .pill-wrap {
+      display: flex; flex-direction: column; flex: 1; max-width: 100px;
+      background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 32px; overflow: hidden;
+    }
+    #easytv-overlay .pill-half {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; padding: 18px 0; cursor: pointer; color: #fff;
+      transition: background 0.15s; -webkit-tap-highlight-color: transparent; user-select: none;
+    }
+    #easytv-overlay .pill-half:hover  { background: rgba(255,255,255,0.18); }
+    #easytv-overlay .pill-half:active { background: rgba(255,255,255,0.26); }
+    #easytv-overlay .pill-half ha-icon { --mdc-icon-size: 24px; }
+    #easytv-overlay .pill-half span { font-size: 10px; color: rgba(255,255,255,0.55); letter-spacing: 0.03em; }
+    #easytv-overlay .pill-divider { height: 1px; background: rgba(255,255,255,0.13); margin: 0 12px; }
+    #easytv-overlay .pill-mute {
+      width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.13);
+      cursor: pointer; color: #fff; transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #easytv-overlay .pill-mute:hover  { background: rgba(255,255,255,0.18); }
+    #easytv-overlay .pill-mute:active { background: rgba(255,255,255,0.26); transform: scale(0.92); }
+    #easytv-overlay .pill-mute ha-icon { --mdc-icon-size: 26px; }
+  `;
+  document.head.appendChild(s);
+}
+
 // ── Compact Card Styles ───────────────────────────────────────────────────────
 
 const CARD_STYLES = `
@@ -86,7 +252,6 @@ const CARD_STYLES = `
     --easytv-card-box-shadow:      var(--ha-card-box-shadow, none);
     --easytv-card-backdrop-filter: none;
     --easytv-text-color:           var(--primary-text-color, #fff);
-    --easytv-muted-color:          var(--secondary-text-color, rgba(255,255,255,0.6));
     --easytv-accent-color:         var(--primary-color, #1976d2);
     --easytv-button-background:    var(--secondary-background-color, var(--card-background-color, #2a2a2a));
     --easytv-button-border-radius: 50%;
@@ -99,9 +264,7 @@ const CARD_STYLES = `
     display: flex; align-items: center; justify-content: space-between;
     padding: 10px 14px; border-radius: var(--easytv-card-border-radius);
     background: var(--easytv-card-background); border: var(--easytv-card-border);
-    box-shadow: var(--easytv-card-box-shadow);
-    backdrop-filter: var(--easytv-card-backdrop-filter); -webkit-backdrop-filter: var(--easytv-card-backdrop-filter);
-    color: var(--easytv-text-color); gap: 10px;
+    box-shadow: var(--easytv-card-box-shadow); color: var(--easytv-text-color); gap: 10px;
   }
   .compact-single .c-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
   .compact-single .c-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
@@ -109,7 +272,6 @@ const CARD_STYLES = `
     display: flex; flex-direction: column; padding: 14px 14px 12px;
     border-radius: var(--easytv-card-border-radius); background: var(--easytv-card-background);
     border: var(--easytv-card-border); box-shadow: var(--easytv-card-box-shadow);
-    backdrop-filter: var(--easytv-card-backdrop-filter); -webkit-backdrop-filter: var(--easytv-card-backdrop-filter);
     color: var(--easytv-text-color); gap: 12px;
   }
   .compact-double .d-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -139,223 +301,25 @@ const CARD_STYLES = `
   .no-btn-border .icon-btn, .no-btn-border .qa-btn { border-color: transparent !important; }
 `;
 
-// ── Overlay Styles ────────────────────────────────────────────────────────────
-
-const OVERLAY_STYLES = `
-  #easytv-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999;
-    display: flex; flex-direction: column;
-    font-family: var(--paper-font-body1_-_font-family, sans-serif);
-    animation: etvFadeIn 0.2s ease;
-    transform: translateZ(0); -webkit-transform: translateZ(0);
-    background: rgba(10,10,18,0.6);
-    backdrop-filter: blur(32px) saturate(1.4);
-    -webkit-backdrop-filter: blur(32px) saturate(1.4);
-    --etv-text:       #ffffff;
-    --etv-muted:      rgba(255,255,255,0.55);
-    --etv-btn-bg:     rgba(255,255,255,0.10);
-    --etv-btn-hover:  rgba(255,255,255,0.18);
-    --etv-btn-active: rgba(255,255,255,0.26);
-    --etv-border:     rgba(255,255,255,0.13);
-    --etv-accent:     #1976d2;
-    --etv-radius-btn: 14px;
-    --etv-power-bg:      rgba(220,50,50,0.15);
-    --etv-power-border:  rgba(220,50,50,0.4);
-    --etv-power-hover:   rgba(220,50,50,0.28);
-    --etv-power-active:  rgba(220,50,50,0.42);
-    --etv-power-color:   rgba(255,100,100,1);
-  }
-  @keyframes etvFadeIn {
-    from { opacity: 0; transform: translateY(16px) translateZ(0); }
-    to   { opacity: 1; transform: translateY(0)    translateZ(0); }
-  }
-
-  /* ── Header ── */
-  #easytv-overlay .overlay-header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 18px 20px 14px; flex-shrink: 0;
-    border-bottom: 1px solid var(--etv-border);
-  }
-  #easytv-overlay .overlay-header ha-icon { --mdc-icon-size: 24px; color: var(--etv-text); }
-  #easytv-overlay .overlay-title   { flex: 1; font-size: 18px; font-weight: 700; color: var(--etv-text); }
-  #easytv-overlay .overlay-version { font-size: 11px; color: var(--etv-muted); }
-  #easytv-overlay .close-btn {
-    cursor: pointer; width: 40px; height: 40px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    transition: background 0.15s; flex-shrink: 0; color: var(--etv-text);
-  }
-  #easytv-overlay .close-btn:hover  { background: var(--etv-btn-hover); }
-  #easytv-overlay .close-btn:active { background: var(--etv-btn-active); }
-  #easytv-overlay .close-btn ha-icon { --mdc-icon-size: 20px; }
-
-  /* ── Body ── */
-  #easytv-overlay .overlay-body {
-    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-    display: flex; flex-direction: column; align-items: center;
-    padding: 20px 20px 32px; gap: 20px;
-  }
-
-  /* ── Power row ── */
-  #easytv-overlay .power-row {
-    display: flex; justify-content: flex-start; width: 100%;
-  }
-  #easytv-overlay .power-btn {
-    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--etv-power-bg); border: 1px solid var(--etv-power-border);
-    cursor: pointer; color: var(--etv-power-color);
-    transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  #easytv-overlay .power-btn:hover  { background: var(--etv-power-hover); }
-  #easytv-overlay .power-btn:active { background: var(--etv-power-active); transform: scale(0.92); }
-  #easytv-overlay .power-btn ha-icon { --mdc-icon-size: 26px; }
-
-  /* ── Sources row ── */
-  #easytv-overlay .sources-row {
-    display: flex; gap: 10px; width: 100%;
-    overflow-x: auto; -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
-    scrollbar-width: none;
-  }
-  #easytv-overlay .sources-row::-webkit-scrollbar { display: none; }
-  #easytv-overlay .source-btn {
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    border-radius: 16px; padding: 14px 20px; flex-shrink: 0;
-    cursor: pointer; color: var(--etv-text);
-    transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent; min-width: 72px;
-  }
-  #easytv-overlay .source-btn:hover  { background: var(--etv-btn-hover); }
-  #easytv-overlay .source-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
-  #easytv-overlay .source-btn .src-label {
-    font-size: 12px; color: var(--etv-muted); white-space: nowrap;
-  }
-
-  /* ── SVG D-pad ── */
-  #easytv-overlay .dpad-wrap {
-    position: relative;
-    width: min(280px, calc(100vw - 40px));
-    aspect-ratio: 1; flex-shrink: 0;
-  }
-  #easytv-overlay .dpad-wrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
-  #easytv-overlay .dpad-petal {
-    fill: var(--etv-btn-bg); stroke: var(--etv-border); stroke-width: 1;
-    cursor: pointer; transition: fill 0.15s; -webkit-tap-highlight-color: transparent;
-  }
-  #easytv-overlay .dpad-petal:hover  { fill: var(--etv-btn-hover); }
-  #easytv-overlay .dpad-petal:active { fill: var(--etv-btn-active); }
-  #easytv-overlay .dpad-center {
-    fill: var(--etv-btn-bg); stroke: var(--etv-border); stroke-width: 1;
-    cursor: pointer; transition: fill 0.15s; -webkit-tap-highlight-color: transparent;
-  }
-  #easytv-overlay .dpad-center:hover  { fill: var(--etv-btn-hover); }
-  #easytv-overlay .dpad-center:active { fill: var(--etv-btn-active); }
-  #easytv-overlay .dpad-arrow-icon { fill: rgba(255,255,255,0.7); pointer-events: none; }
-  #easytv-overlay .dpad-ok { fill: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
-
-  /* ── Utility row ── */
-  #easytv-overlay .util-row { display: flex; gap: 12px; justify-content: center; width: 100%; }
-  #easytv-overlay .util-btn {
-    display: flex; flex-direction: column; align-items: center; gap: 5px;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    border-radius: var(--etv-radius-btn); padding: 12px 0; flex: 1; max-width: 80px;
-    cursor: pointer; color: var(--etv-text); transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  #easytv-overlay .util-btn:hover  { background: var(--etv-btn-hover); }
-  #easytv-overlay .util-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
-  #easytv-overlay .util-btn ha-icon { --mdc-icon-size: 22px; }
-  #easytv-overlay .util-btn span { font-size: 11px; color: var(--etv-muted); }
-
-  /* ── Playback row ── */
-  #easytv-overlay .playback-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
-  #easytv-overlay .pb-btn {
-    display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    border-radius: var(--etv-radius-btn); width: 56px; height: 56px;
-    cursor: pointer; color: var(--etv-text); transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  #easytv-overlay .pb-btn:hover  { background: var(--etv-btn-hover); }
-  #easytv-overlay .pb-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
-  #easytv-overlay .pb-btn ha-icon { --mdc-icon-size: 24px; }
-
-  /* ── Pill controls row (vol | mute | ch) ── */
-  #easytv-overlay .pill-row {
-    display: flex; gap: 12px; justify-content: center;
-    align-items: center; width: 100%;
-  }
-  #easytv-overlay .pill-wrap {
-    display: flex; flex-direction: column;
-    flex: 1; max-width: 100px;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    border-radius: 32px; overflow: hidden;
-  }
-  #easytv-overlay .pill-half {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px; padding: 18px 0;
-    cursor: pointer; color: var(--etv-text);
-    transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-  }
-  #easytv-overlay .pill-half:hover  { background: var(--etv-btn-hover); }
-  #easytv-overlay .pill-half:active { background: var(--etv-btn-active); }
-  #easytv-overlay .pill-half ha-icon { --mdc-icon-size: 24px; }
-  #easytv-overlay .pill-half span {
-    font-size: 10px; color: var(--etv-muted); letter-spacing: 0.03em;
-  }
-  #easytv-overlay .pill-divider {
-    height: 1px; background: var(--etv-border); margin: 0 12px;
-  }
-  #easytv-overlay .pill-mute {
-    width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    cursor: pointer; color: var(--etv-text);
-    transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  #easytv-overlay .pill-mute:hover  { background: var(--etv-btn-hover); }
-  #easytv-overlay .pill-mute:active { background: var(--etv-btn-active); transform: scale(0.92); }
-  #easytv-overlay .pill-mute ha-icon { --mdc-icon-size: 26px; }
-`;
-
 // ── Editor Styles ─────────────────────────────────────────────────────────────
 
 const EDITOR_STYLES = `
-  .editor {
-    display: flex; flex-direction: column; gap: 16px; padding: 16px;
-    font-family: var(--paper-font-body1_-_font-family, sans-serif);
-  }
+  .editor { display: flex; flex-direction: column; gap: 16px; padding: 16px; font-family: inherit; }
   .editor-panel {
-    display: flex; flex-direction: column; gap: 12px; padding: 14px;
-    border-radius: 14px;
-    background: var(--ha-card-background, var(--card-background-color, rgba(255,255,255,0.03)));
+    display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 14px;
+    background: var(--ha-card-background, rgba(255,255,255,0.03));
     border: 1px solid var(--divider-color, rgba(255,255,255,0.12));
   }
-  .panel-title {
-    font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
-    color: var(--primary-color, #1976d2); margin-bottom: 2px;
-  }
-  .panel-hint {
-    font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.5));
-    line-height: 1.5; padding: 0 2px;
-  }
-  .field-wrap { display: flex; flex-direction: column; gap: 4px; }
-  .field-wrap label {
-    font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.6)); padding-left: 2px;
-  }
+  .panel-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--primary-color, #1976d2); margin-bottom: 2px; }
+  .panel-hint  { font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.5)); line-height: 1.5; padding: 0 2px; }
+  .field-wrap  { display: flex; flex-direction: column; gap: 4px; }
+  .field-wrap label { font-size: 12px; color: var(--secondary-text-color, rgba(255,255,255,0.6)); padding-left: 2px; }
   ha-entity-picker { width: 100%; display: block; }
   .etv-input, .etv-select {
     width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px;
     border: 1px solid var(--divider-color, rgba(255,255,255,0.15));
     background: var(--secondary-background-color, #2a2a2a);
-    color: var(--primary-text-color, #fff);
-    font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s;
+    color: var(--primary-text-color, #fff); font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s;
   }
   .etv-input:focus, .etv-select:focus { border-color: var(--primary-color, #1976d2); }
   .etv-select {
@@ -365,10 +329,7 @@ const EDITOR_STYLES = `
   }
   .row { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px; gap: 12px; }
   .row label { font-size: 14px; color: var(--primary-text-color, #fff); }
-  .version-badge {
-    font-size: 11px; color: var(--secondary-text-color, rgba(255,255,255,0.5));
-    text-align: center; padding-top: 4px;
-  }
+  .version-badge { font-size: 11px; color: var(--secondary-text-color, rgba(255,255,255,0.5)); text-align: center; padding-top: 4px; }
 `;
 
 // ── SVG D-pad builder ─────────────────────────────────────────────────────────
@@ -526,17 +487,15 @@ class EasyTVCard extends HTMLElement {
   _openOverlay() {
     if (this._overlayOpen) return;
     this._overlayOpen = true;
-    const cfg      = this._config;
+    ensureOverlayStyles(); // inject into <head> once
+    const cfg     = this._config;
     const stateObj = this._hass?.states[cfg.entity];
-    const name     = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
-    const cmds     = buildCmds(cfg);
-    const getHass  = () => this._hass;
+    const name    = cfg.name || stateObj?.attributes?.friendly_name || cfg.entity;
+    const cmds    = buildCmds(cfg);
+    const getHass = () => this._hass;
 
     const overlay = document.createElement('div');
     overlay.id = 'easytv-overlay';
-    const style = document.createElement('style');
-    style.textContent = OVERLAY_STYLES;
-    overlay.appendChild(style);
 
     // Header
     const header = document.createElement('div');
@@ -562,7 +521,7 @@ class EasyTVCard extends HTMLElement {
     powerRow.appendChild(powerBtn);
     body.appendChild(powerRow);
 
-    // Sources row — use inline SVG instead of ha-icon so icons always render
+    // Sources row — inline SVG icons, no ha-icon dependency
     const sources = cfg.sources !== undefined ? cfg.sources : DEFAULT_SOURCES;
     if (sources && sources.length > 0) {
       const sourcesRow = document.createElement('div');
@@ -583,7 +542,7 @@ class EasyTVCard extends HTMLElement {
     dpadWrap.appendChild(buildSvgDpad(cmds, getHass, cfg.entity));
     body.appendChild(dpadWrap);
 
-    // Utility row: Back / Home / Info
+    // Utility row
     const utilRow = document.createElement('div');
     utilRow.className = 'util-row';
     [
@@ -603,9 +562,9 @@ class EasyTVCard extends HTMLElement {
     const pbRow = document.createElement('div');
     pbRow.className = 'playback-row';
     [
-      { key: 'reverse', icon: 'mdi:rewind'      },
-      { key: 'play',    icon: 'mdi:play-pause'  },
-      { key: 'forward', icon: 'mdi:fast-forward' },
+      { key: 'reverse', icon: 'mdi:rewind'       },
+      { key: 'play',    icon: 'mdi:play-pause'   },
+      { key: 'forward', icon: 'mdi:fast-forward'  },
     ].forEach(({ key, icon }) => {
       const btn = document.createElement('div');
       btn.className = 'pb-btn';
@@ -615,7 +574,7 @@ class EasyTVCard extends HTMLElement {
     });
     body.appendChild(pbRow);
 
-    // Pill controls: [Vol pill] [Mute] [Ch pill]
+    // Pill controls
     const pillRow = document.createElement('div');
     pillRow.className = 'pill-row';
 
@@ -625,15 +584,13 @@ class EasyTVCard extends HTMLElement {
     volUp.className = 'pill-half';
     volUp.innerHTML = `<ha-icon icon="mdi:volume-plus"></ha-icon><span>VOL +</span>`;
     volUp.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_up));
-    const volDivider = document.createElement('div');
-    volDivider.className = 'pill-divider';
+    const volDiv = document.createElement('div');
+    volDiv.className = 'pill-divider';
     const volDown = document.createElement('div');
     volDown.className = 'pill-half';
     volDown.innerHTML = `<ha-icon icon="mdi:volume-minus"></ha-icon><span>VOL −</span>`;
     volDown.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_down));
-    volPill.appendChild(volUp);
-    volPill.appendChild(volDivider);
-    volPill.appendChild(volDown);
+    volPill.appendChild(volUp); volPill.appendChild(volDiv); volPill.appendChild(volDown);
     pillRow.appendChild(volPill);
 
     const muteBtn = document.createElement('div');
@@ -648,15 +605,13 @@ class EasyTVCard extends HTMLElement {
     chUp.className = 'pill-half';
     chUp.innerHTML = `<ha-icon icon="mdi:chevron-up"></ha-icon><span>CH +</span>`;
     chUp.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.channel_up));
-    const chDivider = document.createElement('div');
-    chDivider.className = 'pill-divider';
+    const chDiv = document.createElement('div');
+    chDiv.className = 'pill-divider';
     const chDown = document.createElement('div');
     chDown.className = 'pill-half';
     chDown.innerHTML = `<ha-icon icon="mdi:chevron-down"></ha-icon><span>CH −</span>`;
     chDown.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.channel_down));
-    chPill.appendChild(chUp);
-    chPill.appendChild(chDivider);
-    chPill.appendChild(chDown);
+    chPill.appendChild(chUp); chPill.appendChild(chDiv); chPill.appendChild(chDown);
     pillRow.appendChild(chPill);
 
     body.appendChild(pillRow);
@@ -737,18 +692,9 @@ class EasyTVCardEditor extends HTMLElement {
             <option value="double"${cfg.card_type === 'double' ? ' selected' : ''}>Double row</option>
           </select>
         </div>
-        <div class="row">
-          <label>No card background</label>
-          <ha-switch data-key="no_background"></ha-switch>
-        </div>
-        <div class="row">
-          <label>No button background</label>
-          <ha-switch data-key="no_button_background"></ha-switch>
-        </div>
-        <div class="row">
-          <label>No button border</label>
-          <ha-switch data-key="no_button_border"></ha-switch>
-        </div>
+        <div class="row"><label>No card background</label><ha-switch data-key="no_background"></ha-switch></div>
+        <div class="row"><label>No button background</label><ha-switch data-key="no_button_background"></ha-switch></div>
+        <div class="row"><label>No button border</label><ha-switch data-key="no_button_border"></ha-switch></div>
       </div>
 
       <div class="editor-panel">
@@ -811,6 +757,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.7.8 ',
+  '%c EasyTV Card v0.7.9 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
