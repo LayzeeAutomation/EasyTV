@@ -1,7 +1,7 @@
-// EasyTV Card v0.8.3
+// EasyTV Card v0.8.4
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.8.3';
+const CARD_VERSION = '0.8.4';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -169,7 +169,12 @@ const OVERLAY_STYLES = `
     display: flex; flex-direction: column; align-items: center;
     padding: 20px 20px 32px; gap: 20px;
   }
-  .power-row { display: flex; justify-content: flex-start; width: 100%; }
+
+  /* ── Power + Source row ── */
+  .power-row {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%;
+  }
   .power-btn {
     width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
@@ -181,12 +186,23 @@ const OVERLAY_STYLES = `
   .power-btn:hover  { background: var(--etv-power-hover); }
   .power-btn:active { background: var(--etv-power-active); transform: scale(0.92); }
   .power-btn ha-icon { --mdc-icon-size: 26px; }
+  .source-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 18px; height: 52px; border-radius: 26px;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    cursor: pointer; color: var(--etv-text);
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+  }
+  .source-btn:hover  { background: var(--etv-btn-hover); }
+  .source-btn:active { background: var(--etv-btn-active); transform: scale(0.95); }
+  .source-btn ha-icon { --mdc-icon-size: 20px; }
+  .source-btn span { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
 
   /* ── D-pad + corner buttons container ── */
   .dpad-scene {
     position: relative;
     width: min(300px, calc(100vw - 40px));
-    /* Extra padding on all sides to accommodate the corner buttons (half their size = 24px) */
     padding: 24px;
     box-sizing: border-box;
     flex-shrink: 0;
@@ -221,21 +237,18 @@ const OVERLAY_STYLES = `
     cursor: pointer; color: var(--etv-text);
     transition: background 0.15s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
-    /* Offset so the button centre sits just outside the dpad circle */
-    transform: translate(-50%, -50%);
   }
   .corner-btn:hover  { background: var(--etv-btn-hover); }
-  .corner-btn:active { background: var(--etv-btn-active); transform: translate(-50%, -50%) scale(0.92); }
   .corner-btn ha-icon { --mdc-icon-size: 22px; }
   /* top-right → Info */
   .corner-info { top: 24px; right: 24px; transform: translate(50%, -50%); }
-  .corner-info:active { transform: translate(50%, -50%) scale(0.92); }
+  .corner-info:active { background: var(--etv-btn-active); transform: translate(50%, -50%) scale(0.92); }
   /* bottom-left → Back */
   .corner-back { bottom: 24px; left: 24px; transform: translate(-50%, 50%); }
-  .corner-back:active { transform: translate(-50%, 50%) scale(0.92); }
+  .corner-back:active { background: var(--etv-btn-active); transform: translate(-50%, 50%) scale(0.92); }
   /* bottom-right → Home */
   .corner-home { bottom: 24px; right: 24px; transform: translate(50%, 50%); }
-  .corner-home:active { transform: translate(50%, 50%) scale(0.92); }
+  .corner-home:active { background: var(--etv-btn-active); transform: translate(50%, 50%) scale(0.92); }
 
   .playback-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
   .pb-btn {
@@ -414,14 +427,22 @@ class EasyTVOverlayEl extends HTMLElement {
     body.className = 'overlay-body';
     sr.appendChild(body);
 
-    // Power row
+    // Power + Source row
     const powerRow = document.createElement('div');
     powerRow.className = 'power-row';
+
     const powerBtn = document.createElement('div');
     powerBtn.className = 'power-btn';
     powerBtn.innerHTML = `<ha-icon icon="mdi:power"></ha-icon>`;
     powerBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.power));
     powerRow.appendChild(powerBtn);
+
+    const sourceBtn = document.createElement('div');
+    sourceBtn.className = 'source-btn';
+    sourceBtn.innerHTML = `<ha-icon icon="mdi:import"></ha-icon><span>Source</span>`;
+    sourceBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.source));
+    powerRow.appendChild(sourceBtn);
+
     body.appendChild(powerRow);
 
     // D-pad scene: outer container with padding for corner buttons
@@ -738,6 +759,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.8.3 ',
+  '%c EasyTV Card v0.8.4 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
