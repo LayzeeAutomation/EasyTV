@@ -1,7 +1,7 @@
-// EasyTV Card v0.7.1
+// EasyTV Card v0.7.2
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.7.1';
+const CARD_VERSION = '0.7.2';
 
 // ─── TV Presets ───────────────────────────────────────────────────────────────
 
@@ -169,23 +169,29 @@ const OVERLAY_STYLES = `
   }
 
   /* ── SVG D-pad ── */
-  #easytv-overlay .dpad-wrap { position: relative; width: 220px; height: 220px; flex-shrink: 0; }
-  #easytv-overlay .dpad-wrap svg { width: 100%; height: 100%; overflow: visible; }
+  #easytv-overlay .dpad-wrap {
+    position: relative;
+    width: min(280px, calc(100vw - 40px));
+    aspect-ratio: 1;
+    flex-shrink: 0;
+  }
+  #easytv-overlay .dpad-wrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
   #easytv-overlay .dpad-petal {
-    fill: var(--etv-btn-bg); stroke: var(--etv-border); stroke-width: 1.5;
+    fill: var(--etv-btn-bg); stroke: var(--etv-border); stroke-width: 1;
     cursor: pointer; transition: fill 0.15s;
     -webkit-tap-highlight-color: transparent;
   }
   #easytv-overlay .dpad-petal:hover  { fill: var(--etv-btn-hover); }
   #easytv-overlay .dpad-petal:active { fill: var(--etv-btn-active); }
   #easytv-overlay .dpad-center {
-    fill: var(--etv-btn-bg); stroke: var(--etv-border); stroke-width: 1.5;
+    fill: var(--etv-btn-bg); stroke: var(--etv-border); stroke-width: 1;
     cursor: pointer; transition: fill 0.15s;
     -webkit-tap-highlight-color: transparent;
   }
   #easytv-overlay .dpad-center:hover  { fill: var(--etv-btn-hover); }
   #easytv-overlay .dpad-center:active { fill: var(--etv-btn-active); }
-  #easytv-overlay .dpad-arrow { fill: var(--etv-muted); font-size: 18px; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
+  #easytv-overlay .dpad-arrow-icon { fill: rgba(255,255,255,0.7); pointer-events: none; }
+  #easytv-overlay .dpad-ok { fill: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
 
   /* ── Utility row (Back / Home / Info) ── */
   #easytv-overlay .util-row {
@@ -269,54 +275,78 @@ const EDITOR_STYLES = `
 // ─── SVG D-pad builder ────────────────────────────────────────────────────────
 
 function buildSvgDpad(cmds, hass, entityId) {
-  const cx = 110, cy = 110, R = 96, r = 36, gap = 4;
+  // viewBox 0 0 240 240, centre at 120,120
+  const cx = 120, cy = 120;
+  const R  = 112; // outer radius
+  const r  = 40;  // inner (centre button) radius
+  const gapDeg = 5; // gap in degrees between petals
 
-  // Arc petal path between two angles, from inner radius r to outer R
-  function petalPath(a1, a2) {
-    const toR = (deg) => deg * Math.PI / 180;
-    const ag1 = toR(a1 + gap), ag2 = toR(a2 - gap);
-    const x1 = cx + r  * Math.cos(ag1), y1 = cy + r  * Math.sin(ag1);
-    const x2 = cx + R  * Math.cos(ag1), y2 = cy + R  * Math.sin(ag1);
-    const x3 = cx + R  * Math.cos(ag2), y3 = cy + R  * Math.sin(ag2);
-    const x4 = cx + r  * Math.cos(ag2), y4 = cy + r  * Math.sin(ag2);
+  const toRad = d => d * Math.PI / 180;
+
+  // Build a donut-sector path for a 90-degree petal
+  // midAngle: the pointing direction of the petal (0=right, 90=down, 180=left, 270=up)
+  function petalPath(midAngle) {
+    const half = 45 - gapDeg / 2;
+    const a1 = toRad(midAngle - half);
+    const a2 = toRad(midAngle + half);
+    const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+    const x2 = cx + R * Math.cos(a1), y2 = cy + R * Math.sin(a1);
+    const x3 = cx + R * Math.cos(a2), y3 = cy + R * Math.sin(a2);
+    const x4 = cx + r * Math.cos(a2), y4 = cy + r * Math.sin(a2);
     return `M${x1},${y1} L${x2},${y2} A${R},${R} 0 0,1 ${x3},${y3} L${x4},${y4} A${r},${r} 0 0,0 ${x1},${y1} Z`;
   }
 
+  // Small filled triangle arrow pointing in direction (0=right,90=down,180=left,270=up)
+  function arrowPolygon(midAngle, dist) {
+    const rad = toRad(midAngle);
+    const px = cx + dist * Math.cos(rad);
+    const py = cy + dist * Math.sin(rad);
+    const s = 9; // arrow half-size
+    // Three points of triangle: tip pointing outward, base perpendicular
+    const tipX = px + s * Math.cos(rad),  tipY = py + s * Math.sin(rad);
+    const b1X  = px - s * Math.cos(rad) + s * Math.cos(rad + Math.PI/2);
+    const b1Y  = py - s * Math.sin(rad) + s * Math.sin(rad + Math.PI/2);
+    const b2X  = px - s * Math.cos(rad) + s * Math.cos(rad - Math.PI/2);
+    const b2Y  = py - s * Math.sin(rad) + s * Math.sin(rad - Math.PI/2);
+    return `${tipX},${tipY} ${b1X},${b1Y} ${b2X},${b2Y}`;
+  }
+
   const petals = [
-    { key: 'up',    a1: -120, a2: -60,  ax: cx,        ay: cy - 68, arrow: '▲' },
-    { key: 'right', a1: -30,  a2:  30,  ax: cx + 68,   ay: cy,      arrow: '▶' },
-    { key: 'down',  a1:  60,  a2: 120,  ax: cx,        ay: cy + 68, arrow: '▼' },
-    { key: 'left',  a1: 150,  a2: 210,  ax: cx - 68,   ay: cy,      arrow: '◀' },
+    { key: 'up',    mid: 270 },
+    { key: 'right', mid: 0   },
+    { key: 'down',  mid: 90  },
+    { key: 'left',  mid: 180 },
   ];
 
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', `0 0 220 220`);
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 240 240');
 
   petals.forEach(p => {
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', petalPath(p.a1, p.a2));
+    const dist = (r + R) / 2; // midpoint between inner and outer radius
+
+    const path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', petalPath(p.mid));
     path.setAttribute('class', 'dpad-petal');
     path.addEventListener('click', () => sendCmd(hass, entityId, cmds[p.key]));
     svg.appendChild(path);
 
-    const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    txt.setAttribute('x', p.ax); txt.setAttribute('y', p.ay);
-    txt.setAttribute('class', 'dpad-arrow');
-    txt.textContent = p.arrow;
-    svg.appendChild(txt);
+    const arrow = document.createElementNS(NS, 'polygon');
+    arrow.setAttribute('points', arrowPolygon(p.mid, dist));
+    arrow.setAttribute('class', 'dpad-arrow-icon');
+    svg.appendChild(arrow);
   });
 
-  // Centre select button
-  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r - 4);
+  // Centre circle (select)
+  const circle = document.createElementNS(NS, 'circle');
+  circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r - 2);
   circle.setAttribute('class', 'dpad-center');
   circle.addEventListener('click', () => sendCmd(hass, entityId, cmds.select));
   svg.appendChild(circle);
 
-  const okTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  okTxt.setAttribute('x', cx); okTxt.setAttribute('y', cy + 1);
-  okTxt.setAttribute('class', 'dpad-arrow');
-  okTxt.style.fontSize = '13px';
+  const okTxt = document.createElementNS(NS, 'text');
+  okTxt.setAttribute('x', cx); okTxt.setAttribute('y', cy);
+  okTxt.setAttribute('class', 'dpad-ok');
   okTxt.textContent = 'OK';
   svg.appendChild(okTxt);
 
@@ -459,8 +489,8 @@ class EasyTVCard extends HTMLElement {
     const utilRow = document.createElement('div');
     utilRow.className = 'util-row';
     [
-      { key: 'back', icon: 'mdi:arrow-left',   label: 'Back' },
-      { key: 'home', icon: 'mdi:home-outline',  label: 'Home' },
+      { key: 'back', icon: 'mdi:arrow-left',        label: 'Back' },
+      { key: 'home', icon: 'mdi:home-outline',       label: 'Home' },
       { key: 'info', icon: 'mdi:information-outline', label: 'Info' },
     ].forEach(({ key, icon, label }) => {
       const btn = document.createElement('div');
@@ -471,7 +501,7 @@ class EasyTVCard extends HTMLElement {
     });
     body.appendChild(utilRow);
 
-    // Playback row: Rewind / Play-Pause / Forward
+    // Playback row
     const pbRow = document.createElement('div');
     pbRow.className = 'playback-row';
     [
@@ -639,6 +669,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.7.1 ',
+  '%c EasyTV Card v0.7.2 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
