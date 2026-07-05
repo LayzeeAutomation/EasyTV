@@ -1,7 +1,7 @@
-// EasyTV Card v0.8.2
+// EasyTV Card v0.8.3
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.8.2';
+const CARD_VERSION = '0.8.3';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -181,10 +181,20 @@ const OVERLAY_STYLES = `
   .power-btn:hover  { background: var(--etv-power-hover); }
   .power-btn:active { background: var(--etv-power-active); transform: scale(0.92); }
   .power-btn ha-icon { --mdc-icon-size: 26px; }
+
+  /* ── D-pad + corner buttons container ── */
+  .dpad-scene {
+    position: relative;
+    width: min(300px, calc(100vw - 40px));
+    /* Extra padding on all sides to accommodate the corner buttons (half their size = 24px) */
+    padding: 24px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
   .dpad-wrap {
     position: relative;
-    width: min(280px, calc(100vw - 40px));
-    aspect-ratio: 1; flex-shrink: 0;
+    width: 100%;
+    aspect-ratio: 1;
   }
   .dpad-wrap svg { width: 100%; height: 100%; display: block; overflow: visible; }
   .dpad-petal {
@@ -201,18 +211,32 @@ const OVERLAY_STYLES = `
   .dpad-center:active { fill: var(--etv-btn-active); }
   .dpad-arrow-icon { fill: rgba(255,255,255,0.7); pointer-events: none; }
   .dpad-ok { fill: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; pointer-events: none; dominant-baseline: middle; text-anchor: middle; }
-  .util-row { display: flex; gap: 12px; justify-content: center; width: 100%; }
-  .util-btn {
-    display: flex; flex-direction: column; align-items: center; gap: 5px;
+
+  /* ── Corner circular buttons ── */
+  .corner-btn {
+    position: absolute;
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
     background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    border-radius: var(--etv-radius-btn); padding: 12px 0; flex: 1; max-width: 80px;
-    cursor: pointer; color: var(--etv-text); transition: background 0.15s, transform 0.1s;
+    cursor: pointer; color: var(--etv-text);
+    transition: background 0.15s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
+    /* Offset so the button centre sits just outside the dpad circle */
+    transform: translate(-50%, -50%);
   }
-  .util-btn:hover  { background: var(--etv-btn-hover); }
-  .util-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
-  .util-btn ha-icon { --mdc-icon-size: 22px; }
-  .util-btn span { font-size: 11px; color: var(--etv-muted); }
+  .corner-btn:hover  { background: var(--etv-btn-hover); }
+  .corner-btn:active { background: var(--etv-btn-active); transform: translate(-50%, -50%) scale(0.92); }
+  .corner-btn ha-icon { --mdc-icon-size: 22px; }
+  /* top-right → Info */
+  .corner-info { top: 24px; right: 24px; transform: translate(50%, -50%); }
+  .corner-info:active { transform: translate(50%, -50%) scale(0.92); }
+  /* bottom-left → Back */
+  .corner-back { bottom: 24px; left: 24px; transform: translate(-50%, 50%); }
+  .corner-back:active { transform: translate(-50%, 50%) scale(0.92); }
+  /* bottom-right → Home */
+  .corner-home { bottom: 24px; right: 24px; transform: translate(50%, 50%); }
+  .corner-home:active { transform: translate(50%, 50%) scale(0.92); }
+
   .playback-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
   .pb-btn {
     display: flex; align-items: center; justify-content: center;
@@ -245,12 +269,8 @@ const OVERLAY_STYLES = `
   .pill-half:hover  { background: var(--etv-btn-hover); }
   .pill-half:active { background: var(--etv-btn-active); }
   .pill-half ha-icon { --mdc-icon-size: 24px; }
-  .pill-half span {
-    font-size: 10px; color: var(--etv-muted); letter-spacing: 0.03em;
-  }
-  .pill-divider {
-    height: 1px; background: var(--etv-border); margin: 0 12px;
-  }
+  .pill-half span { font-size: 10px; color: var(--etv-muted); letter-spacing: 0.03em; }
+  .pill-divider { height: 1px; background: var(--etv-border); margin: 0 12px; }
   .pill-mute {
     width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
@@ -394,6 +414,7 @@ class EasyTVOverlayEl extends HTMLElement {
     body.className = 'overlay-body';
     sr.appendChild(body);
 
+    // Power row
     const powerRow = document.createElement('div');
     powerRow.className = 'power-row';
     const powerBtn = document.createElement('div');
@@ -403,26 +424,32 @@ class EasyTVOverlayEl extends HTMLElement {
     powerRow.appendChild(powerBtn);
     body.appendChild(powerRow);
 
+    // D-pad scene: outer container with padding for corner buttons
+    const dpadScene = document.createElement('div');
+    dpadScene.className = 'dpad-scene';
+
     const dpadWrap = document.createElement('div');
     dpadWrap.className = 'dpad-wrap';
     dpadWrap.appendChild(buildSvgDpad(cmds, getHass, cfg.entity));
-    body.appendChild(dpadWrap);
+    dpadScene.appendChild(dpadWrap);
 
-    const utilRow = document.createElement('div');
-    utilRow.className = 'util-row';
-    [
-      { key: 'back', icon: 'mdi:arrow-left',         label: 'Back' },
-      { key: 'home', icon: 'mdi:home-outline',        label: 'Home' },
-      { key: 'info', icon: 'mdi:information-outline', label: 'Info' },
-    ].forEach(({ key, icon, label }) => {
+    // Corner buttons — absolutely positioned within dpadScene
+    const corners = [
+      { cls: 'corner-btn corner-info', icon: 'mdi:information-outline', key: 'info' },
+      { cls: 'corner-btn corner-back', icon: 'mdi:arrow-left',          key: 'back' },
+      { cls: 'corner-btn corner-home', icon: 'mdi:home-outline',        key: 'home' },
+    ];
+    corners.forEach(({ cls, icon, key }) => {
       const btn = document.createElement('div');
-      btn.className = 'util-btn';
-      btn.innerHTML = `<ha-icon icon="${icon}"></ha-icon><span>${label}</span>`;
+      btn.className = cls;
+      btn.innerHTML = `<ha-icon icon="${icon}"></ha-icon>`;
       btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds[key]));
-      utilRow.appendChild(btn);
+      dpadScene.appendChild(btn);
     });
-    body.appendChild(utilRow);
 
+    body.appendChild(dpadScene);
+
+    // Playback row
     const pbRow = document.createElement('div');
     pbRow.className = 'playback-row';
     [
@@ -438,6 +465,7 @@ class EasyTVOverlayEl extends HTMLElement {
     });
     body.appendChild(pbRow);
 
+    // Pill controls: [Vol pill] [Mute] [Ch pill]
     const pillRow = document.createElement('div');
     pillRow.className = 'pill-row';
 
@@ -710,6 +738,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.8.2 ',
+  '%c EasyTV Card v0.8.3 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
