@@ -1,7 +1,7 @@
-// EasyTV Card v0.8.5
+// EasyTV Card v0.8.6
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.8.5';
+const CARD_VERSION = '0.8.6';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -510,40 +510,26 @@ class EasyTVOverlayEl extends HTMLElement {
     dpadWrap.appendChild(navSvg);
     dpadScene.appendChild(dpadWrap);
 
-    // Mode toggle — top-left corner
+    // Mode toggle — top-left corner (always visible)
     const toggleBtn = document.createElement('div');
     toggleBtn.className = 'corner-btn corner-toggle';
     toggleBtn.innerHTML = `<ha-icon icon="mdi:numeric"></ha-icon>`;
     toggleBtn.title = 'Switch to number pad';
-    toggleBtn.addEventListener('click', () => {
-      numpadMode = !numpadMode;
-      if (numpadMode) {
-        dpadWrap.innerHTML = '';
-        dpadWrap.appendChild(numGrid);
-        toggleBtn.innerHTML = `<ha-icon icon="mdi:gamepad-variant-outline"></ha-icon>`;
-        toggleBtn.title = 'Switch to navigation';
-        toggleBtn.classList.add('numpad-active');
-      } else {
-        dpadWrap.innerHTML = '';
-        dpadWrap.appendChild(navSvg);
-        toggleBtn.innerHTML = `<ha-icon icon="mdi:numeric"></ha-icon>`;
-        toggleBtn.title = 'Switch to number pad';
-        toggleBtn.classList.remove('numpad-active');
-      }
-    });
     dpadScene.appendChild(toggleBtn);
 
-    // Remaining corner buttons
-    [
+    // Corner buttons that hide in numpad mode
+    const cornerBtnsData = [
       { cls: 'corner-btn corner-info', icon: 'mdi:information-outline', key: 'info' },
       { cls: 'corner-btn corner-back', icon: 'mdi:arrow-left',          key: 'back' },
       { cls: 'corner-btn corner-home', icon: 'mdi:home-outline',        key: 'home' },
-    ].forEach(({ cls, icon, key }) => {
+    ];
+    const cornerBtnEls = cornerBtnsData.map(({ cls, icon, key }) => {
       const btn = document.createElement('div');
       btn.className = cls;
       btn.innerHTML = `<ha-icon icon="${icon}"></ha-icon>`;
       btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds[key]));
       dpadScene.appendChild(btn);
+      return btn;
     });
 
     body.appendChild(dpadScene);
@@ -596,6 +582,30 @@ class EasyTVOverlayEl extends HTMLElement {
     pillRow.appendChild(chPill);
 
     body.appendChild(pillRow);
+
+    // Toggle handler — wire up after pbRow and cornerBtnEls are defined
+    toggleBtn.addEventListener('click', () => {
+      numpadMode = !numpadMode;
+      if (numpadMode) {
+        dpadWrap.innerHTML = '';
+        dpadWrap.appendChild(numGrid);
+        toggleBtn.innerHTML = `<ha-icon icon="mdi:gamepad-variant-outline"></ha-icon>`;
+        toggleBtn.title = 'Switch to navigation';
+        toggleBtn.classList.add('numpad-active');
+        // Hide overlapping elements
+        cornerBtnEls.forEach(b => { b.style.display = 'none'; });
+        pbRow.style.display = 'none';
+      } else {
+        dpadWrap.innerHTML = '';
+        dpadWrap.appendChild(navSvg);
+        toggleBtn.innerHTML = `<ha-icon icon="mdi:numeric"></ha-icon>`;
+        toggleBtn.title = 'Switch to number pad';
+        toggleBtn.classList.remove('numpad-active');
+        // Restore hidden elements
+        cornerBtnEls.forEach(b => { b.style.display = ''; });
+        pbRow.style.display = '';
+      }
+    });
   }
 }
 
@@ -836,6 +846,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.8.5 ',
+  '%c EasyTV Card v0.8.6 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
