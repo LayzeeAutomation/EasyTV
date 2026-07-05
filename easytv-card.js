@@ -1,7 +1,7 @@
-// EasyTV Card v0.9.3
+// EasyTV Card v0.9.4
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.9.3';
+const CARD_VERSION = '0.9.4';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -32,9 +32,6 @@ const QUICK_ACTION_DEFS = {
 
 const DEFAULT_QUICK_SINGLE = ['volume_down', 'play_pause', 'volume_up'];
 const DEFAULT_QUICK_DOUBLE = ['volume_down', 'play_pause', 'volume_up', 'power', 'home', 'back'];
-
-// Default overlay shortcuts shown below mute/source bar
-const DEFAULT_OVERLAY_SHORTCUTS = ['back', 'home', 'info'];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -174,8 +171,10 @@ const OVERLAY_STYLES = `
     padding: 20px 20px 32px; gap: 20px;
   }
 
-  /* ── Power row ── */
-  .power-row { display: flex; align-items: center; width: 100%; }
+  /* ── Power row: power left, source right ── */
+  .power-row {
+    display: flex; align-items: center; justify-content: space-between; width: 100%;
+  }
   .power-btn {
     width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
@@ -186,6 +185,16 @@ const OVERLAY_STYLES = `
   .power-btn:hover  { background: var(--etv-power-hover); }
   .power-btn:active { background: var(--etv-power-active); transform: scale(0.92); }
   .power-btn ha-icon { --mdc-icon-size: 26px; }
+  .source-btn {
+    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    cursor: pointer; color: var(--etv-text);
+    transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent;
+  }
+  .source-btn:hover  { background: var(--etv-btn-hover); }
+  .source-btn:active { background: var(--etv-btn-active); transform: scale(0.92); }
+  .source-btn ha-icon { --mdc-icon-size: 24px; }
 
   /* ── D-pad scene ── */
   .dpad-scene {
@@ -258,10 +267,9 @@ const OVERLAY_STYLES = `
   .corner-home { bottom: 24px; right: 24px; transform: translate(50%, 50%); }
   .corner-home:active { background: var(--etv-btn-active); transform: translate(50%, 50%) scale(0.92); }
 
-  /* ── Playback + vol/ch section ── */
-  /* Three-column row: [vol pill] [playback buttons] [ch pill] */
+  /* ── Media section: [vol pill] [centre controls] [ch pill] ── */
   .media-section {
-    display: flex; align-items: center; gap: 12px; width: 100%;
+    display: flex; align-items: stretch; gap: 12px; width: 100%;
   }
 
   /* Side pills — vol & ch */
@@ -282,52 +290,37 @@ const OVERLAY_STYLES = `
   .pill-half span { font-size: 9px; color: var(--etv-muted); letter-spacing: 0.03em; }
   .pill-divider { height: 1px; background: var(--etv-border); margin: 0 8px; flex-shrink: 0; }
 
-  /* Centre: playback buttons stacked */
-  .pb-buttons {
-    display: flex; gap: 8px; justify-content: center; align-items: center; flex: 1;
+  /* Centre controls: two rows stacked */
+  .centre-controls {
+    flex: 1; display: flex; flex-direction: column; gap: 8px;
   }
-  .pb-btn {
+
+  /* Row 1: play/pause — full width */
+  .pb-btn-wide {
     display: flex; align-items: center; justify-content: center;
     background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    border-radius: var(--etv-radius-btn); width: 52px; height: 52px;
+    border-radius: var(--etv-radius-btn); height: 52px; width: 100%;
+    cursor: pointer; color: var(--etv-text); transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pb-btn-wide:hover  { background: var(--etv-btn-hover); }
+  .pb-btn-wide:active { background: var(--etv-btn-active); transform: scale(0.97); }
+  .pb-btn-wide ha-icon { --mdc-icon-size: 26px; }
+
+  /* Row 2: rewind | mute | forward — 3 equal buttons */
+  .centre-row2 {
+    display: flex; gap: 8px;
+  }
+  .pb-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
+    border-radius: var(--etv-radius-btn); height: 52px;
     cursor: pointer; color: var(--etv-text); transition: background 0.15s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
   }
   .pb-btn:hover  { background: var(--etv-btn-hover); }
   .pb-btn:active { background: var(--etv-btn-active); transform: scale(0.93); }
-  .pb-btn ha-icon { --mdc-icon-size: 24px; }
-
-  /* ── Mute + Source bar ── */
-  .mute-source-bar {
-    display: flex; gap: 10px; width: 100%;
-  }
-  .ms-btn {
-    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 5px; padding: 14px 0;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    border-radius: 16px; cursor: pointer; color: var(--etv-text);
-    transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent; user-select: none;
-  }
-  .ms-btn:hover  { background: var(--etv-btn-hover); }
-  .ms-btn:active { background: var(--etv-btn-active); transform: scale(0.97); }
-  .ms-btn ha-icon { --mdc-icon-size: 24px; }
-  .ms-btn span { font-size: 11px; color: var(--etv-muted); letter-spacing: 0.04em; font-weight: 500; }
-
-  /* ── Shortcut row ── */
-  .shortcut-row {
-    display: flex; gap: 10px; width: 100%;
-  }
-  .sc-btn {
-    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 5px; padding: 12px 0;
-    background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
-    border-radius: 16px; cursor: pointer; color: var(--etv-text);
-    transition: background 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent; user-select: none;
-  }
-  .sc-btn:hover  { background: var(--etv-btn-hover); }
-  .sc-btn:active { background: var(--etv-btn-active); transform: scale(0.97); }
-  .sc-btn ha-icon { --mdc-icon-size: 22px; }
-  .sc-btn span { font-size: 10px; color: var(--etv-muted); letter-spacing: 0.04em; font-weight: 500; }
+  .pb-btn ha-icon { --mdc-icon-size: 22px; }
 
   /* Utility */
   .etv-hidden { visibility: hidden; pointer-events: none; height: 0 !important; overflow: hidden; margin: 0 !important; padding: 0 !important; min-height: 0 !important; }
@@ -509,14 +502,23 @@ class EasyTVOverlayEl extends HTMLElement {
     body.className = 'overlay-body';
     sr.appendChild(body);
 
-    // ── Power row ──
+    // ── Power row: power left, source right ──
     const powerRow = document.createElement('div');
     powerRow.className = 'power-row';
+
     const powerBtn = document.createElement('div');
     powerBtn.className = 'power-btn';
     powerBtn.innerHTML = `<ha-icon icon="mdi:power"></ha-icon>`;
     powerBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.power));
     powerRow.appendChild(powerBtn);
+
+    const sourceBtn = document.createElement('div');
+    sourceBtn.className = 'source-btn';
+    sourceBtn.innerHTML = `<ha-icon icon="mdi:import"></ha-icon>`;
+    sourceBtn.title = 'Source';
+    sourceBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.source));
+    powerRow.appendChild(sourceBtn);
+
     body.appendChild(powerRow);
 
     // ── Switch logic ──
@@ -528,8 +530,6 @@ class EasyTVOverlayEl extends HTMLElement {
       toggleBtn.classList.add('etv-hidden');
       cornerBtnEls.forEach(b => b.classList.add('etv-hidden'));
       mediaSection.classList.add('etv-hidden');
-      muteSourceBar.classList.add('etv-hidden');
-      shortcutRow.classList.add('etv-hidden');
     };
 
     const exitNumpad = () => {
@@ -540,8 +540,6 @@ class EasyTVOverlayEl extends HTMLElement {
       toggleBtn.classList.remove('etv-hidden');
       cornerBtnEls.forEach(b => b.classList.remove('etv-hidden'));
       mediaSection.classList.remove('etv-hidden');
-      muteSourceBar.classList.remove('etv-hidden');
-      shortcutRow.classList.remove('etv-hidden');
     };
 
     // ── D-pad scene ──
@@ -576,7 +574,7 @@ class EasyTVOverlayEl extends HTMLElement {
     });
     body.appendChild(dpadScene);
 
-    // ── Media section: [vol pill] [playback btns] [ch pill] ──
+    // ── Media section: [vol pill] [centre controls] [ch pill] ──
     const mediaSection = document.createElement('div');
     mediaSection.className = 'media-section';
 
@@ -592,21 +590,34 @@ class EasyTVOverlayEl extends HTMLElement {
     volPill.appendChild(volUp); volPill.appendChild(volDiv); volPill.appendChild(volDown);
     mediaSection.appendChild(volPill);
 
-    // Playback buttons
-    const pbButtons = document.createElement('div');
-    pbButtons.className = 'pb-buttons';
+    // Centre controls
+    const centreControls = document.createElement('div');
+    centreControls.className = 'centre-controls';
+
+    // Row 1: play/pause full width
+    const playBtn = document.createElement('div');
+    playBtn.className = 'pb-btn-wide';
+    playBtn.innerHTML = `<ha-icon icon="mdi:play-pause"></ha-icon>`;
+    playBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.play));
+    centreControls.appendChild(playBtn);
+
+    // Row 2: rewind | mute | forward
+    const centreRow2 = document.createElement('div');
+    centreRow2.className = 'centre-row2';
     [
-      { key: 'reverse', icon: 'mdi:rewind' },
-      { key: 'play',    icon: 'mdi:play-pause' },
-      { key: 'forward', icon: 'mdi:fast-forward' },
+      { key: 'reverse',      icon: 'mdi:rewind' },
+      { key: 'volume_mute',  icon: 'mdi:volume-off' },
+      { key: 'forward',      icon: 'mdi:fast-forward' },
     ].forEach(({ key, icon }) => {
       const btn = document.createElement('div');
       btn.className = 'pb-btn';
       btn.innerHTML = `<ha-icon icon="${icon}"></ha-icon>`;
       btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds[key]));
-      pbButtons.appendChild(btn);
+      centreRow2.appendChild(btn);
     });
-    mediaSection.appendChild(pbButtons);
+    centreControls.appendChild(centreRow2);
+
+    mediaSection.appendChild(centreControls);
 
     // Ch pill
     const chPill  = document.createElement('div'); chPill.className  = 'pill-wrap';
@@ -621,39 +632,6 @@ class EasyTVOverlayEl extends HTMLElement {
     mediaSection.appendChild(chPill);
 
     body.appendChild(mediaSection);
-
-    // ── Mute + Source bar ──
-    const muteSourceBar = document.createElement('div');
-    muteSourceBar.className = 'mute-source-bar';
-
-    const muteBtn = document.createElement('div'); muteBtn.className = 'ms-btn';
-    muteBtn.innerHTML = `<ha-icon icon="mdi:volume-off"></ha-icon><span>MUTE</span>`;
-    muteBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.volume_mute));
-    muteSourceBar.appendChild(muteBtn);
-
-    const sourceBtn = document.createElement('div'); sourceBtn.className = 'ms-btn';
-    sourceBtn.innerHTML = `<ha-icon icon="mdi:import"></ha-icon><span>SOURCE</span>`;
-    sourceBtn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, cmds.source));
-    muteSourceBar.appendChild(sourceBtn);
-
-    body.appendChild(muteSourceBar);
-
-    // ── Shortcut row ──
-    const shortcutRow = document.createElement('div');
-    shortcutRow.className = 'shortcut-row';
-
-    const scKeys = cfg.overlay_shortcuts || DEFAULT_OVERLAY_SHORTCUTS;
-    scKeys.forEach(qa => {
-      const def = QUICK_ACTION_DEFS[qa];
-      if (!def) return;
-      const btn = document.createElement('div');
-      btn.className = 'sc-btn';
-      btn.innerHTML = `<ha-icon icon="${def.icon}"></ha-icon><span>${def.title.toUpperCase()}</span>`;
-      btn.addEventListener('click', () => sendCmd(getHass(), cfg.entity, def.cmd(cmds)));
-      shortcutRow.appendChild(btn);
-    });
-
-    body.appendChild(shortcutRow);
   }
 }
 
@@ -894,6 +872,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.9.3 ',
+  '%c EasyTV Card v0.9.4 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
