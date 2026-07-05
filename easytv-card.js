@@ -1,7 +1,7 @@
-// EasyTV Card v0.7.8
+// EasyTV Card v0.8.1
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.7.8';
+const CARD_VERSION = '0.8.1';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -137,9 +137,7 @@ const CARD_STYLES = `
   .no-btn-border .icon-btn, .no-btn-border .qa-btn { border-color: transparent !important; }
 `;
 
-// ── Overlay Styles (scoped inside shadow root — guaranteed to apply) ─────────
-// The overlay is a custom element with its own shadow root, so these styles
-// use :host and simple class selectors — no external scoping needed.
+// ── Overlay Styles (scoped inside shadow root — guaranteed to apply) ──────────
 
 const OVERLAY_STYLES = `
   :host {
@@ -370,7 +368,7 @@ const EDITOR_STYLES = `
   }
 `;
 
-// ── SVG D-pad builder (original) ───────────────────────────────────────────────
+// ── SVG D-pad builder ─────────────────────────────────────────────────────────
 
 function buildSvgDpad(cmds, getHass, entityId) {
   const cx = 120, cy = 120, R = 112, r = 40, gapDeg = 5;
@@ -668,7 +666,7 @@ class EasyTVCard extends HTMLElement {
     overlay.open(cfg, getHass, name);
     this._overlayEl = overlay;
 
-    // Close on backdrop tap (clicking the host element itself)
+    // Close on backdrop tap
     overlay.addEventListener('click', e => {
       if (e.composedPath()[0] === overlay) this._closeOverlay();
     });
@@ -806,6 +804,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.7.8 ',
+  '%c EasyTV Card v0.8.1 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
