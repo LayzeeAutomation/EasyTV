@@ -1,7 +1,7 @@
-// EasyTV Card v0.8.8
+// EasyTV Card v0.8.9
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '0.8.8';
+const CARD_VERSION = '0.8.9';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -266,7 +266,6 @@ const OVERLAY_STYLES = `
   /* top-left → Mode toggle */
   .corner-toggle { top: 24px; left: 24px; transform: translate(-50%, -50%); }
   .corner-toggle:active { background: var(--etv-btn-active); transform: translate(-50%, -50%) scale(0.92); }
-  .corner-toggle.numpad-active { background: rgba(25,118,210,0.25); border-color: rgba(25,118,210,0.6); color: #64b5f6; }
   /* top-right → Info */
   .corner-info { top: 24px; right: 24px; transform: translate(50%, -50%); }
   .corner-info:active { background: var(--etv-btn-active); transform: translate(50%, -50%) scale(0.92); }
@@ -279,17 +278,17 @@ const OVERLAY_STYLES = `
 
   /* ── Wide back bar — shown only in numpad mode ── */
   .numpad-back-bar {
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%; height: 52px; border-radius: 26px;
+    display: flex; align-items: center; justify-content: center;
+    width: 66%; margin: 16px auto 0;
+    height: 52px; border-radius: 26px;
     background: var(--etv-btn-bg); border: 1px solid var(--etv-border);
     cursor: pointer; color: var(--etv-text);
     transition: background 0.15s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
-    font-size: 14px; font-weight: 600; letter-spacing: 0.02em;
+    font-size: 15px; font-weight: 600; letter-spacing: 0.02em;
   }
   .numpad-back-bar:hover  { background: var(--etv-btn-hover); }
-  .numpad-back-bar:active { background: var(--etv-btn-active); transform: scale(0.98); }
-  .numpad-back-bar ha-icon { --mdc-icon-size: 22px; }
+  .numpad-back-bar:active { background: var(--etv-btn-active); transform: scale(0.97); }
 
   .playback-row { display: flex; gap: 10px; justify-content: center; width: 100%; }
   .pb-btn {
@@ -502,7 +501,7 @@ class EasyTVOverlayEl extends HTMLElement {
     body.className = 'overlay-body';
     sr.appendChild(body);
 
-    // ── Power + Source row (no toggle here) ──
+    // ── Power + Source row ──
     const powerRow = document.createElement('div');
     powerRow.className = 'power-row';
 
@@ -531,7 +530,7 @@ class EasyTVOverlayEl extends HTMLElement {
     dpadWrap.appendChild(navSvg);
     dpadScene.appendChild(dpadWrap);
 
-    // Toggle button — top-left corner of dpad (original position)
+    // Toggle button — top-left corner of dpad
     const toggleBtn = document.createElement('div');
     toggleBtn.className = 'corner-btn corner-toggle';
     toggleBtn.innerHTML = `<ha-icon icon="mdi:numeric"></ha-icon>`;
@@ -558,7 +557,7 @@ class EasyTVOverlayEl extends HTMLElement {
     // ── Wide back bar — hidden in nav mode, shown in numpad mode ──
     const backBar = document.createElement('div');
     backBar.className = 'numpad-back-bar etv-hidden';
-    backBar.innerHTML = `<ha-icon icon="mdi:gamepad-variant-outline"></ha-icon><span>Back to remote</span>`;
+    backBar.textContent = 'Back';
     body.appendChild(backBar);
 
     // ── Playback row ──
@@ -610,18 +609,19 @@ class EasyTVOverlayEl extends HTMLElement {
 
     body.appendChild(pillRow);
 
-    // ── Shared switch logic ──
+    // ── Switch logic ──
     const enterNumpad = () => {
       numpadMode = true;
       dpadWrap.innerHTML = '';
       dpadWrap.appendChild(numGrid);
       dpadScene.classList.add('numpad-mode');
-      toggleBtn.classList.add('numpad-active');
+      // Hide toggle button in numpad mode
+      toggleBtn.classList.add('etv-hidden');
       // Hide corner nav buttons and bottom rows
       cornerBtnEls.forEach(b => b.classList.add('etv-hidden'));
       pbRow.classList.add('etv-hidden');
       pillRow.classList.add('etv-hidden');
-      // Show wide back bar
+      // Show back bar
       backBar.classList.remove('etv-hidden');
     };
 
@@ -630,7 +630,8 @@ class EasyTVOverlayEl extends HTMLElement {
       dpadWrap.innerHTML = '';
       dpadWrap.appendChild(navSvg);
       dpadScene.classList.remove('numpad-mode');
-      toggleBtn.classList.remove('numpad-active');
+      // Restore toggle button
+      toggleBtn.classList.remove('etv-hidden');
       // Restore nav elements
       cornerBtnEls.forEach(b => b.classList.remove('etv-hidden'));
       pbRow.classList.remove('etv-hidden');
@@ -884,6 +885,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v0.8.8 ',
+  '%c EasyTV Card v0.8.9 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
