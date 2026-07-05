@@ -1,7 +1,7 @@
-// EasyTV Card v1.0.3
+// EasyTV Card v1.0.4
 // https://github.com/LayzeeAutomation/EasyTV
 
-const CARD_VERSION = '1.0.3';
+const CARD_VERSION = '1.0.4';
 
 // ── TV Presets ────────────────────────────────────────────────────────────────
 
@@ -167,7 +167,6 @@ const CARD_STYLES = `
     --easytv-pill-border:   rgba(255,255,255,0.10);
     --easytv-on-color:      #4ade80;
     --easytv-off-color:     rgba(255,255,255,0.22);
-    /* compact app row */
     --easytv-app-gap:  8px;
     --easytv-app-cols: 4;
   }
@@ -183,7 +182,6 @@ const CARD_STYLES = `
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* ════ SHARED SHELL ════ */
   .etv-card {
     border-radius: var(--easytv-radius);
     background: var(--easytv-bg);
@@ -194,11 +192,9 @@ const CARD_STYLES = `
     color: var(--easytv-text);
     overflow: hidden;
     animation: etvCardIn 0.25s ease both;
-    /* left accent bar */
     border-left: 3px solid var(--easytv-accent);
   }
 
-  /* ════ SINGLE ROW ════ */
   .compact-single {
     display: flex; align-items: center;
     padding: 12px 14px 12px 16px;
@@ -208,14 +204,8 @@ const CARD_STYLES = `
     display: flex; align-items: center; gap: 10px;
     flex: 1; min-width: 0;
   }
-  .tv-icon-wrap {
-    position: relative; flex-shrink: 0;
-  }
-  .tv-icon {
-    --mdc-icon-size: 26px;
-    color: var(--easytv-accent);
-    display: block;
-  }
+  .tv-icon-wrap { position: relative; flex-shrink: 0; }
+  .tv-icon { --mdc-icon-size: 26px; color: var(--easytv-accent); display: block; }
   .status-dot {
     position: absolute; bottom: -1px; right: -2px;
     width: 8px; height: 8px; border-radius: 50%;
@@ -226,42 +216,32 @@ const CARD_STYLES = `
   .status-dot.on  { background: var(--easytv-on-color); box-shadow: 0 0 6px var(--easytv-on-color); }
   .tv-info { flex: 1; min-width: 0; }
   .tv-name {
-    font-weight: 700; font-size: 15px;
-    color: var(--easytv-text);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    line-height: 1.2;
+    font-weight: 700; font-size: 15px; color: var(--easytv-text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;
   }
-  .tv-state {
-    font-size: 11px; color: var(--easytv-muted);
-    margin-top: 1px; text-transform: capitalize;
-  }
+  .tv-state { font-size: 11px; color: var(--easytv-muted); margin-top: 1px; text-transform: capitalize; }
   .c-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
-  /* connected pill group for quick actions */
   .qa-pill {
     display: flex; align-items: stretch;
     background: var(--easytv-pill-bg);
     border: 1px solid var(--easytv-pill-border);
-    border-radius: 12px;
-    overflow: hidden;
+    border-radius: 12px; overflow: hidden;
   }
   .qa-pill-btn {
     display: flex; align-items: center; justify-content: center;
     width: 40px; height: 38px;
     cursor: pointer; color: var(--easytv-text);
     transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent; flex-shrink: 0;
   }
   .qa-pill-btn:not(:last-child) { border-right: 1px solid var(--easytv-pill-border); }
   .qa-pill-btn:hover  { background: var(--easytv-btn-hover); }
   .qa-pill-btn:active { background: var(--easytv-btn-active); transform: scale(0.91); }
   .qa-pill-btn ha-icon { --mdc-icon-size: 18px; }
 
-  /* open-overlay icon button */
   .icon-btn {
-    background: var(--easytv-btn-bg);
-    border: 1px solid var(--easytv-btn-border);
+    background: var(--easytv-btn-bg); border: 1px solid var(--easytv-btn-border);
     cursor: pointer; color: var(--easytv-text);
     width: 40px; height: 40px; border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
@@ -272,29 +252,20 @@ const CARD_STYLES = `
   .icon-btn:active { background: var(--easytv-btn-active); transform: scale(0.92); }
   .icon-btn ha-icon { --mdc-icon-size: 20px; }
 
-  /* ════ DOUBLE ROW ════ */
   .compact-double {
     display: flex; flex-direction: column;
-    padding: 14px 14px 0 16px;
-    gap: 0;
+    padding: 14px 14px 0 16px; gap: 0;
   }
   .d-top {
     display: flex; align-items: center;
-    justify-content: space-between; gap: 10px;
-    padding-bottom: 12px;
+    justify-content: space-between; gap: 10px; padding-bottom: 12px;
   }
   .d-top-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-
-  /* full-width quick action row */
-  .d-actions {
-    display: flex; gap: 6px;
-    padding-bottom: 12px;
-  }
+  .d-actions { display: flex; gap: 6px; padding-bottom: 12px; }
   .d-qa-btn {
     flex: 1; height: 42px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    background: var(--easytv-btn-bg);
-    border: 1px solid var(--easytv-btn-border);
+    background: var(--easytv-btn-bg); border: 1px solid var(--easytv-btn-border);
     color: var(--easytv-text); cursor: pointer;
     transition: background 0.15s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
@@ -303,30 +274,20 @@ const CARD_STYLES = `
   .d-qa-btn:active { background: var(--easytv-btn-active); transform: scale(0.93); }
   .d-qa-btn ha-icon { --mdc-icon-size: 20px; }
 
-  /* ── compact app row (double card) ─────── */
   .compact-app-row {
-    display: flex;
-    gap: var(--easytv-app-gap);
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    display: flex; gap: var(--easytv-app-gap); width: 100%;
+    overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
     scroll-snap-type: x mandatory;
-    padding: 2px 0 10px;
-    box-sizing: border-box;
-    /* subtle top divider */
-    border-top: 1px solid var(--easytv-border);
-    margin-top: 2px;
+    padding: 2px 0 10px; box-sizing: border-box;
+    border-top: 1px solid var(--easytv-border); margin-top: 2px;
   }
   .compact-app-row::-webkit-scrollbar { display: none; }
-
   .compact-app-btn {
     flex: 0 0 calc((100% - (var(--easytv-app-cols) - 1) * var(--easytv-app-gap)) / var(--easytv-app-cols));
     scroll-snap-align: start;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px; padding: 8px 4px;
-    border-radius: 12px; cursor: pointer;
+    gap: 4px; padding: 8px 4px; border-radius: 12px; cursor: pointer;
     transition: transform 0.15s, filter 0.15s;
     -webkit-tap-highlight-color: transparent; user-select: none;
     border: 1px solid transparent;
@@ -342,7 +303,6 @@ const CARD_STYLES = `
     max-width: 100%; text-align: center;
   }
 
-  /* no-background / no-border overrides */
   .no-btn-bg  .qa-pill-btn, .no-btn-bg  .d-qa-btn, .no-btn-bg  .icon-btn { background: transparent !important; }
   .no-btn-border .qa-pill-btn, .no-btn-border .d-qa-btn, .no-btn-border .icon-btn,
   .no-btn-border .qa-pill { border-color: transparent !important; }
@@ -710,7 +670,7 @@ function buildNumpad(getHass, entityId, onBack) {
   return grid;
 }
 
-// ── App row builder (overlay) ──────────────────────────────────────────────────
+// ── App row builder (overlay) ─────────────────────────────────────────────────
 
 function buildAppRow(cfg, getHass) {
   const row = document.createElement('div');
@@ -728,7 +688,7 @@ function buildAppRow(cfg, getHass) {
   return row;
 }
 
-// ── Compact app row builder (card) ───────────────────────────────────────────
+// ── Compact app row builder (card) ────────────────────────────────────────────
 
 function buildCompactAppRow(cfg, getHass) {
   const row = document.createElement('div');
@@ -751,6 +711,11 @@ function buildCompactAppRow(cfg, getHass) {
 class EasyTVOverlayEl extends HTMLElement {
   constructor() { super(); this.attachShadow({ mode: 'open' }); }
 
+  // Dispatch a composed event so the card element (outside shadow DOM) can hear it
+  _requestClose() {
+    this.dispatchEvent(new CustomEvent('etv-close', { bubbles: true, composed: true }));
+  }
+
   open(cfg, getHass, name) {
     const sr = this.shadowRoot;
     const cmds = buildCmds(cfg);
@@ -768,7 +733,8 @@ class EasyTVOverlayEl extends HTMLElement {
       <span class="overlay-version">v${CARD_VERSION}</span>
       <div class="close-btn" id="etv-close"><ha-icon icon="mdi:close"></ha-icon></div>`;
     sr.appendChild(header);
-    sr.querySelector('#etv-close').addEventListener('click', () => this.remove());
+    // ✕ button: request close via event (card calls _closeOverlay which resets flag)
+    sr.querySelector('#etv-close').addEventListener('click', () => this._requestClose());
 
     const body = document.createElement('div');
     body.className = 'overlay-body';
@@ -962,7 +928,6 @@ class EasyTVCard extends HTMLElement {
         </div>`;
 
     } else {
-      // double row
       const qaKeys = cfg.quick_actions || DEFAULT_QUICK_DOUBLE;
       const qaRowBtns = qaKeys.map(qa => {
         const def = QUICK_ACTION_DEFS[qa];
@@ -989,7 +954,6 @@ class EasyTVCard extends HTMLElement {
           <div class="d-actions">${qaRowBtns}</div>
         </div>`;
 
-      // append compact app row if enabled
       if (cfg.show_apps !== false) {
         const shell = card.querySelector('.etv-card');
         shell.appendChild(buildCompactAppRow(cfg, getHass));
@@ -1008,6 +972,10 @@ class EasyTVCard extends HTMLElement {
     document.body.appendChild(overlay);
     overlay.open(cfg, getHass, name);
     this._overlayEl = overlay;
+
+    // ✕ button dispatches 'etv-close' (composed) — handle it here
+    overlay.addEventListener('etv-close', () => this._closeOverlay());
+    // backdrop tap also closes
     overlay.addEventListener('click', e => {
       if (e.composedPath()[0] === overlay) this._closeOverlay();
     });
@@ -1132,6 +1100,6 @@ window.customCards.push({
 });
 
 console.info(
-  '%c EasyTV Card v1.0.3 ',
+  '%c EasyTV Card v1.0.4 ',
   'color:#fff;background:#1976d2;font-weight:bold;border-radius:4px;padding:2px 6px;'
 );
